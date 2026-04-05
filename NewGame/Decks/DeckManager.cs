@@ -1,4 +1,5 @@
 using Card = MagicalDeckbuilder.Cards.Card;
+using CardType = MagicalDeckbuilder.Cards.CardType;
 
 namespace MagicalDeckbuilder.Decks;
 
@@ -15,6 +16,16 @@ public enum PileType
 }
 
 /// <summary>
+/// Represents a creature slot on the battlefield
+/// </summary>
+public class CreatureSlot
+{
+    public int SlotIndex { get; set; }
+    public Card? Creature { get; set; }
+    public bool IsEmpty => Creature == null;
+}
+
+/// <summary>
 /// Manages a player's deck and various card piles
 /// </summary>
 public class DeckManager
@@ -25,6 +36,10 @@ public class DeckManager
     public List<Card> Hand { get; private set; } = new();
     public List<Card> DiscardPile { get; private set; } = new();
     public List<Card> InPlay { get; private set; } = new();
+    
+    // Creature slots (0-4, five slots total)
+    public List<CreatureSlot> CreatureSlots { get; private set; } = new();
+    public int MaxCreatureSlots { get; set; } = 5;
     
     public int MaxHandSize { get; set; } = 7;
     public int StartingHandSize { get; set; } = 4;
@@ -38,6 +53,13 @@ public class DeckManager
         Hand.Clear();
         DiscardPile.Clear();
         InPlay.Clear();
+        
+        // Initialize creature slots
+        CreatureSlots.Clear();
+        for (int i = 0; i < MaxCreatureSlots; i++)
+        {
+            CreatureSlots.Add(new CreatureSlot { SlotIndex = i });
+        }
         
         // Create copies of all cards in the deck
         foreach (var card in cardTemplates)
@@ -109,6 +131,76 @@ public class DeckManager
             return card;
         }
         return null;
+    }
+    
+    /// <summary>
+    /// Play a creature card into a specific slot
+    /// </summary>
+    public Card? PlayCreatureToSlot(string cardId, int slotIndex)
+    {
+        var card = Hand.FirstOrDefault(c => c.Id == cardId);
+        if (card == null || card.Type != CardType.Creature)
+            return null;
+            
+        if (slotIndex < 0 || slotIndex >= CreatureSlots.Count)
+            return null;
+            
+        if (!CreatureSlots[slotIndex].IsEmpty)
+            return null;
+            
+        Hand.Remove(card);
+        CreatureSlots[slotIndex].Creature = card;
+        InPlay.Add(card);
+        return card;
+    }
+    
+    /// <summary>
+    /// Get creature in a specific slot
+    /// </summary>
+    public Card? GetCreatureInSlot(int slotIndex)
+    {
+        if (slotIndex >= 0 && slotIndex < CreatureSlots.Count)
+            return CreatureSlots[slotIndex].Creature;
+        return null;
+    }
+    
+    /// <summary>
+    /// Remove creature from slot (to discard)
+    /// </summary>
+    public void RemoveCreatureFromSlot(int slotIndex)
+    {
+        if (slotIndex >= 0 && slotIndex < CreatureSlots.Count)
+        {
+            var creature = CreatureSlots[slotIndex].Creature;
+            if (creature != null)
+            {
+                InPlay.Remove(creature);
+                DiscardPile.Add(creature);
+                CreatureSlots[slotIndex].Creature = null;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get all creatures currently in slots
+    /// </summary>
+    public List<Card> GetCreaturesInSlots()
+    {
+        return CreatureSlots
+            .Where(s => s.Creature != null)
+            .Select(s => s.Creature!)
+            .ToList();
+    }
+    
+    /// <summary>
+    /// Clear all slots (for new game)
+    /// </summary>
+    public void ClearSlots()
+    {
+        foreach (var slot in CreatureSlots)
+        {
+            slot.Creature = null;
+        }
     }
     
     /// <summary>
@@ -184,18 +276,42 @@ public class DeckManager
     }
     
     /// <summary>
-    /// Display cards in play
+    /// Display cards in play (including creature slots)
     /// </summary>
     public string DisplayInPlay()
     {
-        if (InPlay.Count == 0)
+        var display = new System.Text.StringBuilder();
+        
+        // Display creature slots
+        bool hasCreatures = false;
+        for (int i = 0; i < CreatureSlots.Count; i++)
+        {
+            var slot = CreatureSlots[i];
+            if (slot.Creature != null)
+            {
+                display.AppendLine($"  [{i + 1}] {slot.Creature.Name} | PWR:{slot.Creature.Power} HP:{slot.Creature.Health}");
+                hasCreatures = true;
+            }
+            else
+            {
+                display.AppendLine($"  [{i + 1}] (Empty)");
+            }
+        }
+        
+        // Display other cards in play (non-creatures)
+        var otherCards = InPlay.Where(c => c.Type != CardType.Creature).ToList();
+        if (otherCards.Count > 0)
+        {
+            if (hasCreatures) display.AppendLine("  ─ Other Cards ─");
+            foreach (var card in otherCards)
+            {
+                display.AppendLine($"  • {card.Name} ({card.Type})");
+            }
+        }
+        
+        if (!hasCreatures && otherCards.Count == 0)
             return "  (Nothing in play)";
         
-        var display = new System.Text.StringBuilder();
-        foreach (var card in InPlay)
-        {
-            display.AppendLine($"  - {card.Name} ({card.Type}) | PWR:{card.Power} HP:{card.Health}");
-        }
         return display.ToString();
     }
     
@@ -208,5 +324,6 @@ public class DeckManager
         Hand.Clear();
         DiscardPile.Clear();
         InPlay.Clear();
+        ClearSlots();
     }
 }

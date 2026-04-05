@@ -2,6 +2,7 @@ using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
+using CreatureSlot = MagicalDeckbuilder.Decks.CreatureSlot;
 using MagicalDeckbuilder.Decks;
 using MagicalDeckbuilder.Combining;
 using MagicalDeckbuilder.Game;
@@ -23,14 +24,45 @@ public class Character
     public bool IsPlayer { get; set; } = true;
     public List<Card> CustomCreatedCards { get; set; } = new();
     
+    // Damage tracking for visual display
+    public int LastDamageTaken { get; set; } = 0;
+    public int LastDamageDealt { get; set; } = 0;
+    public bool ShowDamageIndicator { get; set; } = false;
+    
     /// <summary>
-    /// Generate a visual health bar
+    /// Take damage and track it for display
+    /// </summary>
+    public void TakeDamage(int amount)
+    {
+        LastDamageTaken = amount;
+        ShowDamageIndicator = true;
+        Health = Math.Max(0, Health - amount);
+    }
+    
+    /// <summary>
+    /// Reset damage indicators after display
+    /// </summary>
+    public void ClearDamageIndicator()
+    {
+        ShowDamageIndicator = false;
+        LastDamageTaken = 0;
+        LastDamageDealt = 0;
+    }
+    
+    /// <summary>
+    /// Generate a visual health bar with optional damage indicator
     /// </summary>
     public string GetHealthBar()
     {
         const int barLength = 20;
         int filled = (int)((double)Health / MaxHealth * barLength);
         string bar = new string('█', filled) + new string('░', barLength - filled);
+        
+        // Add damage indicator if recently damaged
+        if (ShowDamageIndicator && LastDamageTaken > 0)
+        {
+            return $"[{bar}] -{LastDamageTaken}";
+        }
         return $"[{bar}]";
     }
     
@@ -234,7 +266,18 @@ public class Game
             return;
         }
         
-        Console.WriteLine("Select card number to play:");
+        // Show available slots for creatures
+        Console.WriteLine("\nAvailable creature slots:");
+        for (int i = 0; i < _player.Deck.CreatureSlots.Count; i++)
+        {
+            var slot = _player.Deck.CreatureSlots[i];
+            if (slot.Creature != null)
+                Console.WriteLine($"  [{i + 1}] {slot.Creature.Name}");
+            else
+                Console.WriteLine($"  [{i + 1}] (Empty)");
+        }
+        
+        Console.WriteLine("\nSelect card number to play:");
         var input = Console.ReadLine();
         
         if (int.TryParse(input, out int cardIndex) && cardIndex >= 1 && cardIndex <= _player.Deck.Hand.Count)
@@ -243,13 +286,45 @@ public class Game
             
             if (card.ManaCost <= _player.Mana)
             {
-                _player.Mana -= card.ManaCost;
-                _player.Deck.PlayCard(card.Id);
-                Console.WriteLine($"✓ Played {card.Name}!");
-                _gameLog.Add($"Played {card.Name}");
-                
-                // Apply card effects
-                ApplyCardEffects(card, _player, _opponent);
+                // For creatures, ask which slot to play in
+                if (card.Type == CardType.Creature)
+                {
+                    Console.WriteLine($"Select slot number (1-{_player.Deck.CreatureSlots.Count}) for {card.Name}:");
+                    var slotInput = Console.ReadLine();
+                    
+                    if (int.TryParse(slotInput, out int slotNum) && slotNum >= 1 && slotNum <= _player.Deck.CreatureSlots.Count)
+                    {
+                        var slotIndex = slotNum - 1;
+                        if (!_player.Deck.CreatureSlots[slotIndex].IsEmpty)
+                        {
+                            Console.WriteLine("That slot is occupied! Choose another.");
+                            return;
+                        }
+                        
+                        _player.Mana -= card.ManaCost;
+                        _player.Deck.PlayCreatureToSlot(card.Id, slotIndex);
+                        Console.WriteLine($"✓ Played {card.Name} in slot {slotNum}!");
+                        _gameLog.Add($"Played {card.Name} in slot {slotNum}");
+                        
+                        // Apply card effects (initial attack is handled in combat phase)
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid slot selection.");
+                        return;
+                    }
+                }
+                else
+                {
+                    // Non-creature cards play normally
+                    _player.Mana -= card.ManaCost;
+                    _player.Deck.PlayCard(card.Id);
+                    Console.WriteLine($"✓ Played {card.Name}!");
+                    _gameLog.Add($"Played {card.Name}");
+                    
+                    // Apply card effects
+                    ApplyCardEffects(card, _player, _opponent);
+                }
             }
             else
             {
@@ -275,21 +350,25 @@ public class Game
                     if (effect.Target == TargetType.Enemy || effect.Target == TargetType.Any)
                     {
                         int damage = effect.Value;
-                        // Creatures attack too
-                        if (card.Type == CardType.Creature && caster.IsPlayer)
+                        
+                        // For spells, check for enemy creatures
+                        if (card.Type == CardType.Spell || card.Type == CardType.Weapon)
                         {
-                            // Check if target has creatures
-                            var enemyCreatures = _opponent.Deck.InPlay.Where(c => c.Type == CardType.Creature).ToList();
+                            var enemyCreatures = target.Deck.GetCreaturesInSlots();
                             if (enemyCreatures.Count > 0)
                             {
-                                // Attack enemy creature first
+                                // Attack first creature
                                 var enemyCreature = enemyCreatures.First();
                                 enemyCreature.Health -= damage;
                                 Console.WriteLine($"  ⚔️ {card.Name} attacks {enemyCreature.Name} for {damage} damage!");
                                 
                                 if (enemyCreature.Health <= 0)
                                 {
-                                    _opponent.Deck.DiscardCard(enemyCreature.Id);
+                                    // Find and remove the creature from slots
+                                    var slotIndex = target.Deck.CreatureSlots
+                                        .FindIndex(s => s.Creature?.Id == enemyCreature.Id);
+                                    if (slotIndex >= 0)
+                                        target.Deck.RemoveCreatureFromSlot(slotIndex);
                                     Console.WriteLine($"  💀 {enemyCreature.Name} was destroyed!");
                                 }
                             }
@@ -297,12 +376,13 @@ public class Game
                             {
                                 // Direct attack
                                 target.Health -= damage;
-                                Console.WriteLine($"  ⚔️ {card.Name} attacks {target.Name} for {damage} damage!");
+                                Console.WriteLine($"  💥 {card.Name} deals {damage} damage to {target.Name}!");
                             }
                         }
                         else
                         {
-                            target.Health -= damage;
+                            // Other card types deal direct damage
+                            target.TakeDamage(damage);
                             Console.WriteLine($"  💥 {card.Name} deals {damage} damage to {target.Name}!");
                         }
                     }
@@ -342,7 +422,7 @@ public class Game
             }
         }
         
-        // Creatures stay in play, spells and events are discarded
+        // Creatures stay in play (in slots), spells and events are discarded
         if (card.Type == CardType.Spell || card.Type == CardType.Event)
         {
             _player.Deck.DiscardCard(card.Id);
@@ -435,6 +515,16 @@ public class Game
             }
         }
         
+        // COMBAT PHASE: Player creatures attack
+        Console.WriteLine("\n⚔️  COMBAT PHASE: Your creatures attack!");
+        ResolveCombat(_player, _opponent);
+        
+        // Check for game over after combat
+        if (_opponent.Health <= 0 || _player.Health <= 0)
+        {
+            return;
+        }
+        
         // Opponent's turn
         OpponentTurn();
         
@@ -461,6 +551,103 @@ public class Game
     }
     
     /// <summary>
+    /// Resolve combat - all creatures attack according to slot rules
+    /// </summary>
+    private void ResolveCombat(Character attacker, Character defender)
+    {
+        var attackerSlots = attacker.Deck.CreatureSlots;
+        var defenderSlots = defender.Deck.CreatureSlots;
+        
+        // Process each slot - creatures attack in slot order
+        for (int slotIndex = 0; slotIndex < attackerSlots.Count; slotIndex++)
+        {
+            var attackerCreature = attackerSlots[slotIndex].Creature;
+            if (attackerCreature == null)
+                continue;
+            
+            if (attackerCreature.Type != CardType.Creature)
+                continue;
+            
+            // Find target using the targeting logic
+            var target = FindCombatTarget(slotIndex, defenderSlots, defender);
+            
+            if (target != null)
+            {
+                // Attack the creature
+                int damage = attackerCreature.Power;
+                target.Health -= damage;
+                Console.WriteLine($"  ⚔️ {attackerCreature.Name} (Slot {slotIndex + 1}) attacks {target.Name} for {damage} damage!");
+                
+                // Check if target creature died
+                if (target.Health <= 0)
+                {
+                    // Remove the target from its slot
+                    defender.Deck.RemoveCreatureFromSlot(
+                        defender.Deck.CreatureSlots.FindIndex(s => s.Creature?.Id == target.Id));
+                    Console.WriteLine($"  💀 {target.Name} was destroyed!");
+                }
+            }
+            else
+            {
+                // Direct attack to opponent
+                int damage = attackerCreature.Power;
+                defender.TakeDamage(damage);
+                Console.WriteLine($"  ⚔️ {attackerCreature.Name} (Slot {slotIndex + 1}) attacks {defender.Name} directly for {damage} damage!");
+            }
+        }
+        
+        // Remove dead creatures from slots (health <= 0)
+        for (int slotIndex = 0; slotIndex < attackerSlots.Count; slotIndex++)
+        {
+            var creature = attackerSlots[slotIndex].Creature;
+            if (creature != null && creature.Health <= 0)
+            {
+                attacker.Deck.RemoveCreatureFromSlot(slotIndex);
+                Console.WriteLine($"  💀 Your {creature.Name} in slot {slotIndex + 1} was destroyed!");
+            }
+        }
+        
+        // Clear damage indicators after display
+        defender.ClearDamageIndicator();
+    }
+    
+    /// <summary>
+    /// Find combat target for a creature in the given slot
+    /// Rules:
+    /// 1. First try the opposite slot
+    /// 2. If empty, scan left-to-right starting from slot 0
+    /// 3. If all slots empty, return null (direct attack)
+    /// </summary>
+    private Card? FindCombatTarget(int attackerSlotIndex, List<CreatureSlot> defenderSlots, Character defender)
+    {
+        // First, check the opposite slot
+        if (attackerSlotIndex < defenderSlots.Count)
+        {
+            var oppositeCreature = defenderSlots[attackerSlotIndex].Creature;
+            if (oppositeCreature != null)
+            {
+                return oppositeCreature;
+            }
+        }
+        
+        // If opposite is empty, scan left-to-right (like reading a book)
+        for (int i = 0; i < defenderSlots.Count; i++)
+        {
+            if (i == attackerSlotIndex)
+                continue; // Skip the opposite slot we already checked
+            
+            var creature = defenderSlots[i].Creature;
+            if (creature != null)
+            {
+                return creature;
+            }
+        }
+        
+        // No creatures in any slot - direct attack
+        return null;
+    }
+    
+    /// <summary>
     /// Simple AI opponent turn
     /// </summary>
     private void OpponentTurn()
@@ -477,14 +664,38 @@ public class Game
         {
             if (card.ManaCost <= _opponent.Mana)
             {
-                _opponent.Mana -= card.ManaCost;
-                _opponent.Deck.PlayCard(card.Id);
-                Console.WriteLine($"   👹 Enemy played {card.Name}!");
-                
-                // Apply effects to player
-                ApplyCardEffects(card, _opponent, _player);
-                
-                _gameLog.Add($"Enemy played {card.Name}");
+                // For creatures, find an empty slot
+                if (card.Type == CardType.Creature)
+                {
+                    var emptySlot = -1;
+                    for (int i = 0; i < _opponent.Deck.CreatureSlots.Count; i++)
+                    {
+                        if (_opponent.Deck.CreatureSlots[i].IsEmpty)
+                        {
+                            emptySlot = i;
+                            break;
+                        }
+                    }
+                    
+                    if (emptySlot >= 0)
+                    {
+                        _opponent.Mana -= card.ManaCost;
+                        _opponent.Deck.PlayCreatureToSlot(card.Id, emptySlot);
+                        Console.WriteLine($"   👹 Enemy played {card.Name} in slot {emptySlot + 1}!");
+                        _gameLog.Add($"Enemy played {card.Name} in slot {emptySlot + 1}");
+                    }
+                }
+                else
+                {
+                    _opponent.Mana -= card.ManaCost;
+                    _opponent.Deck.PlayCard(card.Id);
+                    Console.WriteLine($"   👹 Enemy played {card.Name}!");
+                    
+                    // Apply effects to player
+                    ApplyCardEffects(card, _opponent, _player);
+                    
+                    _gameLog.Add($"Enemy played {card.Name}");
+                }
             }
         }
         
@@ -494,10 +705,23 @@ public class Game
             _opponent.Deck.DiscardFromHand(card.Id);
         }
         
-        // Move in-play to discard
+        // NON-CREATURES in play get discarded (creatures stay in slots)
         foreach (var card in _opponent.Deck.InPlay.ToList())
         {
-            _opponent.Deck.DiscardCard(card.Id);
+            if (card.Type != CardType.Creature)
+            {
+                _opponent.Deck.DiscardCard(card.Id);
+            }
+        }
+        
+        // Combat phase: opponent creatures attack!
+        Console.WriteLine("\n⚔️  COMBAT PHASE: Enemy creatures attack!");
+        ResolveCombat(_opponent, _player);
+        
+        // Check for game over after opponent combat
+        if (_player.Health <= 0)
+        {
+            return;
         }
         
         // Next opponent turn
