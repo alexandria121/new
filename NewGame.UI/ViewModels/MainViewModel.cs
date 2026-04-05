@@ -173,6 +173,12 @@ public class MainViewModel : ViewModelBase
 
     private void InitializeGame()
     {
+        // Clear field slots first to avoid any stale state
+        for (int i = 0; i < FieldSlots.Length; i++)
+        {
+            FieldSlots[i] = null;
+        }
+        
         _opponentAI = new OpponentAI(_difficulty);
         OpponentDeck = OpponentAI.CreateDeckForDifficulty(_difficulty);
 
@@ -188,8 +194,10 @@ public class MainViewModel : ViewModelBase
         OpponentHealth = 30;
         TurnCount = 1;
         IsPlayerTurn = true;
+        StatusMessage = "";
 
         RefreshHand();
+        OnPropertyChanged(nameof(FieldSlots));
         CurrentView = "Game";
     }
 
