@@ -52,7 +52,7 @@ public partial class GameView : UserControl
 
             if (card != null && slotIndex >= 6 && slotIndex <= 11)
             {
-                ViewModel?.PlayCardToSlot(card, slotIndex);
+                ViewModel?.MoveCardToSlot(card, slotIndex);
             }
         }
         e.Handled = true;
@@ -98,6 +98,45 @@ public partial class GameView : UserControl
             {
                 ViewModel?.SetComboCard(card, 2);
             }
+        }
+        e.Handled = true;
+    }
+
+    private void OnHandCardMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && sender is Border cardBorder)
+        {
+            if (cardBorder.Tag is CardViewModel card)
+            {
+                DragDrop.DoDragDrop(cardBorder, card, DragDropEffects.Move);
+            }
+        }
+    }
+
+    private void OnHandCardClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            ViewModel?.SelectCardFromHand(card);
+        }
+    }
+
+    private void OnSlotMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && sender is Border slotBorder)
+        {
+            if (slotBorder.Tag is CardViewModel card)
+            {
+                DragDrop.DoDragDrop(slotBorder, card, DragDropEffects.Move);
+            }
+        }
+    }
+
+    private void OnFieldCardClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            ViewModel?.SelectCardFromField(card);
         }
         e.Handled = true;
     }

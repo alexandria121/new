@@ -30,6 +30,12 @@ public class CardViewModel : ViewModelBase
     public int Rarity => _card.Rarity;
     public IReadOnlyList<CardEffect> Effects => _card.Effects;
 
+    public string EffectsText => Effects.Count > 0
+        ? string.Join(", ", Effects.Select(e => e.Name))
+        : "";
+
+    public bool HasEffects => Effects.Count > 0;
+
     public bool IsSelected
     {
         get => _isSelected;

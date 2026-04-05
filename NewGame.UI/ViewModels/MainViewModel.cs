@@ -6,13 +6,18 @@ using MagicalDeckbuilder.Decks;
 using MagicalDeckbuilder.Game;
 using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
+using EffectType = MagicalDeckbuilder.Cards.EffectType;
+using TargetType = MagicalDeckbuilder.Cards.TargetType;
 using PileType = MagicalDeckbuilder.Decks.PileType;
+using CreatureSlot = MagicalDeckbuilder.Decks.CreatureSlot;
 
 namespace NewGame.UI.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
     private readonly CardCombiner _cardCombiner = new();
+    private OpponentAI? _opponentAI;
+    private DifficultyLevel _difficulty = DifficultyLevel.Journeyman;
 
     private string _currentView = "Menu";
     private CardViewModel? _selectedCard;
@@ -59,7 +64,7 @@ public class MainViewModel : ViewModelBase
     public ObservableCollection<CardViewModel> CustomCards { get; } = new();
     public ObservableCollection<CardViewModel> PlayerDeckCards { get; } = new();
     public DeckManager PlayerDeck { get; }
-    public DeckManager OpponentDeck { get; }
+    public DeckManager OpponentDeck { get; private set; }
 
     public int PlayerDeckCardCount => PlayerDeckCards.Count;
 
@@ -149,6 +154,12 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _isPlayerTurn, value);
     }
 
+    public DifficultyLevel Difficulty
+    {
+        get => _difficulty;
+        set => SetProperty(ref _difficulty, value);
+    }
+
     public ICommand InitializeGameCommand { get; }
     public ICommand StartGameCommand { get; }
     public ICommand EndTurnCommand { get; }
@@ -161,11 +172,11 @@ public class MainViewModel : ViewModelBase
 
     private void InitializeGame()
     {
+        _opponentAI = new OpponentAI(_difficulty);
+        OpponentDeck = OpponentAI.CreateDeckForDifficulty(_difficulty);
+
         var playerCards = CardFactory.GenerateRandomDeck();
         PlayerDeck.InitializeDeck(playerCards);
-
-        var opponentCards = CardFactory.GenerateRandomDeck();
-        OpponentDeck.InitializeDeck(opponentCards);
 
         PlayerDeck.DrawCards(4);
 
@@ -225,12 +236,167 @@ public class MainViewModel : ViewModelBase
         if (!IsPlayerTurn) return;
 
         ResolveCombat();
-        IsPlayerTurn = false;
 
+        if (OpponentHealth <= 0 || PlayerHealth <= 0)
+        {
+            return;
+        }
+
+        IsPlayerTurn = false;
+        ExecuteOpponentTurn();
+
+        if (OpponentHealth <= 0 || PlayerHealth <= 0)
+        {
+            return;
+        }
+
+        TurnCount++;
+        PlayerMana = Math.Min(TurnCount, 10);
+        IsPlayerTurn = true;
         PlayerDeck.DrawCards(1);
         RefreshHand();
-        TurnCount++;
-        PlayerMana = Math.Min(_turnCount, 10);
+    }
+
+    private void ExecuteOpponentTurn()
+    {
+        if (_opponentAI == null) return;
+
+        var playerSlots = Enumerable.Range(0, 6).Select(i => new CreatureSlot
+        {
+            SlotIndex = i,
+            Creature = FieldSlots[i]?.Card
+        }).ToList();
+
+        int opponentMana = Math.Min(TurnCount, 10);
+        bool keepPlaying = true;
+
+        while (keepPlaying && opponentMana > 0)
+        {
+            var decision = _opponentAI.DecideAction(OpponentDeck, opponentMana, playerSlots);
+
+            switch (decision.Type)
+            {
+                case OpponentAI.AIDecisionType.PlayCreature:
+                    if (decision.CardId != null && decision.SlotIndex.HasValue)
+                    {
+                        var card = OpponentDeck.Hand.FirstOrDefault(c => c.Id == decision.CardId);
+                        if (card != null && card.Type == CardType.Creature)
+                        {
+                            OpponentDeck.PlayCreatureToSlot(card.Id, decision.SlotIndex.Value);
+                            opponentMana -= card.ManaCost;
+                            FieldSlots[decision.SlotIndex.Value] = new CardViewModel(card);
+                            OnPropertyChanged(nameof(FieldSlots));
+                            UpdateOpponentSlotDisplay(decision.SlotIndex.Value, card);
+                        }
+                        else
+                        {
+                            keepPlaying = false;
+                        }
+                    }
+                    else
+                    {
+                        keepPlaying = false;
+                    }
+                    break;
+
+                case OpponentAI.AIDecisionType.PlaySpell:
+                case OpponentAI.AIDecisionType.PlayWeapon:
+                case OpponentAI.AIDecisionType.PlayArtifact:
+                    if (decision.CardId != null)
+                    {
+                        var card = OpponentDeck.Hand.FirstOrDefault(c => c.Id == decision.CardId);
+                        if (card != null && card.ManaCost <= opponentMana)
+                        {
+                            OpponentDeck.PlayCard(card.Id);
+                            opponentMana -= card.ManaCost;
+                            ApplyOpponentCardEffects(card);
+                        }
+                        else
+                        {
+                            keepPlaying = false;
+                        }
+                    }
+                    else
+                    {
+                        keepPlaying = false;
+                    }
+                    break;
+
+                case OpponentAI.AIDecisionType.Attack:
+                    ResolveOpponentCombat();
+                    break;
+
+                default:
+                    keepPlaying = false;
+                    break;
+            }
+        }
+
+        ResolveOpponentCombat();
+        OpponentDeck.DrawCards(1);
+    }
+
+    private void UpdateOpponentSlotDisplay(int slotIndex, Card card)
+    {
+    }
+
+    private void ApplyOpponentCardEffects(Card card)
+    {
+        foreach (var effect in card.Effects)
+        {
+            if (effect.Type == EffectType.Damage)
+            {
+                if (effect.Target == TargetType.Enemy)
+                {
+                    var playerCreatures = FieldSlots.Skip(6).Where(s => s != null).ToList();
+                    if (playerCreatures.Count > 0)
+                    {
+                        var target = playerCreatures.First();
+                        if (target != null)
+                        {
+                            target.Card.Health -= effect.Value;
+                            if (target.Card.Health <= 0)
+                            {
+                                var idx = Array.IndexOf(FieldSlots, target);
+                                if (idx >= 0) FieldSlots[idx] = null;
+                                OnPropertyChanged(nameof(FieldSlots));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        PlayerHealth -= effect.Value;
+                    }
+                }
+            }
+        }
+    }
+
+    private void ResolveOpponentCombat()
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            var opponentCreature = FieldSlots[i]?.Card;
+            var playerCreature = FieldSlots[i + 6]?.Card;
+
+            if (opponentCreature != null && opponentCreature.Power > 0)
+            {
+                if (playerCreature != null)
+                {
+                    playerCreature.Health -= opponentCreature.Power;
+                    if (playerCreature.Health <= 0)
+                    {
+                        FieldSlots[i + 6] = null;
+                        PlayerHealth -= opponentCreature.Power;
+                    }
+                }
+                else
+                {
+                    PlayerHealth -= opponentCreature.Power;
+                }
+                OnPropertyChanged(nameof(FieldSlots));
+            }
+        }
     }
 
     private void ResolveCombat()
@@ -338,6 +504,47 @@ public class MainViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(FieldSlots));
         OnPropertyChanged(nameof(PlayerHand));
+    }
+
+    public void MoveCardToSlot(CardViewModel card, int targetSlotIndex)
+    {
+        if (targetSlotIndex < 6 || targetSlotIndex > 11) return;
+        
+        int sourceSlotIndex = -1;
+        for (int i = 6; i < 12; i++)
+        {
+            if (FieldSlots[i]?.Id == card.Id)
+            {
+                sourceSlotIndex = i;
+                break;
+            }
+        }
+
+        if (sourceSlotIndex == -1)
+        {
+            PlayCardToSlot(card, targetSlotIndex);
+            return;
+        }
+
+        if (sourceSlotIndex == targetSlotIndex) return;
+
+        if (FieldSlots[targetSlotIndex] == null)
+        {
+            FieldSlots[targetSlotIndex] = card;
+            FieldSlots[sourceSlotIndex] = null;
+        }
+
+        OnPropertyChanged(nameof(FieldSlots));
+    }
+
+    public void SelectCardFromHand(CardViewModel card)
+    {
+        SelectedCard = card;
+    }
+
+    public void SelectCardFromField(CardViewModel card)
+    {
+        SelectedCard = card;
     }
 
     private void PlayCard(CardViewModel? card)

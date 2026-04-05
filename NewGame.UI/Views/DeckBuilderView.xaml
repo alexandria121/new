@@ -71,17 +71,18 @@
                                             BorderBrush="{Binding Type, Converter={StaticResource TypeToColorConverter}}"
                                             BorderThickness="2"
                                             CornerRadius="6"
-                                            Padding="8"
+                                            Padding="6"
                                             Margin="4"
                                             Width="130"
-                                            Height="180"
+                                            Height="170"
                                             Cursor="Hand"
                                             MouseLeftButtonDown="Card_MouseLeftButtonDown"
                                             MouseMove="Card_MouseMove">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="35"/>
+                                                <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
@@ -103,18 +104,51 @@
 
                                             <Border Grid.Row="1"
                                                     Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
-                                                    Margin="0,6"
+                                                    Margin="0,4"
                                                     CornerRadius="3">
                                                 <TextBlock Text="{Binding Type}"
                                                            Foreground="#80FFFFFF"
                                                            FontSize="9"
-                                                           HorizontalAlignment="Center"/>
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
                                             </Border>
 
-                                            <TextBlock Grid.Row="2"
+                                            <Grid Grid.Row="2" Margin="0,2,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9"/>
+                                                    <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold"/>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9"/>
+                                                    <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"/>
+                                                </StackPanel>
+
+                                                <Border Grid.Column="2"
+                                                        Background="{StaticResource SurfaceBrush}"
+                                                        CornerRadius="2"
+                                                        Padding="2,1"
+                                                        HorizontalAlignment="Right"
+                                                        Visibility="{Binding HasEffects, Converter={StaticResource NullToVisibilityConverter}}">
+                                                    <TextBlock Text="{Binding EffectsText}"
+                                                               Foreground="{StaticResource AccentBrush}"
+                                                               FontSize="7"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               MaxWidth="40"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <TextBlock Grid.Row="3"
                                                        Text="{Binding Element}"
                                                        Foreground="{StaticResource TextSecondaryBrush}"
-                                                       FontSize="8"/>
+                                                       FontSize="8"
+                                                       Margin="0,2,0,0"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
