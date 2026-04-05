@@ -1,0 +1,309 @@
+<UserControl x:Class="NewGame.UI.Views.GameView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:NewGame.UI.ViewModels"
+             xmlns:controls="clr-namespace:NewGame.UI.Controls"
+             xmlns:Converters="clr-namespace:NewGame.UI.Converters"
+             mc:Ignorable="d"
+             Background="{StaticResource BackgroundBrush}">
+
+    <UserControl.Resources>
+        <Converters:BoolToTurnTextConverter x:Key="BoolToTurnTextConverter"/>
+        <Converters:BoolToTurnColorConverter x:Key="BoolToTurnColorConverter"/>
+        <Converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Bar: Turn Info & Status -->
+        <Border Grid.Row="0" 
+                Background="{StaticResource SurfaceBrush}" 
+                CornerRadius="6"
+                Padding="15,10"
+                Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                    <TextBlock Text="Turn " Foreground="{StaticResource TextPrimaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding TurnCount}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Text=" | " Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding IsPlayerTurn, Converter={StaticResource BoolToTurnTextConverter}}"
+                               Foreground="{Binding IsPlayerTurn, Converter={StaticResource BoolToTurnColorConverter}}"
+                               FontSize="14" FontWeight="Bold"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusMessage}"
+                           Foreground="{StaticResource AccentBrush}"
+                           FontSize="13"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="20,0">
+                    <TextBlock Text="HP: " Foreground="{StaticResource HealthBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding PlayerHealth}" Foreground="{StaticResource HealthBrush}" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Text="/" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding PlayerMaxHealth}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="20,0">
+                    <TextBlock Text="Mana: " Foreground="{StaticResource ManaBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding PlayerMana}" Foreground="{StaticResource ManaBrush}" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Text="/" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding PlayerMaxMana}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
+                </StackPanel>
+
+                <Button Grid.Column="4"
+                        Content="End Turn"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Command="{Binding EndTurnCommand}"
+                        Padding="20,8"/>
+            </Grid>
+        </Border>
+
+        <!-- Opponent Area -->
+        <Border Grid.Row="1" 
+                Background="{StaticResource SurfaceBrush}" 
+                CornerRadius="6"
+                Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" 
+                           Text="Opponent" 
+                           Foreground="{StaticResource DangerBrush}"
+                           FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <UniformGrid Grid.Row="1" Rows="1" Columns="6">
+                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="3" CornerRadius="4">
+                        <TextBlock Text="O1" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="3" CornerRadius="4">
+                        <TextBlock Text="O2" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="3" CornerRadius="4">
+                        <TextBlock Text="O3" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="3" CornerRadius="4">
+                        <TextBlock Text="O4" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="3" CornerRadius="4">
+                        <TextBlock Text="O5" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="3" CornerRadius="4">
+                        <TextBlock Text="O6" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </UniformGrid>
+            </Grid>
+        </Border>
+
+        <!-- Playing Field Label -->
+        <TextBlock Grid.Row="2" 
+                   Text="Playing Field" 
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   FontSize="12"
+                   Margin="0,10"
+                   HorizontalAlignment="Center"/>
+
+        <!-- Player Field Area -->
+        <Border Grid.Row="3" 
+                Background="#324632" 
+                CornerRadius="6"
+                Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="280"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Player Field Slots -->
+                <UniformGrid Grid.Column="0" Rows="1" Columns="6" VerticalAlignment="Center">
+                    <Border x:Name="Slot0" 
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="4" 
+                            CornerRadius="6"
+                            AllowDrop="True"
+                            Drop="OnSlotDrop"
+                            DragEnter="OnSlotDragEnter"
+                            DragLeave="OnSlotDragLeave"
+                            Tag="6">
+                        <TextBlock Text="P1" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="Slot1" 
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="4" 
+                            CornerRadius="6"
+                            AllowDrop="True"
+                            Drop="OnSlotDrop"
+                            DragEnter="OnSlotDragEnter"
+                            DragLeave="OnSlotDragLeave"
+                            Tag="7">
+                        <TextBlock Text="P2" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="Slot2" 
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="4" 
+                            CornerRadius="6"
+                            AllowDrop="True"
+                            Drop="OnSlotDrop"
+                            DragEnter="OnSlotDragEnter"
+                            DragLeave="OnSlotDragLeave"
+                            Tag="8">
+                        <TextBlock Text="P3" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="Slot3" 
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="4" 
+                            CornerRadius="6"
+                            AllowDrop="True"
+                            Drop="OnSlotDrop"
+                            DragEnter="OnSlotDragEnter"
+                            DragLeave="OnSlotDragLeave"
+                            Tag="9">
+                        <TextBlock Text="P4" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="Slot4" 
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="4" 
+                            CornerRadius="6"
+                            AllowDrop="True"
+                            Drop="OnSlotDrop"
+                            DragEnter="OnSlotDragEnter"
+                            DragLeave="OnSlotDragLeave"
+                            Tag="10">
+                        <TextBlock Text="P5" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="Slot5" 
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="4" 
+                            CornerRadius="6"
+                            AllowDrop="True"
+                            Drop="OnSlotDrop"
+                            DragEnter="OnSlotDragEnter"
+                            DragLeave="OnSlotDragLeave"
+                            Tag="11">
+                        <TextBlock Text="P6" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Combo Area -->
+                <Border Grid.Column="1" 
+                        Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="6"
+                        Padding="10"
+                        Margin="10,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" 
+                                   Text="Card Combine" 
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="14" FontWeight="Bold"
+                                   HorizontalAlignment="Center"/>
+
+                        <Grid Grid.Row="1" Margin="0,15,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="ComboSlot1" 
+                                    Grid.Column="0"
+                                    Background="#464646" 
+                                    BorderBrush="#505050" 
+                                    BorderThickness="2" 
+                                    Margin="5" 
+                                    CornerRadius="6"
+                                    Height="80"
+                                    AllowDrop="True"
+                                    Drop="OnComboSlot1Drop"
+                                    DragEnter="OnComboSlotDragEnter"
+                                    DragLeave="OnComboSlotDragLeave">
+                                <TextBlock Text="1" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
+                            </Border>
+
+                            <Border x:Name="ComboSlot2" 
+                                    Grid.Column="1"
+                                    Background="#464646" 
+                                    BorderBrush="#505050" 
+                                    BorderThickness="2" 
+                                    Margin="5" 
+                                    CornerRadius="6"
+                                    Height="80"
+                                    AllowDrop="True"
+                                    Drop="OnComboSlot2Drop"
+                                    DragEnter="OnComboSlotDragEnter"
+                                    DragLeave="OnComboSlotDragLeave">
+                                <TextBlock Text="2" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
+                            </Border>
+                        </Grid>
+
+                        <Border Grid.Row="2"
+                                Background="{StaticResource SurfaceLightBrush}"
+                                BorderBrush="{StaticResource SecondaryBrush}"
+                                BorderThickness="1"
+                                Margin="5,10"
+                                CornerRadius="6"
+                                Height="60"
+                                Visibility="{Binding ComboResult, Converter={StaticResource NullToVisibilityConverter}}">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding ComboResult.Name}"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           FontSize="12" FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Preview"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           FontSize="10"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Grid.Row="3"
+                                Content="Combine!"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Command="{Binding CombineCardsCommand}"
+                                IsEnabled="{Binding CanCombine}"
+                                Height="50"
+                                FontSize="16"
+                                Margin="5,10"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

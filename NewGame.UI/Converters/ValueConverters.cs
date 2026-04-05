@@ -1,0 +1,239 @@
+using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
+using System.Windows.Media;
+using CardType = MagicalDeckbuilder.Cards.CardType;
+using ElementType = MagicalDeckbuilder.Cards.ElementType;
+
+namespace NewGame.UI.Converters;
+
+public class TypeToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is CardType type)
+        {
+            return type switch
+            {
+                CardType.Spell => new SolidColorBrush(Color.FromRgb(255, 100, 100)),
+                CardType.Creature => new SolidColorBrush(Color.FromRgb(100, 255, 100)),
+                CardType.Artifact => new SolidColorBrush(Color.FromRgb(200, 200, 100)),
+                CardType.Enchantment => new SolidColorBrush(Color.FromRgb(150, 100, 200)),
+                CardType.Weapon => new SolidColorBrush(Color.FromRgb(255, 150, 50)),
+                CardType.Armor => new SolidColorBrush(Color.FromRgb(100, 150, 200)),
+                CardType.Event => new SolidColorBrush(Color.FromRgb(255, 200, 100)),
+                CardType.Blank => new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                _ => new SolidColorBrush(Color.FromRgb(128, 128, 128))
+            };
+        }
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class ElementToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is ElementType element)
+        {
+            return element switch
+            {
+                ElementType.Radioactivity => new SolidColorBrush(Color.FromRgb(0, 255, 100)),
+                ElementType.Flesh => new SolidColorBrush(Color.FromRgb(200, 100, 100)),
+                ElementType.Toxin => new SolidColorBrush(Color.FromRgb(150, 200, 0)),
+                ElementType.Fungus => new SolidColorBrush(Color.FromRgb(100, 150, 100)),
+                ElementType.Thermodynamics => new SolidColorBrush(Color.FromRgb(255, 100, 50)),
+                ElementType.Time => new SolidColorBrush(Color.FromRgb(150, 100, 200)),
+                ElementType.Food => new SolidColorBrush(Color.FromRgb(200, 150, 100)),
+                ElementType.Eldritch => new SolidColorBrush(Color.FromRgb(100, 0, 150)),
+                _ => new SolidColorBrush(Color.FromRgb(128, 128, 128))
+            };
+        }
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class RarityToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is int rarity)
+        {
+            return rarity switch
+            {
+                1 => new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+                2 => new SolidColorBrush(Color.FromRgb(100, 200, 100)),
+                3 => new SolidColorBrush(Color.FromRgb(50, 100, 200)),
+                4 => new SolidColorBrush(Color.FromRgb(200, 150, 50)),
+                _ => new SolidColorBrush(Color.FromRgb(128, 128, 128))
+            };
+        }
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class IsCreatureConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is CardType type)
+        {
+            return type == CardType.Creature ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool b)
+        {
+            return b ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class InverseBoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool b)
+        {
+            return b ? Visibility.Collapsed : Visibility.Visible;
+        }
+        return Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BoolToTurnTextConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool isPlayerTurn)
+        {
+            return isPlayerTurn ? "Your Turn" : "Enemy Turn";
+        }
+        return "Unknown";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BoolToTurnColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool isPlayerTurn)
+        {
+            return isPlayerTurn
+                ? new SolidColorBrush(Color.FromRgb(76, 175, 80))
+                : new SolidColorBrush(Color.FromRgb(244, 67, 54));
+        }
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class NullToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value != null ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class EmptyToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is int count)
+        {
+            return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class NotMenuToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string view)
+        {
+            return view == "Menu" ? Visibility.Collapsed : Visibility.Visible;
+        }
+        return Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class StringEqualityToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string str && parameter is string param)
+        {
+            return str == param ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
