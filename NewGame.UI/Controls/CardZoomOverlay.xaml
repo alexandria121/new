@@ -1,0 +1,317 @@
+<UserControl x:Class="NewGame.UI.Controls.CardZoomOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:Converters="clr-namespace:NewGame.UI.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="350"
+             MouseLeftButtonDown="OnOverlayClick"
+             KeyDown="OnKeyDown">
+
+    <UserControl.Resources>
+        <Converters:ElementToColorConverter x:Key="ElementToColorConverter"/>
+        <Converters:ElementToGradientConverter x:Key="ElementToGradientConverter"/>
+        <Converters:ElementToGlowConverter x:Key="ElementToGlowConverter"/>
+        <Converters:TypeToColorConverter x:Key="TypeToColorConverter"/>
+        <Converters:RarityToColorConverter x:Key="RarityToColorConverter"/>
+        <Converters:RarityToGradientConverter x:Key="RarityToGradientConverter"/>
+        <Converters:RarityToGlowConverter x:Key="RarityToGlowConverter"/>
+        <Converters:EffectTypeToIconConverter x:Key="EffectTypeToIconConverter"/>
+        <Converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <Converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <!-- Semi-transparent overlay background -->
+    <Grid>
+        <!-- Dark overlay -->
+        <Border Background="#CC000000" 
+                MouseLeftButtonDown="OnOverlayBackgroundClick"/>
+
+        <!-- Outer wrapper for element glow effect -->
+        <Border Effect="{Binding Element, Converter={StaticResource ElementToGlowConverter}}"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center">
+            <!-- Inner wrapper for rarity glow -->
+            <Border Effect="{Binding Rarity, Converter={StaticResource RarityToGlowConverter}}">
+                <!-- Card detail popup with element gradient border -->
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{Binding Element, Converter={StaticResource ElementToGradientConverter}}"
+                        BorderThickness="4"
+                        CornerRadius="12"
+                        Padding="0"
+                        Width="320"
+                        MaxHeight="550">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header with close button -->
+                        <Border Grid.Row="0" 
+                                Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
+                                CornerRadius="12,12,0,0"
+                                Padding="15,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ElementEmoji}" 
+                                               FontSize="24" 
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontSize="18" 
+                                                   FontWeight="Bold"
+                                                   Foreground="White"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding RarityText}" 
+                                                       FontSize="11"
+                                                       Foreground="#B0FFFFFF"/>
+                                            <TextBlock Text=" | " Foreground="#80FFFFFF"/>
+                                            <TextBlock Text="{Binding Type}" 
+                                                       FontSize="11"
+                                                       Foreground="#B0FFFFFF"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Close button -->
+                                <Button Grid.Column="1" 
+                                        Content="✕" 
+                                        FontSize="16"
+                                        Foreground="White"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Click="OnCloseClick"
+                                        Padding="8,4"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Mana cost and element info bar -->
+                        <Border Grid.Row="1" 
+                                Background="{StaticResource SurfaceLightBrush}"
+                                Padding="15,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Mana Cost -->
+                                <Border Grid.Column="0" 
+                                        Background="#1E64C8"
+                                        CornerRadius="12"
+                                        Padding="12,4"
+                                        HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="◆" 
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource ManaBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding ManaCost}" 
+                                                   FontSize="14" 
+                                                   FontWeight="Bold"
+                                                   Foreground="White"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Power (for creatures/weapons) -->
+                                <Border Grid.Column="1" 
+                                        Background="#503232"
+                                        CornerRadius="8"
+                                        Padding="10,4"
+                                        Margin="5,0"
+                                        Visibility="{Binding Power, Converter={StaticResource NullToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding Power}" Foreground="White" FontSize="13" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Health (for creatures) -->
+                                <Border Grid.Column="2" 
+                                        Background="#325032"
+                                        CornerRadius="8"
+                                        Padding="10,4"
+                                        Margin="5,0"
+                                        Visibility="{Binding Health, Converter={StaticResource NullToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="♥" Foreground="{StaticResource HealthBrush}" FontSize="12" Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding Health}" Foreground="White" FontSize="13" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Legendary badge -->
+                                <Border Grid.Column="3" 
+                                        CornerRadius="8"
+                                        Padding="8,4"
+                                        Margin="5,0,0,0"
+                                        Visibility="{Binding IsLegendary, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#C89632" Offset="0"/>
+                                            <GradientStop Color="#8B6914" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <TextBlock Text="★ LEGENDARY" 
+                                               Foreground="#FFD700" 
+                                               FontSize="10" 
+                                               FontWeight="Bold"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Card content area -->
+                        <ScrollViewer Grid.Row="2" 
+                                      VerticalScrollBarVisibility="Auto"
+                                      Padding="15,10">
+                            <StackPanel>
+                                <!-- Card Description -->
+                                <Border Background="{StaticResource SurfaceLightBrush}"
+                                        CornerRadius="6"
+                                        Padding="12,10"
+                                        Margin="0,0,0,12">
+                                    <TextBlock Text="{Binding Description}"
+                                               TextWrapping="Wrap"
+                                               FontSize="13"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               LineHeight="20"/>
+                                </Border>
+
+                                <!-- Effects Section -->
+                                <TextBlock Text="EFFECTS"
+                                           FontSize="11"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,0,8"/>
+
+                                <!-- Effects list with detailed info -->
+                                <ItemsControl ItemsSource="{Binding Effects}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource SurfaceLightBrush}"
+                                                    CornerRadius="6"
+                                                    Padding="12,10"
+                                                    Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <!-- Effect Icon -->
+                                                    <Border Grid.Column="0" Grid.RowSpan="3"
+                                                            Background="{Binding Type, Converter={StaticResource TypeToColorConverter}}"
+                                                            CornerRadius="6"
+                                                            Width="40" Height="40"
+                                                            Margin="0,0,12,0">
+                                                        <TextBlock Text="{Binding Type, Converter={StaticResource EffectTypeToIconConverter}}"
+                                                                   FontSize="20"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="White"/>
+                                                    </Border>
+
+                                                    <!-- Effect Name -->
+                                                    <TextBlock Grid.Column="1" Grid.Row="0"
+                                                               Text="{Binding Name}"
+                                                               FontSize="14"
+                                                               FontWeight="Bold"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                                    <!-- Effect Value -->
+                                                    <StackPanel Grid.Column="1" Grid.Row="1" 
+                                                                Orientation="Horizontal" 
+                                                                Margin="0,2,0,0">
+                                                        <TextBlock Text="Value: " 
+                                                                   FontSize="12"
+                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                        <TextBlock Text="{Binding Value}" 
+                                                                   FontSize="12"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentBrush}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Effect Target -->
+                                                    <StackPanel Grid.Column="1" Grid.Row="2" 
+                                                                Orientation="Horizontal" 
+                                                                Margin="0,2,0,0">
+                                                        <TextBlock Text="Target: " 
+                                                                   FontSize="11"
+                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                        <TextBlock Text="{Binding Target}" 
+                                                                   FontSize="11"
+                                                                   Foreground="{StaticResource PrimaryBrush}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- No effects message -->
+                                <TextBlock Text="This card has no active effects."
+                                           FontSize="12"
+                                           FontStyle="Italic"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Visibility="{Binding HasEffects, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Footer with Element and Rarity -->
+                        <Border Grid.Row="3" 
+                                Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
+                                CornerRadius="0,0,12,12"
+                                Padding="15,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ElementEmoji}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="{Binding Element}" 
+                                               FontSize="12"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <TextBlock Text="{Binding RarityGem}" 
+                                               FontSize="14"
+                                               Foreground="{Binding Rarity, Converter={StaticResource RarityToColorConverter}}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding RarityText}" 
+                                               FontSize="12"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

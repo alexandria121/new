@@ -15,6 +15,22 @@
         <Converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <Converters:CanAffordToOpacityConverter x:Key="CanAffordToOpacityConverter"/>
         <Converters:CanAffordToColorConverter x:Key="CanAffordToColorConverter"/>
+        <Converters:ElementToColorConverter x:Key="ElementToColorConverter"/>
+        <Converters:ElementToGradientConverter x:Key="ElementToGradientConverter"/>
+        <Converters:ElementToGlowConverter x:Key="ElementToGlowConverter"/>
+        <Converters:TypeToColorConverter x:Key="TypeToColorConverter"/>
+        <Converters:EffectTypeToIconConverter x:Key="EffectTypeToIconConverter"/>
+        <Converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+        <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <Converters:RarityToGradientConverter x:Key="RarityToGradientConverter"/>
+        <Converters:RarityToGlowConverter x:Key="RarityToGlowConverter"/>
+
+        <!-- Enhanced Card Border Style with Element Glow -->
+        <Style x:Key="ElementCardStyle" TargetType="Border">
+            <Setter Property="BorderThickness" Value="4"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -269,63 +285,101 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{Binding ManaCost, Converter={StaticResource CanAffordToColorConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}" 
-                                        BorderBrush="#505050" 
-                                        BorderThickness="2" 
-                                        Margin="4" 
-                                        CornerRadius="6"
-                                        Width="120"
-                                        Height="160"
-                                        Opacity="{Binding Card.ManaCost, Converter={StaticResource CanAffordToOpacityConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}"
-                                        MouseMove="OnHandCardMouseMove"
-                                        MouseLeftButtonDown="OnHandCardClick"
-                                        Tag="{Binding}"
-                                        Cursor="Hand">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        
-                                        <Border Grid.Row="0" 
-                                                Background="{StaticResource SecondaryBrush}" 
-                                                CornerRadius="6,6,0,0" 
-                                                Padding="5,3">
-                                            <TextBlock Text="{Binding Card.ManaCost}" 
-                                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                                       FontSize="12" FontWeight="Bold"
-                                                       HorizontalAlignment="Center"/>
+                                <!-- Outer wrapper for glow effect -->
+                                <Border Effect="{Binding Card.Element, Converter={StaticResource ElementToGlowConverter}}"
+                                        Margin="4">
+                                    <!-- Inner wrapper for rarity glow -->
+                                    <Border Effect="{Binding Card.Rarity, Converter={StaticResource RarityToGlowConverter}}">
+                                        <Border Background="{Binding ManaCost, Converter={StaticResource CanAffordToColorConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}" 
+                                                BorderBrush="{Binding Card.Element, Converter={StaticResource ElementToGradientConverter}}" 
+                                                BorderThickness="4" 
+                                                CornerRadius="8"
+                                                Width="120"
+                                                Height="160"
+                                                Opacity="{Binding Card.ManaCost, Converter={StaticResource CanAffordToOpacityConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}"
+                                                MouseMove="OnHandCardMouseMove"
+                                                MouseLeftButtonDown="OnHandCardClick"
+                                                Tag="{Binding}"
+                                                Cursor="Hand">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                
+                                                <!-- Type Badge in top-left corner with element color -->
+                                                <Border Grid.Row="0" 
+                                                        Background="{Binding Card.Element, Converter={StaticResource ElementToColorConverter}}"
+                                                        CornerRadius="6,6,0,0" 
+                                                        Padding="5,3">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Card.ManaCost}" 
+                                                                   Foreground="White"
+                                                                   FontSize="12" FontWeight="Bold"
+                                                                   HorizontalAlignment="Center"/>
+                                                        <!-- Rarity gem indicator -->
+                                                        <TextBlock Grid.Column="1" 
+                                                                   Text="{Binding Card.Rarity, Converter={StaticResource RarityToColorConverter}}"
+                                                                   FontSize="10"
+                                                                   Margin="2,0"
+                                                                   VerticalAlignment="Center"/>
+                                                        <!-- Type Badge Symbol -->
+                                                        <Border Grid.Column="2" 
+                                                                Background="#202020"
+                                                                CornerRadius="10"
+                                                                Padding="4,2"
+                                                                ToolTip="{Binding TypeBadgeTooltip}">
+                                                            <TextBlock Text="{Binding TypeBadgeSymbol}" 
+                                                                       FontSize="10"
+                                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                                
+                                                <!-- Card content area with element-colored header -->
+                                                <Border Grid.Row="1" 
+                                                        Background="#383838" 
+                                                        Margin="6"
+                                                        CornerRadius="4">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Card.Name}" 
+                                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                                   FontSize="11" 
+                                                                   FontWeight="Bold"
+                                                                   TextWrapping="Wrap"
+                                                                   TextAlignment="Center"
+                                                                   Margin="4"/>
+                                                        <!-- Element indicator -->
+                                                        <TextBlock Text="{Binding ElementEmoji}"
+                                                                   FontSize="14"
+                                                                   HorizontalAlignment="Center"
+                                                                   Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="5,0,5,6">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <TextBlock Text="PWR:" Foreground="{StaticResource DangerBrush}" FontSize="10"/>
+                                                        <TextBlock Text="{Binding Card.Power}" Foreground="{StaticResource DangerBrush}" FontSize="10" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="HP:" Foreground="{StaticResource HealthBrush}" FontSize="10"/>
+                                                        <TextBlock Text="{Binding Card.Health}" Foreground="{StaticResource HealthBrush}" FontSize="10"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding EffectsText}"
+                                                               Foreground="{Binding Card.Element, Converter={StaticResource ElementToColorConverter}}"
+                                                               FontSize="8"
+                                                               TextAlignment="Center"
+                                                               Margin="0,2,0,0"
+                                                               Visibility="{Binding HasEffects, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
                                         </Border>
-                                        
-                                        <Border Grid.Row="1" 
-                                                Background="#383838" 
-                                                Margin="5"
-                                                CornerRadius="4">
-                                            <TextBlock Text="{Binding Card.Name}" 
-                                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                                       FontSize="11" 
-                                                       TextWrapping="Wrap"
-                                                       TextAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       Margin="5"/>
-                                        </Border>
-                                        
-                                        <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="5,0,5,5">
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="PWR:" Foreground="{StaticResource DangerBrush}" FontSize="10"/>
-                                                <TextBlock Text="{Binding Card.Power}" Foreground="{StaticResource DangerBrush}" FontSize="10" Margin="0,0,10,0"/>
-                                                <TextBlock Text="HP:" Foreground="{StaticResource HealthBrush}" FontSize="10"/>
-                                                <TextBlock Text="{Binding Card.Health}" Foreground="{StaticResource HealthBrush}" FontSize="10"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding EffectsText}"
-                                                       Foreground="{StaticResource AccentBrush}"
-                                                       FontSize="8"
-                                                       TextAlignment="Center"
-                                                       Margin="0,2,0,0"
-                                                       Visibility="{Binding HasEffects, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
+                                    </Border>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -662,5 +716,11 @@
                 </Border>
             </Grid>
         </Border>
+
+        <!-- Card Zoom Overlay -->
+        <Grid Grid.Row="0" Grid.RowSpan="5"
+              Visibility="{Binding IsCardZoomed, Converter={StaticResource BoolToVisibilityConverter}}">
+            <controls:CardZoomOverlay DataContext="{Binding ZoomedCard}"/>
+        </Grid>
     </Grid>
 </UserControl>

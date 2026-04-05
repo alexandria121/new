@@ -36,6 +36,98 @@ public class CardViewModel : ViewModelBase
 
     public bool HasEffects => Effects.Count > 0;
 
+    /// <summary>
+    /// Detailed effects text showing effect name, value, and target
+    /// </summary>
+    public string EffectsDetailText => Effects.Count > 0
+        ? string.Join("\n", Effects.Select(e => $"• {GetEffectIcon(e.Type)} {e.Name} ({e.Value}) → {FormatTarget(e.Target)}"))
+        : "";
+
+    /// <summary>
+    /// Formatted string for tooltip showing all effect descriptions
+    /// </summary>
+    public string EffectsTooltipText => Effects.Count > 0
+        ? string.Join("\n\n", Effects.Select(e => $"{GetEffectIcon(e.Type)} {e.Name}\n{e.Description}\nValue: {e.Value} | Target: {FormatTarget(e.Target)}"))
+        : "No effects";
+
+    /// <summary>
+    /// Number of effects on the card
+    /// </summary>
+    public int EffectCount => Effects.Count;
+
+    /// <summary>
+    /// Gets the icon for an effect type
+    /// </summary>
+    public static string GetEffectIcon(EffectType type) => type switch
+    {
+        EffectType.Damage => "⚔",
+        EffectType.Heal => "❤",
+        EffectType.DrawCard => "🃏",
+        EffectType.Buff => "⬆",
+        EffectType.Debuff => "⬇",
+        EffectType.Shield => "🛡",
+        EffectType.ManaGain => "💧",
+        EffectType.Destroy => "💀",
+        EffectType.Duplicate => "👥",
+        EffectType.Transform => "🔄",
+        _ => "✨"
+    };
+
+    /// <summary>
+    /// Gets the element icon
+    /// </summary>
+    public string ElementIcon => Element switch
+    {
+        ElementType.Radioactivity => "☢",
+        ElementType.Flesh => "💀",
+        ElementType.Toxin => "☠",
+        ElementType.Fungus => "🍄",
+        ElementType.Thermodynamics => "🔥",
+        ElementType.Time => "⏳",
+        ElementType.Food => "🍖",
+        ElementType.Eldritch => "👁",
+        _ => "❓"
+    };
+
+    /// <summary>
+    /// Gets the element emoji for larger displays
+    /// </summary>
+    public string ElementEmoji => Element switch
+    {
+        ElementType.Radioactivity => "☢️",
+        ElementType.Flesh => "🫀",
+        ElementType.Toxin => "☠️",
+        ElementType.Fungus => "🍄",
+        ElementType.Thermodynamics => "🔥",
+        ElementType.Time => "⏳",
+        ElementType.Food => "🍖",
+        ElementType.Eldritch => "👁️",
+        _ => "❓"
+    };
+
+    /// <summary>
+    /// Gets the rarity gemstone symbol
+    /// </summary>
+    public string RarityGem => Rarity switch
+    {
+        1 => "◆",
+        2 => "◆",
+        3 => "◆",
+        4 => "★",
+        _ => "◇"
+    };
+
+    private static string FormatTarget(TargetType target) => target switch
+    {
+        TargetType.Self => "Self",
+        TargetType.Enemy => "Enemy",
+        TargetType.Ally => "Ally",
+        TargetType.Any => "Any",
+        TargetType.AllEnemies => "All Enemies",
+        TargetType.AllAllies => "All Allies",
+        _ => "Unknown"
+    };
+
     public bool IsSelected
     {
         get => _isSelected;
@@ -90,6 +182,39 @@ public class CardViewModel : ViewModelBase
         3 => "#3264C8",
         4 => "#C89632",
         _ => "#808080"
+    };
+
+    /// <summary>
+    /// Returns the badge symbol for the card type
+    /// Sword for creatures, wand for spells, tent for events, etc.
+    /// </summary>
+    public string TypeBadgeSymbol => Type switch
+    {
+        CardType.Creature => "⚔",      // Sword
+        CardType.Spell => "🪄",          // Wand/magic
+        CardType.Event => "⛺",          // Tent
+        CardType.Artifact => "🏺",       // Amphora/artifact
+        CardType.Weapon => "⚔",         // Sword
+        CardType.Armor => "🛡",          // Shield
+        CardType.Enchantment => "✨",   // Sparkles
+        CardType.Blank => "⬜",          // Blank square
+        _ => "📄"                        // Default document
+    };
+
+    /// <summary>
+    /// Returns the badge tooltip text for the card type
+    /// </summary>
+    public string TypeBadgeTooltip => Type switch
+    {
+        CardType.Creature => "Creature - Can attack and defend",
+        CardType.Spell => "Spell - One-time effect",
+        CardType.Event => "Event - World-altering effect",
+        CardType.Artifact => "Artifact - Permanent equipment",
+        CardType.Weapon => "Weapon - Equippable for damage",
+        CardType.Armor => "Armor - Equippable for defense",
+        CardType.Enchantment => "Enchantment - Permanent enhancement",
+        CardType.Blank => "Blank - Can be infused",
+        _ => "Card"
     };
 
     public CardViewModel Clone() => new(_card.Clone());

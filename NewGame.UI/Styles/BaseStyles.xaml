@@ -40,21 +40,81 @@
     <SolidColorBrush x:Key="EventBrush" Color="#FFC864"/>
     <SolidColorBrush x:Key="BlankBrush" Color="#C8C8C8"/>
 
-    <!-- Element Colors -->
-    <SolidColorBrush x:Key="FireBrush" Color="#FF501E"/>
-    <SolidColorBrush x:Key="WaterBrush" Color="#1E64C8"/>
-    <SolidColorBrush x:Key="EarthBrush" Color="#644628"/>
-    <SolidColorBrush x:Key="AirBrush" Color="#B4DCFF"/>
-    <SolidColorBrush x:Key="LightBrush" Color="#FFF0B4"/>
-    <SolidColorBrush x:Key="DarkBrush" Color="#281432"/>
-    <SolidColorBrush x:Key="ArcaneBrush" Color="#9632C8"/>
-    <SolidColorBrush x:Key="NatureBrush" Color="#3CB43C"/>
+    <!-- Game Element Colors (Full Colors) -->
+    <SolidColorBrush x:Key="RadioactivityBrush" Color="#00FF64"/>
+    <SolidColorBrush x:Key="FleshBrush" Color="#C86464"/>
+    <SolidColorBrush x:Key="ToxinBrush" Color="#96C800"/>
+    <SolidColorBrush x:Key="FungusBrush" Color="#649664"/>
+    <SolidColorBrush x:Key="ThermodynamicsBrush" Color="#FF6432"/>
+    <SolidColorBrush x:Key="TimeBrush" Color="#9664C8"/>
+    <SolidColorBrush x:Key="FoodBrush" Color="#C89664"/>
+    <SolidColorBrush x:Key="EldritchBrush" Color="#6400C8"/>
+
+    <!-- Element Gradient Brushes for Card Borders -->
+    <LinearGradientBrush x:Key="RadioactivityGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#00FF64" Offset="0"/>
+        <GradientStop Color="#00CC50" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="FleshGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#C86464" Offset="0"/>
+        <GradientStop Color="#A05050" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ToxinGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#96C800" Offset="0"/>
+        <GradientStop Color="#78A000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="FungusGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#649664" Offset="0"/>
+        <GradientStop Color="#507850" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ThermodynamicsGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF6432" Offset="0"/>
+        <GradientStop Color="#CC5028" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TimeGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#9664C8" Offset="0"/>
+        <GradientStop Color="#7850A0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="FoodGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#C89664" Offset="0"/>
+        <GradientStop Color="#A07850" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="EldritchGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#6400C8" Offset="0"/>
+        <GradientStop Color="#5000A0" Offset="1"/>
+    </LinearGradientBrush>
 
     <!-- Rarity Colors -->
     <SolidColorBrush x:Key="CommonBrush" Color="#B4B4B4"/>
     <SolidColorBrush x:Key="UncommonBrush" Color="#64C864"/>
     <SolidColorBrush x:Key="RareBrush" Color="#3264C8"/>
     <SolidColorBrush x:Key="LegendaryBrush" Color="#C89632"/>
+
+    <!-- Rarity Gradient Brushes -->
+    <LinearGradientBrush x:Key="LegendaryGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFD700" Offset="0"/>
+        <GradientStop Color="#C89632" Offset="0.5"/>
+        <GradientStop Color="#FFD700" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="RareGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#5080FF" Offset="0"/>
+        <GradientStop Color="#3264C8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="UncommonGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#80E080" Offset="0"/>
+        <GradientStop Color="#64C864" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Drop Shadow Effects for Each Element -->
+    <DropShadowEffect x:Key="RadioactivityGlow" Color="#00FF64" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="FleshGlow" Color="#C86464" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="ToxinGlow" Color="#96C800" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="FungusGlow" Color="#649664" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="ThermodynamicsGlow" Color="#FF6432" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="TimeGlow" Color="#9664C8" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="FoodGlow" Color="#C89664" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="EldritchGlow" Color="#6400C8" BlurRadius="15" ShadowDepth="0" Opacity="0.7"/>
+    <DropShadowEffect x:Key="LegendaryGlow" Color="#FFD700" BlurRadius="20" ShadowDepth="0" Opacity="0.9"/>
 
     <!-- Base Button Style -->
     <Style x:Key="BaseButtonStyle" TargetType="Button">

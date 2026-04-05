@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using NewGame.UI.ViewModels;
 
@@ -7,12 +8,37 @@ namespace NewGame.UI.Views;
 
 public partial class GameView : UserControl
 {
+    private Point _clickStartPoint;
+    private bool _isDragging;
+    private const double DragThreshold = 5.0;
+
     public GameView()
     {
         InitializeComponent();
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        _clickStartPoint = e.GetPosition(this);
+        _isDragging = false;
+        base.OnMouseLeftButtonDown(e);
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed && !_isDragging)
+        {
+            var currentPos = e.GetPosition(this);
+            var diff = currentPos - _clickStartPoint;
+            if (Math.Abs(diff.X) > DragThreshold || Math.Abs(diff.Y) > DragThreshold)
+            {
+                _isDragging = true;
+            }
+        }
+        base.OnMouseMove(e);
+    }
 
     private void OnSlotDragEnter(object sender, DragEventArgs e)
     {
@@ -117,7 +143,12 @@ public partial class GameView : UserControl
     {
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
         {
-            ViewModel?.SelectCardFromHand(card);
+            // Only zoom if it wasn't a drag
+            if (!_isDragging)
+            {
+                ViewModel?.ZoomCard(card);
+            }
+            _isDragging = false;
         }
     }
 
@@ -136,7 +167,12 @@ public partial class GameView : UserControl
     {
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
         {
-            ViewModel?.SelectCardFromField(card);
+            // Only zoom if it wasn't a drag
+            if (!_isDragging)
+            {
+                ViewModel?.ZoomCard(card);
+            }
+            _isDragging = false;
         }
         e.Handled = true;
     }

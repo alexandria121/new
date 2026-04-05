@@ -21,6 +21,7 @@ public class MainViewModel : ViewModelBase
 
     private string _currentView = "Menu";
     private CardViewModel? _selectedCard;
+    private CardViewModel? _zoomedCard;
     private CardViewModel? _comboCard1;
     private CardViewModel? _comboCard2;
     private CardViewModel? _comboResult;
@@ -49,6 +50,7 @@ public class MainViewModel : ViewModelBase
         NavigateCommand = new RelayCommand<string>(Navigate);
         RemoveCardFromDeckCommand = new RelayCommand<CardViewModel>(RemoveCardFromDeck);
         ClearDeckCommand = new RelayCommand(ClearDeck);
+        CloseZoomCommand = new RelayCommand(CloseZoom);
 
         var allCards = CardFactory.CreateStarterDeck();
         AvailableCards = new ObservableCollection<CardViewModel>(
@@ -81,6 +83,18 @@ public class MainViewModel : ViewModelBase
         get => _selectedCard;
         set => SetProperty(ref _selectedCard, value);
     }
+
+    public CardViewModel? ZoomedCard
+    {
+        get => _zoomedCard;
+        set
+        {
+            SetProperty(ref _zoomedCard, value);
+            OnPropertyChanged(nameof(IsCardZoomed));
+        }
+    }
+
+    public bool IsCardZoomed => _zoomedCard != null;
 
     public CardViewModel? ComboCard1
     {
@@ -169,6 +183,7 @@ public class MainViewModel : ViewModelBase
     public ICommand NavigateCommand { get; }
     public ICommand RemoveCardFromDeckCommand { get; }
     public ICommand ClearDeckCommand { get; }
+    public ICommand CloseZoomCommand { get; }
     public ICommand? SelectBattleCommand { get; }
 
     private void InitializeGame()
@@ -185,7 +200,7 @@ public class MainViewModel : ViewModelBase
         var playerCards = CardFactory.GenerateRandomDeck();
         PlayerDeck.InitializeDeck(playerCards);
 
-        PlayerDeck.DrawCards(4);
+        OpponentDeck.DrawCards(4);
 
         PlayerHealth = 30;
         PlayerMaxHealth = 30;
@@ -575,5 +590,21 @@ public class MainViewModel : ViewModelBase
     {
         _difficulty = difficulty;
         InitializeGame();
+    }
+
+    /// <summary>
+    /// Close the zoomed card overlay
+    /// </summary>
+    public void CloseZoom()
+    {
+        ZoomedCard = null;
+    }
+
+    /// <summary>
+    /// Zoom in on a card to show full details
+    /// </summary>
+    public void ZoomCard(CardViewModel card)
+    {
+        ZoomedCard = card;
     }
 }
