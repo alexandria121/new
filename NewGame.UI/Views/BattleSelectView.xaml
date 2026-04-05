@@ -1,0 +1,278 @@
+<UserControl x:Class="NewGame.UI.Views.BattleSelectView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:Converters="clr-namespace:NewGame.UI.Converters"
+             mc:Ignorable="d"
+             Background="{StaticResource BackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,30">
+            <TextBlock Text="SELECT YOUR OPPONENT" 
+                       Style="{StaticResource TitleStyle}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Choose your difficulty level" 
+                       Style="{StaticResource SubtitleStyle}"
+                       HorizontalAlignment="Center"
+                       Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- Difficulty Selection Cards -->
+        <UniformGrid Grid.Row="1" Rows="1" Columns="4" VerticalAlignment="Center" MaxWidth="900">
+            
+            <!-- Apprentice -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="8"
+                    Padding="15"
+                    Margin="10"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="OnDifficultyClick"
+                    Tag="Apprentice">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="10" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" 
+                            Background="#4CAF50" 
+                            CornerRadius="6" 
+                            Padding="8,4"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="APPRENTICE" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                    </Border>
+
+                    <StackPanel Grid.Row="1" Margin="0,20,0,20">
+                        <TextBlock Text="Beginner Friendly" 
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontSize="14" FontWeight="Bold"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,10"/>
+                        <TextBlock Text="• Limited mana costs (1-3)"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Fewer cards"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Basic strategies"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" 
+                            Background="{StaticResource SurfaceLightBrush}"
+                            CornerRadius="4"
+                            Padding="10,6"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="Perfect for learning!" 
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontSize="10"
+                                   FontStyle="Italic"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Journeyman -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="8"
+                    Padding="15"
+                    Margin="10"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="OnDifficultyClick"
+                    Tag="Journeyman">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="10" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" 
+                            Background="#2196F3" 
+                            CornerRadius="6" 
+                            Padding="8,4"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="JOURNEYMAN" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                    </Border>
+
+                    <StackPanel Grid.Row="1" Margin="0,20,0,20">
+                        <TextBlock Text="Moderate Challenge" 
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontSize="14" FontWeight="Bold"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,10"/>
+                        <TextBlock Text="• Moderate mana costs (1-5)"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Balanced deck size"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Smarter card plays"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" 
+                            Background="{StaticResource SurfaceLightBrush}"
+                            CornerRadius="4"
+                            Padding="10,6"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="Recommended for most!" 
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontSize="10"
+                                   FontStyle="Italic"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Expert -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="8"
+                    Padding="15"
+                    Margin="10"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="OnDifficultyClick"
+                    Tag="Expert">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="10" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" 
+                            Background="#FF9800" 
+                            CornerRadius="6" 
+                            Padding="8,4"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="EXPERT" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                    </Border>
+
+                    <StackPanel Grid.Row="1" Margin="0,20,0,20">
+                        <TextBlock Text="Tactical Warfare" 
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontSize="14" FontWeight="Bold"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,10"/>
+                        <TextBlock Text="• Full card pool"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Larger deck size"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Advanced tactics"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" 
+                            Background="{StaticResource SurfaceLightBrush}"
+                            CornerRadius="4"
+                            Padding="10,6"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="For experienced players!" 
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontSize="10"
+                                   FontStyle="Italic"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Grandmaster -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="8"
+                    Padding="15"
+                    Margin="10"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="OnDifficultyClick"
+                    Tag="Grandmaster">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="10" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" 
+                            Background="#9C27B0" 
+                            CornerRadius="6" 
+                            Padding="8,4"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="GRANDMASTER" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                    </Border>
+
+                    <StackPanel Grid.Row="1" Margin="0,20,0,20">
+                        <TextBlock Text="Ultimate Challenge" 
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontSize="14" FontWeight="Bold"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,10"/>
+                        <TextBlock Text="• Full card pool"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Largest deck size"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                        <TextBlock Text="• Optimal strategy AI"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  TextAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" 
+                            Background="{StaticResource SurfaceLightBrush}"
+                            CornerRadius="4"
+                            Padding="10,6"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="Only for the brave!" 
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontSize="10"
+                                   FontStyle="Italic"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </UniformGrid>
+
+        <!-- Bottom Actions -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,30,0,0">
+            <Button Content="Back to Menu" 
+                    Style="{StaticResource BaseButtonStyle}"
+                    Command="{Binding NavigateCommand}"
+                    CommandParameter="Menu"
+                    Padding="20,10"
+                    Margin="0,0,20,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -169,6 +169,7 @@ public class MainViewModel : ViewModelBase
     public ICommand NavigateCommand { get; }
     public ICommand RemoveCardFromDeckCommand { get; }
     public ICommand ClearDeckCommand { get; }
+    public ICommand? SelectBattleCommand { get; }
 
     private void InitializeGame()
     {
@@ -557,5 +558,14 @@ public class MainViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(view)) return;
         CurrentView = view;
+    }
+    
+    /// <summary>
+    /// Select difficulty and initialize a new game with automatic deck generation
+    /// </summary>
+    public void SelectDifficultyAndStart(DifficultyLevel difficulty)
+    {
+        _difficulty = difficulty;
+        InitializeGame();
     }
 }

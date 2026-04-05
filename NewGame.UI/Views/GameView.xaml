@@ -13,6 +13,8 @@
         <Converters:BoolToTurnTextConverter x:Key="BoolToTurnTextConverter"/>
         <Converters:BoolToTurnColorConverter x:Key="BoolToTurnColorConverter"/>
         <Converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <Converters:CanAffordToOpacityConverter x:Key="CanAffordToOpacityConverter"/>
+        <Converters:CanAffordToColorConverter x:Key="CanAffordToColorConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -56,10 +58,13 @@
                            VerticalAlignment="Center"/>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="20,0">
-                    <TextBlock Text="HP: " Foreground="{StaticResource HealthBrush}" FontSize="14"/>
-                    <TextBlock Text="{Binding PlayerHealth}" Foreground="{StaticResource HealthBrush}" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Text="You: " Foreground="{StaticResource HealthBrush}" FontSize="12"/>
+                    <TextBlock Text="{Binding PlayerHealth}" Foreground="{StaticResource HealthBrush}" FontSize="12" FontWeight="Bold"/>
                     <TextBlock Text="/" Foreground="{StaticResource TextSecondaryBrush}"/>
-                    <TextBlock Text="{Binding PlayerMaxHealth}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding PlayerMaxHealth}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                    <TextBlock Text=" | " Foreground="{StaticResource TextSecondaryBrush}" Margin="10,0"/>
+                    <TextBlock Text="Enemy: " Foreground="{StaticResource DangerBrush}" FontSize="12"/>
+                    <TextBlock Text="{Binding OpponentHealth}" Foreground="{StaticResource DangerBrush}" FontSize="12" FontWeight="Bold"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="20,0">
@@ -264,16 +269,18 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#464646" 
+                                <Border Background="{Binding ManaCost, Converter={StaticResource CanAffordToColorConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}" 
                                         BorderBrush="#505050" 
                                         BorderThickness="2" 
                                         Margin="4" 
                                         CornerRadius="6"
                                         Width="120"
                                         Height="160"
+                                        Opacity="{Binding Card.ManaCost, Converter={StaticResource CanAffordToOpacityConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}"
                                         MouseMove="OnHandCardMouseMove"
                                         MouseLeftButtonDown="OnHandCardClick"
-                                        Tag="{Binding}">
+                                        Tag="{Binding}"
+                                        Cursor="Hand">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>

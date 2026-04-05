@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\App.xaml
-8867629070
+9-2116052559
 
-15-771705849
+161510260969
 202364243512
-Controls\CardControl.xaml;MainWindow.xaml;Styles\BaseStyles.xaml;Views\BrowserView.xaml;Views\DeckBuilderView.xaml;Views\GalleryView.xaml;Views\GameView.xaml;Views\MenuView.xaml;
+Controls\CardControl.xaml;MainWindow.xaml;Styles\BaseStyles.xaml;Views\BattleSelectView.xaml;Views\BrowserView.xaml;Views\DeckBuilderView.xaml;Views\GalleryView.xaml;Views\GameView.xaml;Views\MenuView.xaml;
 
 False
 

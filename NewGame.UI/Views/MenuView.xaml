@@ -37,7 +37,7 @@
             <Button Content="Play Game" 
                     Style="{StaticResource PrimaryButtonStyle}"
                     Command="{Binding NavigateCommand}"
-                    CommandParameter="Game"
+                    CommandParameter="BattleSelect"
                     Height="60"
                     Margin="0,10,0,0"
                     FontSize="18"/>

@@ -237,3 +237,47 @@ public class StringEqualityToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts a card's mana cost compared to available mana to determine if it's playable
+/// Returns a brush that highlights playable cards in green, unplayable in red overlay
+/// </summary>
+public class CanAffordToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        // value is the card's ManaCost, parameter should be the available mana
+        if (value is int manaCost && parameter is int availableMana)
+        {
+            return manaCost <= availableMana
+                ? new SolidColorBrush(Color.FromRgb(70, 110, 70)) // Playable - subtle green tint
+                : new SolidColorBrush(Color.FromRgb(110, 50, 50)); // Not affordable - subtle red tint
+        }
+        return new SolidColorBrush(Color.FromRgb(70, 70, 70));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a boolean to an opacity value for card visual feedback
+/// </summary>
+public class CanAffordToOpacityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is int manaCost && parameter is int availableMana)
+        {
+            return manaCost <= availableMana ? 1.0 : 0.5;
+        }
+        return 1.0;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

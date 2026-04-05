@@ -93,4 +93,9 @@ public class CardViewModel : ViewModelBase
     };
 
     public CardViewModel Clone() => new(_card.Clone());
+    
+    /// <summary>
+    /// Check if this card can be afforded with the given available mana
+    /// </summary>
+    public bool CanAffordWith(int availableMana) => ManaCost <= availableMana;
 }

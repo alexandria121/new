@@ -38,3 +38,5 @@ C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\Ga
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\MenuView.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\bin\Debug\net9.0-windows\MagicalDeckbuilder.Shared.dll
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\bin\Debug\net9.0-windows\MagicalDeckbuilder.Shared.pdb
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\BattleSelectView.g.cs
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\BattleSelectView.baml
