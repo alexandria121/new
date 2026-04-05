@@ -20,6 +20,18 @@ public class CombinationResult
 
 /// <summary>
 /// Handles card combination and creation mechanics
+/// Implements the combination system:
+/// - Any card can combine with any card, EXCEPT events cannot be combined
+/// - When two cards combine, they become better than before (but not 100% of both)
+/// - Creature + Creature = Bigger creature
+/// - Creature + Spell = Enchanted creature (buffs, negative effects on hit)
+/// - Creature + Artifact = Equipped creature
+/// - Spell + Spell = Augmented spell (positive+positive=better, pos+neg=double-edged, neg+neg=stronger)
+/// - Spell + Artifact = Magical item that can cast the spell multiple times
+/// - Artifact + Artifact = Mega artifact with combined effects
+/// - Blank + Any other = That card type with extra effect from blank
+/// - Blank + Blank = N/A (cannot combine)
+/// - Event + Any = N/A (cannot combine)
 /// </summary>
 public class CardCombiner
 {
@@ -41,40 +53,88 @@ public class CardCombiner
         { (ElementType.Nature, ElementType.Fire), "Wildfire" },
     };
     
+    // Combination efficiency - results are better than either card alone but not 100% of both
+    private const double CombinationEfficiency = 0.6; // 60% of each card's stats combined
+    
     /// <summary>
     /// Combine two cards to create a new custom card
+    /// Events cannot be combined with anything
     /// </summary>
     public CombinationResult Combine(Card card1, Card card2)
     {
         var result = new CombinationResult();
         
-        // Check if cards can be combined
+        // Rule: Events cannot be combined with ANY card
+        if (card1.Type == CardType.Event || card2.Type == CardType.Event)
+        {
+            result.Success = false;
+            result.Message = "Events cannot be combined.";
+            return result;
+        }
+        
+        // Rule: Blank + Blank = N/A (cannot combine)
+        if (card1.Type == CardType.Blank && card2.Type == CardType.Blank)
+        {
+            result.Success = false;
+            result.Message = "Blank cards cannot be combined with each other.";
+            return result;
+        }
+        
+        // Handle Blank + Other card
+        if (card1.Type == CardType.Blank || card2.Type == CardType.Blank)
+        {
+            return CombineWithBlank(
+                card1.Type == CardType.Blank ? card2 : card1,
+                card1.Type == CardType.Blank ? card1 : card2
+            );
+        }
+        
+        // Creature + Creature = Bigger creature (hybrid)
         if (card1.Type == CardType.Creature && card2.Type == CardType.Creature)
         {
             return CombineCreatures(card1, card2);
         }
-        else if (card1.Type == CardType.Spell && card2.Type == CardType.Spell)
+        
+        // Creature + Spell = Enchanted creature
+        if ((card1.Type == CardType.Creature && card2.Type == CardType.Spell) ||
+            (card1.Type == CardType.Spell && card2.Type == CardType.Creature))
+        {
+            return EnchantCreature(
+                card1.Type == CardType.Spell ? card1 : card2,
+                card1.Type == CardType.Creature ? card1 : card2
+            );
+        }
+        
+        // Creature + Artifact = Equipped creature
+        if ((card1.Type == CardType.Creature && card2.Type == CardType.Artifact) ||
+            (card1.Type == CardType.Artifact && card2.Type == CardType.Creature))
+        {
+            return EquipCreature(
+                card1.Type == CardType.Artifact ? card1 : card2,
+                card1.Type == CardType.Creature ? card1 : card2
+            );
+        }
+        
+        // Spell + Spell = Augmented spell
+        if (card1.Type == CardType.Spell && card2.Type == CardType.Spell)
         {
             return CombineSpells(card1, card2);
         }
-        else if (card1.Type == CardType.Artifact && card2.Type == CardType.Artifact)
+        
+        // Spell + Artifact = Magical item (can cast spell multiple times)
+        if ((card1.Type == CardType.Spell && card2.Type == CardType.Artifact) ||
+            (card1.Type == CardType.Artifact && card2.Type == CardType.Spell))
+        {
+            return CreateMagicalItem(
+                card1.Type == CardType.Spell ? card1 : card2,
+                card1.Type == CardType.Artifact ? card1 : card2
+            );
+        }
+        
+        // Artifact + Artifact = Mega artifact
+        if (card1.Type == CardType.Artifact && card2.Type == CardType.Artifact)
         {
             return CombineArtifacts(card1, card2);
-        }
-        else if (card1.Type == CardType.Event && card2.Type == CardType.Event)
-        {
-            return CombineEvents(card1, card2);
-        }
-        else if (card1.Type == CardType.Blank || card2.Type == CardType.Blank)
-        {
-            return CombineWithBlank(card1.Type == CardType.Blank ? card2 : card1, 
-                                   card1.Type == CardType.Blank ? card1 : card2);
-        }
-        else if (card1.Type == CardType.Spell && card2.Type == CardType.Creature ||
-                 card1.Type == CardType.Creature && card2.Type == CardType.Spell)
-        {
-            return EnchantCreature(card1.Type == CardType.Spell ? card1 : card2, 
-                                   card2.Type == CardType.Creature ? card2 : card1);
         }
         
         result.Success = false;
@@ -83,39 +143,78 @@ public class CardCombiner
     }
     
     /// <summary>
-    /// Combine two creatures into a hybrid creature
+    /// Combine two creatures into a bigger creature (hybrid)
+    /// Uses combination efficiency - result is better than either but not 100% of both
     /// </summary>
     private CombinationResult CombineCreatures(Card card1, Card card2)
     {
         var result = new CombinationResult();
         
-        // Only same element or complementary elements can combine
-        if (card1.Element != card2.Element && !HasSynergy(card1.Element, card2.Element))
-        {
-            result.Success = false;
-            result.Message = "These creatures have no elemental synergy.";
-            return result;
-        }
+        // Note: Current implementation allows any elements to combine, but gives bonus for synergies
         
         var creature1 = (MagicalDeckbuilder.Cards.CreatureCard)card1;
         var creature2 = (MagicalDeckbuilder.Cards.CreatureCard)card2;
         
-        // Create hybrid creature
+        // Calculate combined stats using efficiency formula
+        // Not quite 100% of both - e.g., Goblin (2/2) + Goblin (2/2) ≠ 4/4, it's closer to 3/3
+        int combinedPower = (int)((card1.Power + card2.Power) * CombinationEfficiency) + _random.Next(1, 3);
+        int combinedHealth = (int)((card1.Health + card2.Health) * CombinationEfficiency) + _random.Next(1, 3);
+        
+        // Create hybrid creature - bigger than either parent
         var hybrid = new MagicalDeckbuilder.Cards.CreatureCard
         {
-            Name = $"Hybrid {card1.Name}/{card2.Name}",
-            Description = $"A powerful fusion of {card1.Name} and {card2.Name}.",
+            Name = $"{card1.Name}/{card2.Name} Hybrid",
+            Description = $"A powerful fusion of {card1.Name} and {card2.Name}. " +
+                         $"Has the combined strengths of both creatures.",
             Element = GetSynergyElement(card1.Element, card2.Element),
             ManaCost = Math.Max(card1.ManaCost, card2.ManaCost) + 1,
-            Power = (card1.Power + card2.Power) / 2 + _random.Next(1, 4),
-            Health = (card1.Health + card2.Health) / 2 + _random.Next(1, 3),
+            Power = Math.Max(combinedPower, Math.Max(card1.Power, card2.Power) + 1), // Bigger than either
+            Health = Math.Max(combinedHealth, Math.Max(card1.Health, card2.Health) + 1), // Bigger than either
             Rarity = Math.Max(card1.Rarity, card2.Rarity) + 1,
             IsLegendary = card1.IsLegendary || card2.IsLegendary
         };
         
-        // Combine effects
-        hybrid.Effects.AddRange(card1.Effects);
-        hybrid.Effects.AddRange(card2.Effects);
+        // Combine effects - but scale values down a bit
+        foreach (var effect in card1.Effects)
+        {
+            hybrid.Effects.Add(new CardEffect
+            {
+                Name = effect.Name,
+                Description = effect.Description,
+                Type = effect.Type,
+                Value = (int)(effect.Value * CombinationEfficiency),
+                Target = effect.Target,
+                IsTemporary = effect.IsTemporary
+            });
+        }
+        
+        foreach (var effect in card2.Effects)
+        {
+            // Don't add duplicate effect names
+            if (!hybrid.Effects.Any(e => e.Name == effect.Name))
+            {
+                hybrid.Effects.Add(new CardEffect
+                {
+                    Name = effect.Name,
+                    Description = effect.Description,
+                    Type = effect.Type,
+                    Value = (int)(effect.Value * CombinationEfficiency),
+                    Target = effect.Target,
+                    IsTemporary = effect.IsTemporary
+                });
+            }
+        }
+        
+        // Add a special hybrid ability
+        hybrid.Effects.Add(new CardEffect
+        {
+            Name = "Hybrid Strength",
+            Description = "The combined power of two creatures",
+            Type = EffectType.Buff,
+            Value = 1,
+            Target = TargetType.Self,
+            IsTemporary = false
+        });
         
         result.Success = true;
         result.ResultCard = hybrid;
@@ -124,24 +223,238 @@ public class CardCombiner
     }
     
     /// <summary>
-    /// Combine two spells into a more powerful spell
+    /// Enchant a creature with a spell - adds buff effects
+    /// The creature keeps its stats but gains magical enhancements
+    /// </summary>
+    private CombinationResult EnchantCreature(Card spell, Card creature)
+    {
+        var result = new CombinationResult();
+        
+        // Calculate enhanced stats - spell power adds to creature
+        // Using efficiency: spell contributes ~60% of its power
+        int enhancedPower = creature.Power + (int)(spell.Power * CombinationEfficiency);
+        
+        var enchantedCreature = new MagicalDeckbuilder.Cards.CreatureCard
+        {
+            Name = $"Enchanted {creature.Name}",
+            Description = $"{creature.Name} enhanced with magical enchantments from {spell.Name}. " +
+                         $"{spell.Description}",
+            Element = GetSynergyElement(creature.Element, spell.Element),
+            ManaCost = creature.ManaCost + spell.ManaCost,
+            Power = enhancedPower,
+            Health = creature.Health, // Health stays the same unless buffed
+            Rarity = Math.Max(creature.Rarity, spell.Rarity) + 1,
+            IsLegendary = creature.IsLegendary || spell.IsLegendary
+        };
+        
+        // Add creature's original effects
+        foreach (var effect in creature.Effects)
+        {
+            enchantedCreature.Effects.Add(effect);
+        }
+        
+        // Add spell effects as buffs/enchantments
+        foreach (var effect in spell.Effects)
+        {
+            // Convert spell effects to buffs for the creature
+            var buffType = effect.Type;
+            
+            // If it's a damage spell, make it a "on hit" effect instead
+            if (effect.Type == EffectType.Damage)
+            {
+                enchantedCreature.Effects.Add(new CardEffect
+                {
+                    Name = $"Enchanted: {effect.Name}",
+                    Description = $"On attack: {effect.Description}",
+                    Type = EffectType.Buff,
+                    Value = (int)(effect.Value * CombinationEfficiency), // Reduced for efficiency
+                    Target = TargetType.Self,
+                    IsTemporary = false
+                });
+            }
+            else
+            {
+                // Convert other spell effects to buffs
+                enchantedCreature.Effects.Add(new CardEffect
+                {
+                    Name = $"Enchanted: {effect.Name}",
+                    Description = effect.Description,
+                    Type = EffectType.Buff,
+                    Value = effect.Value,
+                    Target = TargetType.Self,
+                    IsTemporary = false
+                });
+            }
+        }
+        
+        // Add enchantment bonus effect
+        enchantedCreature.Effects.Add(new CardEffect
+        {
+            Name = "Magic Enhancement",
+            Description = "Powered by magical enchantments",
+            Type = EffectType.Buff,
+            Value = 1,
+            Target = TargetType.Self,
+            IsTemporary = false
+        });
+        
+        result.Success = true;
+        result.ResultCard = enchantedCreature;
+        result.Message = $"Created {enchantedCreature.Name}! Power: {enchantedCreature.Power}";
+        return result;
+    }
+    
+    /// <summary>
+    /// Equip a creature with an artifact - stats increased according to artifact
+    /// </summary>
+    private CombinationResult EquipCreature(Card artifact, Card creature)
+    {
+        var result = new CombinationResult();
+        
+        // Artifact provides bonus to creature stats
+        int powerBonus = 0;
+        int healthBonus = 0;
+        
+        foreach (var effect in artifact.Effects)
+        {
+            if (effect.Type == EffectType.Buff)
+            {
+                powerBonus += (int)(effect.Value * CombinationEfficiency);
+            }
+            else if (effect.Type == EffectType.Shield)
+            {
+                healthBonus += effect.Value;
+            }
+            else if (effect.Type == EffectType.Damage)
+            {
+                powerBonus += (int)(effect.Value * CombinationEfficiency);
+            }
+        }
+        
+        // Fallback if no effects - use artifact power directly
+        if (powerBonus == 0 && artifact.Power > 0)
+        {
+            powerBonus = (int)(artifact.Power * CombinationEfficiency);
+        }
+        
+        var equippedCreature = new MagicalDeckbuilder.Cards.CreatureCard
+        {
+            Name = $"{creature.Name} of {artifact.Name}",
+            Description = $"{creature.Name} equipped with {artifact.Name}. {artifact.Description}",
+            Element = GetSynergyElement(creature.Element, artifact.Element),
+            ManaCost = creature.ManaCost + artifact.ManaCost,
+            Power = creature.Power + powerBonus,
+            Health = creature.Health + healthBonus,
+            Rarity = Math.Max(creature.Rarity, artifact.Rarity) + 1,
+            IsLegendary = creature.IsLegendary || artifact.IsLegendary
+        };
+        
+        // Add creature's effects
+        foreach (var effect in creature.Effects)
+        {
+            equippedCreature.Effects.Add(effect);
+        }
+        
+        // Add artifact effects as equipment bonuses
+        foreach (var effect in artifact.Effects)
+        {
+            equippedCreature.Effects.Add(new CardEffect
+            {
+                Name = $"Equipped: {effect.Name}",
+                Description = effect.Description,
+                Type = effect.Type,
+                Value = effect.Value,
+                Target = TargetType.Self,
+                IsTemporary = false
+            });
+        }
+        
+        // Add equipment bonus
+        equippedCreature.Effects.Add(new CardEffect
+        {
+            Name = "Equipment Bonus",
+            Description = "Enhanced by equipped artifact",
+            Type = EffectType.Buff,
+            Value = 1,
+            Target = TargetType.Self,
+            IsTemporary = false
+        });
+        
+        result.Success = true;
+        result.ResultCard = equippedCreature;
+        result.Message = $"Created {equippedCreature.Name}! Power: {equippedCreature.Power}, Health: {equippedCreature.Health}";
+        return result;
+    }
+    
+    /// <summary>
+    /// Combine two spells into an augmented spell
+    /// - Positive + Positive = Better buff
+    /// - Positive + Negative = Double-edged sword
+    /// - Negative + Negative = Extra strong damage/debuff
     /// </summary>
     private CombinationResult CombineSpells(Card card1, Card card2)
     {
         var result = new CombinationResult();
         
+        // Categorize effects as positive or negative
+        bool card1Positive = IsPositiveEffect(card1);
+        bool card2Positive = IsPositiveEffect(card2);
+        
+        string spellName;
+        string spellDescription;
+        
+        if (card1Positive && card2Positive)
+        {
+            // Positive + Positive = Better buff
+            spellName = $"Greater {card1.Name}";
+            spellDescription = $"A powerful combination of beneficial magic. " +
+                             $"Combines the strengths of {card1.Name} and {card2.Name}.";
+        }
+        else if (!card1Positive && !card2Positive)
+        {
+            // Negative + Negative = Extra strong damage
+            spellName = $"Devastating {card1.Name}";
+            spellDescription = $"A devastating combination of destructive magic. " +
+                             $"Far more powerful than either spell alone.";
+        }
+        else
+        {
+            // Positive + Negative = Double-edged sword
+            spellName = $"Cursed {card1.Name}";
+            spellDescription = $"A dangerous spell with both beneficial and harmful effects. " +
+                             $"Use with caution!";
+        }
+        
+        // Calculate combined power using efficiency
+        int combinedPower = (int)((card1.Power + card2.Power) * CombinationEfficiency) + _random.Next(1, 4);
+        
         var combinedSpell = new MagicalDeckbuilder.Cards.SpellCard
         {
-            Name = $"Greater {card1.Name}",
-            Description = $"A powerful combination of {card1.Name} and {card2.Name}.",
+            Name = spellName,
+            Description = spellDescription,
             Element = GetSynergyElement(card1.Element, card2.Element),
             ManaCost = Math.Max(card1.ManaCost, card2.ManaCost) + 2,
-            Power = card1.Power + card2.Power + _random.Next(1, 5),
+            Power = combinedPower,
             Rarity = Math.Max(card1.Rarity, card2.Rarity) + 1,
             IsLegendary = card1.IsLegendary && card2.IsLegendary
         };
         
-        // Combine effects with bonus
+        // Combine effects with bonuses
+        // For positive + positive: boost the values
+        // For negative + negative: significantly boost damage
+        // For mixed: keep both but scale down slightly
+        
+        double effectMultiplier = CombinationEfficiency;
+        
+        if (card1Positive && card2Positive)
+        {
+            effectMultiplier = CombinationEfficiency + 0.2; // Better bonuses
+        }
+        else if (!card1Positive && !card2Positive)
+        {
+            effectMultiplier = CombinationEfficiency + 0.3; // Stronger damage
+        }
+        
         foreach (var effect in card1.Effects)
         {
             combinedSpell.Effects.Add(new CardEffect
@@ -149,7 +462,7 @@ public class CardCombiner
                 Name = effect.Name,
                 Description = effect.Description,
                 Type = effect.Type,
-                Value = effect.Value + (effect.Value / 2),
+                Value = (int)(effect.Value * effectMultiplier),
                 Target = effect.Target,
                 IsTemporary = effect.IsTemporary
             });
@@ -157,15 +470,19 @@ public class CardCombiner
         
         foreach (var effect in card2.Effects)
         {
-            combinedSpell.Effects.Add(new CardEffect
+            // Don't add duplicate effect types
+            if (!combinedSpell.Effects.Any(e => e.Type == effect.Type))
             {
-                Name = effect.Name,
-                Description = effect.Description,
-                Type = effect.Type,
-                Value = effect.Value + (effect.Value / 2),
-                Target = effect.Target,
-                IsTemporary = effect.IsTemporary
-            });
+                combinedSpell.Effects.Add(new CardEffect
+                {
+                    Name = effect.Name,
+                    Description = effect.Description,
+                    Type = effect.Type,
+                    Value = (int)(effect.Value * effectMultiplier),
+                    Target = effect.Target,
+                    IsTemporary = effect.IsTemporary
+                });
+            }
         }
         
         result.Success = true;
@@ -175,7 +492,65 @@ public class CardCombiner
     }
     
     /// <summary>
-    /// Combine two artifacts into a more powerful artifact
+    /// Create a magical item from spell + artifact
+    /// The resulting artifact can cast the spell multiple times
+    /// </summary>
+    private CombinationResult CreateMagicalItem(Card spell, Card artifact)
+    {
+        var result = new CombinationResult();
+        
+        // Calculate charges based on spell power and artifact (using efficiency)
+        int charges = 2 + (int)(spell.Power * CombinationEfficiency / 3);
+        
+        var magicalItem = new MagicalDeckbuilder.Cards.ArtifactCard
+        {
+            Name = $"Enchanted {artifact.Name}",
+            Description = $"A magical artifact containing {spell.Name}. " +
+                         $"Can be used {charges} times. {spell.Description}",
+            Element = GetSynergyElement(spell.Element, artifact.Element),
+            ManaCost = Math.Max(spell.ManaCost, artifact.ManaCost),
+            Power = (int)((spell.Power + artifact.Power) * CombinationEfficiency),
+            Rarity = Math.Max(spell.Rarity, artifact.Rarity) + 1,
+            IsLegendary = spell.IsLegendary || artifact.IsLegendary
+        };
+        
+        // Add artifact's original effects
+        foreach (var effect in artifact.Effects)
+        {
+            magicalItem.Effects.Add(effect);
+        }
+        
+        // Add spell as a reusable effect (multiple charges)
+        magicalItem.Effects.Add(new CardEffect
+        {
+            Name = $"Stored Spell: {spell.Name}",
+            Description = $"Can cast {spell.Name} {charges} times. {spell.Description}",
+            Type = spell.Effects.FirstOrDefault()?.Type ?? EffectType.Damage,
+            Value = spell.Power,
+            Target = TargetType.Any,
+            IsTemporary = false
+        });
+        
+        // Add bonus for having stored magic
+        magicalItem.Effects.Add(new CardEffect
+        {
+            Name = "Arcane Storage",
+            Description = $"Stores {charges} charges of magical energy",
+            Type = EffectType.Buff,
+            Value = charges,
+            Target = TargetType.Self,
+            IsTemporary = false
+        });
+        
+        result.Success = true;
+        result.ResultCard = magicalItem;
+        result.Message = $"Created {magicalItem.Name}! Stores {charges} charges of {spell.Name}";
+        return result;
+    }
+    
+    /// <summary>
+    /// Combine two artifacts into a mega artifact
+    /// Combined effects create a more powerful item
     /// </summary>
     private CombinationResult CombineArtifacts(Card card1, Card card2)
     {
@@ -183,51 +558,24 @@ public class CardCombiner
         
         var combinedArtifact = new MagicalDeckbuilder.Cards.ArtifactCard
         {
-            Name = $"Enhanced {card1.Name}",
-            Description = $"A superior version combining {card1.Name} and {card2.Name}.",
+            Name = $"Mega {card1.Name}",
+            Description = $"A superior artifact combining the powers of {card1.Name} and {card2.Name}.",
             Element = GetSynergyElement(card1.Element, card2.Element),
             ManaCost = Math.Max(card1.ManaCost, card2.ManaCost),
+            Power = (int)((card1.Power + card2.Power) * CombinationEfficiency) + _random.Next(1, 3),
             Rarity = Math.Max(card1.Rarity, card2.Rarity) + 1,
             IsLegendary = card1.IsLegendary || card2.IsLegendary
         };
         
-        // Combine effects
-        combinedArtifact.Effects.AddRange(card1.Effects);
-        combinedArtifact.Effects.AddRange(card2.Effects);
-        
-        result.Success = true;
-        result.ResultCard = combinedArtifact;
-        result.Message = $"Created {combinedArtifact.Name}!";
-        return result;
-    }
-    
-    /// <summary>
-    /// Combine two event cards into a more powerful event
-    /// </summary>
-    private CombinationResult CombineEvents(Card card1, Card card2)
-    {
-        var result = new CombinationResult();
-        
-        var combinedEvent = new MagicalDeckbuilder.Cards.EventCard
-        {
-            Name = $"Enhanced {card1.Name}",
-            Description = $"A powerful combination of {card1.Name} and {card2.Name}.",
-            Element = GetSynergyElement(card1.Element, card2.Element),
-            ManaCost = Math.Max(card1.ManaCost, card2.ManaCost) + 1,
-            Power = card1.Power + card2.Power + _random.Next(1, 3),
-            Rarity = Math.Max(card1.Rarity, card2.Rarity) + 1,
-            IsLegendary = card1.IsLegendary && card2.IsLegendary
-        };
-        
-        // Combine effects with bonus
+        // Combine effects from both artifacts (scaled down)
         foreach (var effect in card1.Effects)
         {
-            combinedEvent.Effects.Add(new CardEffect
+            combinedArtifact.Effects.Add(new CardEffect
             {
                 Name = effect.Name,
                 Description = effect.Description,
                 Type = effect.Type,
-                Value = effect.Value + (effect.Value / 2),
+                Value = (int)(effect.Value * CombinationEfficiency),
                 Target = effect.Target,
                 IsTemporary = effect.IsTemporary
             });
@@ -235,98 +583,124 @@ public class CardCombiner
         
         foreach (var effect in card2.Effects)
         {
-            combinedEvent.Effects.Add(new CardEffect
+            // Combine similar effects if possible
+            var existingEffect = combinedArtifact.Effects.FirstOrDefault(e => e.Type == effect.Type);
+            if (existingEffect != null)
             {
-                Name = effect.Name,
-                Description = effect.Description,
-                Type = effect.Type,
-                Value = effect.Value + (effect.Value / 2),
-                Target = effect.Target,
-                IsTemporary = effect.IsTemporary
-            });
+                // Combine similar effects for greater power
+                existingEffect.Value += (int)(effect.Value * CombinationEfficiency);
+                existingEffect.Description = $"{existingEffect.Description} Also {effect.Description}";
+            }
+            else
+            {
+                combinedArtifact.Effects.Add(new CardEffect
+                {
+                    Name = effect.Name,
+                    Description = effect.Description,
+                    Type = effect.Type,
+                    Value = (int)(effect.Value * CombinationEfficiency),
+                    Target = effect.Target,
+                    IsTemporary = effect.IsTemporary
+                });
+            }
         }
         
+        // Add mega bonus
+        combinedArtifact.Effects.Add(new CardEffect
+        {
+            Name = "Mega Power",
+            Description = "Combined artifact power",
+            Type = EffectType.Buff,
+            Value = 2,
+            Target = TargetType.Self,
+            IsTemporary = false
+        });
+        
         result.Success = true;
-        result.ResultCard = combinedEvent;
-        result.Message = $"Created {combinedEvent.Name}! Power: {combinedEvent.Power}";
+        result.ResultCard = combinedArtifact;
+        result.Message = $"Created {combinedArtifact.Name}! Power: {combinedArtifact.Power}";
         return result;
     }
     
     /// <summary>
     /// Combine a blank card with another card to enhance it
+    /// The blank adds an extra effect to the other card
     /// </summary>
     private CombinationResult CombineWithBlank(Card normalCard, Card blankCard)
     {
         var result = new CombinationResult();
         
-        // Blank adds a random boost to the other card
-        var boostedCard = normalCard.Clone();
-        boostedCard.Name = $"Enhanced {normalCard.Name}";
-        boostedCard.Description = $"{normalCard.Description} Infused with additional power!";
+        // Create enhanced version of the normal card
+        var enhancedCard = normalCard.Clone();
+        enhancedCard.Name = $"Enhanced {normalCard.Name}";
+        enhancedCard.Description = $"{normalCard.Description} Infused with extra power from blank essence!";
         
-        // Add random bonus based on blank's element
-        var bonus = _random.Next(1, 4);
+        // Add random bonus based on blank's element (using efficiency)
+        var bonus = _random.Next(1, 3);
         
-        if (boostedCard.Type == CardType.Creature)
+        if (enhancedCard.Type == CardType.Creature)
         {
-            boostedCard.Power += bonus;
-            boostedCard.Health += bonus;
+            // Creature gets power and health boost
+            enhancedCard.Power += bonus;
+            enhancedCard.Health += bonus;
         }
-        else
+        else if (enhancedCard.Type == CardType.Spell)
         {
-            boostedCard.Power += bonus;
+            // Spell gets power boost
+            enhancedCard.Power += bonus + 1;
+        }
+        else if (enhancedCard.Type == CardType.Artifact)
+        {
+            // Artifact gets power boost
+            enhancedCard.Power += bonus + 1;
         }
         
-        boostedCard.Rarity = Math.Min(boostedCard.Rarity + 1, 4);
+        // Add blank's infusion effect as extra
+        enhancedCard.Effects.Add(new CardEffect
+        {
+            Name = "Blank Infusion",
+            Description = "Enhanced with raw magical essence",
+            Type = EffectType.Buff,
+            Value = bonus,
+            Target = TargetType.Self,
+            IsTemporary = false
+        });
+        
+        enhancedCard.Rarity = Math.Min(enhancedCard.Rarity + 1, 4);
         
         result.Success = true;
-        result.ResultCard = boostedCard;
-        result.Message = $"Created {boostedCard.Name}! +{bonus} to stats";
+        result.ResultCard = enhancedCard;
+        result.Message = $"Created {enhancedCard.Name}! +{bonus} to stats";
         return result;
     }
     
     /// <summary>
-    /// Enchant a creature with a spell
+    /// Check if a card's effects are primarily positive (beneficial)
     /// </summary>
-    private CombinationResult EnchantCreature(Card spell, Card creature)
+    private bool IsPositiveEffect(Card card)
     {
-        var result = new CombinationResult();
-        
-        var enchantedCreature = new MagicalDeckbuilder.Cards.CreatureCard
+        foreach (var effect in card.Effects)
         {
-            Name = $"Enchanted {creature.Name}",
-            Description = $"{creature.Description} Now enhanced with {spell.Name}!",
-            Element = GetSynergyElement(creature.Element, spell.Element),
-            ManaCost = creature.ManaCost + spell.ManaCost,
-            Power = creature.Power + spell.Power,
-            Health = creature.Health,
-            Rarity = Math.Max(creature.Rarity, spell.Rarity) + 1,
-            IsLegendary = creature.IsLegendary || spell.IsLegendary
-        };
-        
-        // Add creature's original effects plus spell effects as buffs
-        foreach (var effect in creature.Effects)
-        {
-            enchantedCreature.Effects.Add(effect);
-        }
-        
-        foreach (var effect in spell.Effects)
-        {
-            enchantedCreature.Effects.Add(new CardEffect
+            // Consider healing, buffs, card draw, mana gain as positive
+            // Consider damage, debuffs as negative
+            if (effect.Type == EffectType.Heal ||
+                effect.Type == EffectType.Buff ||
+                effect.Type == EffectType.DrawCard ||
+                effect.Type == EffectType.ManaGain ||
+                effect.Type == EffectType.Shield)
             {
-                Name = $"Enchanted: {effect.Name}",
-                Description = effect.Description,
-                Type = EffectType.Buff,
-                Value = effect.Value,
-                Target = TargetType.Self,
-                IsTemporary = false
-            });
+                return true;
+            }
+            if (effect.Type == EffectType.Damage ||
+                effect.Type == EffectType.Debuff ||
+                effect.Type == EffectType.Destroy)
+            {
+                return false;
+            }
         }
         
-        result.Success = true;
-        result.ResultCard = enchantedCreature;
-        result.Message = $"Created {enchantedCreature.Name}! Power: {enchantedCreature.Power}";
-        return result;
+        // Default to positive if no clear negative effects
+        return card.Power >= 0;
     }
     
     /// <summary>
@@ -343,6 +717,11 @@ public class CardCombiner
     /// </summary>
     private ElementType GetSynergyElement(ElementType elem1, ElementType elem2)
     {
+        if (elem1 == elem2)
+        {
+            return elem1; // Same element stays same
+        }
+        
         if (ElementSynergies.TryGetValue((elem1, elem2), out var synergy))
         {
             return GetElementFromSynergy(synergy);
@@ -351,7 +730,9 @@ public class CardCombiner
         {
             return GetElementFromSynergy(synergy);
         }
-        return elem1; // Default to first element
+        
+        // Default to the higher mana cost card's element
+        return elem1;
     }
     
     private ElementType GetElementFromSynergy(string synergy)
@@ -397,37 +778,68 @@ public class CardCombiner
     
     private string GetCombinationDescription(Card card1, Card card2)
     {
-        // Check for blank first
+        // Event cards cannot be combined
+        if (card1.Type == CardType.Event || card2.Type == CardType.Event)
+        {
+            return "";
+        }
+        
+        // Blank + Blank = N/A
+        if (card1.Type == CardType.Blank && card2.Type == CardType.Blank)
+        {
+            return "";
+        }
+        
+        // Blank + Other
         if (card1.Type == CardType.Blank || card2.Type == CardType.Blank)
         {
             var normalCard = card1.Type == CardType.Blank ? card2 : card1;
             return $"Enhance {normalCard.Name} with Blank";
         }
         
+        // Creature + Creature
         if (card1.Type == CardType.Creature && card2.Type == CardType.Creature)
         {
-            return HasSynergy(card1.Element, card2.Element) 
-                ? $"Fusion: {card1.Name} + {card2.Name}" 
-                : "";
+            return $"Fusion: {card1.Name} + {card2.Name}";
         }
-        else if (card1.Type == CardType.Spell && card2.Type == CardType.Spell)
-        {
-            return "Combine Spells";
-        }
-        else if (card1.Type == CardType.Artifact && card2.Type == CardType.Artifact)
-        {
-            return "Combine Artifacts";
-        }
-        else if (card1.Type == CardType.Event && card2.Type == CardType.Event)
-        {
-            return "Combine Events";
-        }
-        else if ((card1.Type == CardType.Spell && card2.Type == CardType.Creature) ||
-                 (card1.Type == CardType.Creature && card2.Type == CardType.Spell))
+        
+        // Creature + Spell
+        if ((card1.Type == CardType.Creature && card2.Type == CardType.Spell) ||
+            (card1.Type == CardType.Spell && card2.Type == CardType.Creature))
         {
             var spell = card1.Type == CardType.Spell ? card1 : card2;
             var creature = card1.Type == CardType.Creature ? card1 : card2;
             return $"Enchant {creature.Name} with {spell.Name}";
+        }
+        
+        // Creature + Artifact
+        if ((card1.Type == CardType.Creature && card2.Type == CardType.Artifact) ||
+            (card1.Type == CardType.Artifact && card2.Type == CardType.Creature))
+        {
+            var artifact = card1.Type == CardType.Artifact ? card1 : card2;
+            var creature = card1.Type == CardType.Creature ? card1 : card2;
+            return $"Equip {creature.Name} with {artifact.Name}";
+        }
+        
+        // Spell + Spell
+        if (card1.Type == CardType.Spell && card2.Type == CardType.Spell)
+        {
+            return $"Combine Spells: {card1.Name} + {card2.Name}";
+        }
+        
+        // Spell + Artifact
+        if ((card1.Type == CardType.Spell && card2.Type == CardType.Artifact) ||
+            (card1.Type == CardType.Artifact && card2.Type == CardType.Spell))
+        {
+            var spell = card1.Type == CardType.Spell ? card1 : card2;
+            var artifact = card1.Type == CardType.Artifact ? card1 : card2;
+            return $"Create Magical Item: {artifact.Name} with {spell.Name}";
+        }
+        
+        // Artifact + Artifact
+        if (card1.Type == CardType.Artifact && card2.Type == CardType.Artifact)
+        {
+            return $"Mega Artifact: {card1.Name} + {card2.Name}";
         }
         
         return "";

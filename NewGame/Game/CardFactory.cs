@@ -307,4 +307,310 @@ public static class CardFactory
         
         return blank;
     }
+
+    /// <summary>
+    /// Generate a list of new unique cards for the game
+    /// </summary>
+    public static List<Card> GenerateNewCards()
+    {
+        var newCards = new List<Card>();
+
+        // Legendary Fire Dragon
+        newCards.Add(new CreatureCard
+        {
+            Name = "Infernal Dragon",
+            Description = "A mighty dragon wreathed in eternal flames",
+            Element = ElementType.Fire,
+            ManaCost = 8,
+            Power = 10,
+            Health = 10,
+            Rarity = 4,
+            IsLegendary = true,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Fire Breath", Description = "Deals 5 damage to all enemies", Type = EffectType.Damage, Value = 5, Target = TargetType.AllEnemies },
+                new CardEffect { Name = "Regeneration", Description = "Heals 3 HP each turn", Type = EffectType.Heal, Value = 3, Target = TargetType.Self }
+            }
+        });
+
+        // Rare Water Kraken
+        newCards.Add(new CreatureCard
+        {
+            Name = "Abyssal Kraken",
+            Description = "A terrifying creature from the ocean depths",
+            Element = ElementType.Water,
+            ManaCost = 6,
+            Power = 7,
+            Health = 8,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Tentacle Slam", Description = "Stuns enemy", Type = EffectType.Debuff, Value = 2, Target = TargetType.Enemy }
+            }
+        });
+
+        // Epic Earth Titan
+        newCards.Add(new CreatureCard
+        {
+            Name = "Mountain Titan",
+            Description = "An ancient giant made of living stone",
+            Element = ElementType.Earth,
+            ManaCost = 7,
+            Power = 8,
+            Health = 12,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Earthquake", Description = "Shields self", Type = EffectType.Shield, Value = 5, Target = TargetType.Self }
+            }
+        });
+
+        // Rare Air Phoenix
+        newCards.Add(new CreatureCard
+        {
+            Name = "Storm Phoenix",
+            Description = "A phoenix that rides the winds of storms",
+            Element = ElementType.Air,
+            ManaCost = 5,
+            Power = 6,
+            Health = 4,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Wind Slash", Description = "Quick attack", Type = EffectType.Damage, Value = 6, Target = TargetType.Enemy },
+                new CardEffect { Name = "Fly", Description = "Cannot be blocked", Type = EffectType.Buff, Value = 1, Target = TargetType.Self }
+            }
+        });
+
+        // Legendary Light Seraph
+        newCards.Add(new CreatureCard
+        {
+            Name = "Solar Seraph",
+            Description = "A divine angel of pure sunlight",
+            Element = ElementType.Light,
+            ManaCost = 7,
+            Power = 6,
+            Health = 7,
+            Rarity = 4,
+            IsLegendary = true,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Divine Light", Description = "Heal all allies", Type = EffectType.Heal, Value = 4, Target = TargetType.AllAllies },
+                new CardEffect { Name = "Banish Evil", Description = "Destroy darkness", Type = EffectType.Destroy, Value = 1, Target = TargetType.Enemy }
+            }
+        });
+
+        // Rare Dark Vampire
+        newCards.Add(new CreatureCard
+        {
+            Name = "Night Vampire",
+            Description = "A blood-drinking lord of the night",
+            Element = ElementType.Dark,
+            ManaCost = 4,
+            Power = 5,
+            Health = 4,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Life Drain", Description = "Steal health", Type = EffectType.Heal, Value = 3, Target = TargetType.Enemy }
+            }
+        });
+
+        // Epic Arcane Wizard
+        newCards.Add(new CreatureCard
+        {
+            Name = "Arcane Archmage",
+            Description = "A master of all magical arts",
+            Element = ElementType.Arcane,
+            ManaCost = 6,
+            Power = 4,
+            Health = 5,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Spell Boost", Description = "Double next spell", Type = EffectType.Buff, Value = 2, Target = TargetType.Self },
+                new CardEffect { Name = "Mana Surge", Description = "Gain extra mana", Type = EffectType.ManaGain, Value = 2, Target = TargetType.Self }
+            }
+        });
+
+        // Rare Nature Treant
+        newCards.Add(new CreatureCard
+        {
+            Name = "Ancient Treant",
+            Description = "A wise tree spirit protecting the forest",
+            Element = ElementType.Nature,
+            ManaCost = 5,
+            Power = 4,
+            Health = 8,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Root Growth", Description = "Shield allies", Type = EffectType.Shield, Value = 3, Target = TargetType.AllAllies },
+                new CardEffect { Name = "Regenerate", Description = "Heal self", Type = EffectType.Heal, Value = 2, Target = TargetType.Self }
+            }
+        });
+
+        // Spell: Lightning Storm
+        newCards.Add(new SpellCard
+        {
+            Name = "Lightning Storm",
+            Description = "A devastating thunderstorm strikes all enemies",
+            Element = ElementType.Air,
+            ManaCost = 5,
+            Power = 8,
+            Rarity = 2,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Chain Lightning", Description = "Hits all enemies", Type = EffectType.Damage, Value = 8, Target = TargetType.AllEnemies }
+            }
+        });
+
+        // Spell: Void Blast
+        newCards.Add(new SpellCard
+        {
+            Name = "Void Blast",
+            Description = "Unleash the power of the void",
+            Element = ElementType.Dark,
+            ManaCost = 6,
+            Power = 12,
+            Rarity = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Destroy", Description = "Destroys target", Type = EffectType.Destroy, Value = 1, Target = TargetType.Enemy }
+            }
+        });
+
+        // Spell: Holy Light
+        newCards.Add(new SpellCard
+        {
+            Name = "Holy Light",
+            Description = "Divine healing energy",
+            Element = ElementType.Light,
+            ManaCost = 3,
+            Power = 8,
+            Rarity = 2,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Heal", Description = "Restore health", Type = EffectType.Heal, Value = 8, Target = TargetType.Self }
+            }
+        });
+
+        // Artifact: Shadow Cloak
+        newCards.Add(new ArtifactCard
+        {
+            Name = "Shadow Cloak",
+            Description = "Grants invisibility in darkness",
+            Element = ElementType.Dark,
+            ManaCost = 4,
+            Rarity = 2,
+            Power = 0,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Stealth", Description = "Cannot be targeted", Type = EffectType.Buff, Value = 1, Target = TargetType.Self, IsTemporary = true }
+            }
+        });
+
+        // Artifact: Staff of Wisdom
+        newCards.Add(new ArtifactCard
+        {
+            Name = "Staff of Wisdom",
+            Description = "Amplifies magical power",
+            Element = ElementType.Arcane,
+            ManaCost = 5,
+            Rarity = 3,
+            Power = 3,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Mana Boost", Description = "+2 mana per turn", Type = EffectType.ManaGain, Value = 2, Target = TargetType.Self }
+            }
+        });
+
+        // Event: Blessing of the Gods
+        newCards.Add(new EventCard
+        {
+            Name = "Divine Blessing",
+            Description = "The gods grant you favor",
+            Element = ElementType.Light,
+            ManaCost = 1,
+            Power = 3,
+            Rarity = 2,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Buff", Description = "Gain power", Type = EffectType.Buff, Value = 3, Target = TargetType.Self }
+            }
+        });
+
+        // Event: Card Draw
+        newCards.Add(new EventCard
+        {
+            Name = "Scholar's Insight",
+            Description = "Gain knowledge through study",
+            Element = ElementType.Arcane,
+            ManaCost = 2,
+            Power = 2,
+            Rarity = 1,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Draw", Description = "Draw cards", Type = EffectType.DrawCard, Value = 2, Target = TargetType.Self }
+            }
+        });
+
+        // Enchantment: Fire Aura
+        new Cards.Card
+        {
+            Name = "Blazing Aura",
+            Description = "Surrounds creatures with flames",
+            Type = CardType.Enchantment,
+            Element = ElementType.Fire,
+            ManaCost = 3,
+            Power = 2,
+            Rarity = 2,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Burn", Description = "Damage attackers", Type = EffectType.Damage, Value = 2, Target = TargetType.Enemy }
+            }
+        };
+
+        // Enchantment: Ice Shield
+        new Cards.Card
+        {
+            Name = "Frost Barrier",
+            Description = "Protects with icy defense",
+            Type = CardType.Enchantment,
+            Element = ElementType.Water,
+            ManaCost = 2,
+            Power = 0,
+            Rarity = 2,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect { Name = "Shield", Description = "Block damage", Type = EffectType.Shield, Value = 4, Target = TargetType.Self }
+            }
+        };
+
+        return newCards;
+    }
+
+    /// <summary>
+    /// Generate a random deck of 11-19 cards for testing
+    /// </summary>
+    public static List<Card> GenerateRandomDeck()
+    {
+        var random = new Random();
+        var deck = new List<Card>();
+        
+        // Random deck size between 11 and 19
+        int deckSize = random.Next(11, 20);
+        
+        // Get all available card templates
+        var allCards = CreateStarterDeck();
+        
+        // Randomly select cards for the deck
+        for (int i = 0; i < deckSize; i++)
+        {
+            int cardIndex = random.Next(allCards.Count);
+            deck.Add(allCards[cardIndex].Clone());
+        }
+        
+        return deck;
+    }
 }

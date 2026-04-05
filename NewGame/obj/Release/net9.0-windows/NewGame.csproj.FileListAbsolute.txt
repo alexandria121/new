@@ -1,0 +1,15 @@
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\bin\Release\net9.0-windows\NewGame.exe
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\bin\Release\net9.0-windows\NewGame.deps.json
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\bin\Release\net9.0-windows\NewGame.runtimeconfig.json
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\bin\Release\net9.0-windows\NewGame.dll
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\bin\Release\net9.0-windows\NewGame.pdb
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.AssemblyInfoInputs.cache
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.AssemblyInfo.cs
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.csproj.CoreCompileInputs.cache
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.sourcelink.json
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.dll
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\refint\NewGame.dll
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.pdb
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\NewGame.genruntimeconfig.cache
+c:\Users\atw61\OneDrive\Desktop\new\NewGame\obj\Release\net9.0-windows\ref\NewGame.dll
