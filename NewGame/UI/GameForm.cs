@@ -325,9 +325,9 @@ public class GameForm : Form
             Margin = new Padding(10)
         };
         
-        // Both rows share the available space equally
-        slotsContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
-        slotsContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+        // Both rows - opponent row gets 40%, player row gets 60%
+        slotsContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 40f));
+        slotsContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 60f));
         
         // 6 equal columns for the 6 slots
         for (int i = 0; i < 6; i++)
@@ -348,7 +348,8 @@ public class GameForm : Form
                 BorderStyle = BorderStyle.FixedSingle,
                 Margin = new Padding(3),
                 Tag = i,
-                AllowDrop = true
+                AllowDrop = true,
+                MinimumSize = new Size(120, 180)  // Larger size for proper card display
             };
             
             // Add slot label
@@ -628,8 +629,8 @@ public class GameForm : Form
         
         if (card != null)
         {
-            // Create a card panel for display in the slot
-            var cardPanel = CreateCardPanel(card);
+            // Create a smaller card panel for display in the slot
+            var cardPanel = CreateSlotCardPanel(card);
             cardPanel.Dock = DockStyle.Fill;
             slot.Controls.Add(cardPanel);
         }
@@ -884,10 +885,65 @@ public class GameForm : Form
             Font = new Font("Arial", 12, FontStyle.Bold)
         };
         cardPanel.Controls.Add(manaLabel);
-        
+
         return cardPanel;
     }
-    
+
+    /// <summary>
+    /// Create a smaller card panel for display in a slot on the playing field
+    /// </summary>
+    private Panel CreateSlotCardPanel(Card card)
+    {
+        // Use custom ClickablePanel with smaller dimensions for slot display
+        var cardPanel = new ClickablePanel
+        {
+            Width = 110,
+            Height = 170,
+            BackColor = GetCardColor(card.Element.ToString()),
+            Margin = new Padding(2),
+            BorderStyle = BorderStyle.FixedSingle
+        };
+
+        // Card name at top (smaller font)
+        var nameLabel = new Label
+        {
+            Text = card.Name,
+            ForeColor = Color.White,
+            TextAlign = ContentAlignment.TopCenter,
+            Dock = DockStyle.Top,
+            Height = 40,
+            Font = new Font("Arial", 8, FontStyle.Bold),
+            Padding = new Padding(2)
+        };
+
+        cardPanel.Controls.Add(nameLabel);
+
+        // Card type in middle (smaller font)
+        var typeLabel = new Label
+        {
+            Text = card.Type.ToString(),
+            ForeColor = Color.FromArgb(200, 200, 200),
+            TextAlign = ContentAlignment.MiddleCenter,
+            Dock = DockStyle.Fill,
+            Font = new Font("Arial", 10)
+        };
+        cardPanel.Controls.Add(typeLabel);
+
+        // Mana cost at bottom (smaller font)
+        var manaLabel = new Label
+        {
+            Text = $"{card.ManaCost}",
+            ForeColor = Color.FromArgb(100, 200, 255),
+            TextAlign = ContentAlignment.BottomCenter,
+            Dock = DockStyle.Bottom,
+            Height = 25,
+            Font = new Font("Arial", 10, FontStyle.Bold)
+        };
+        cardPanel.Controls.Add(manaLabel);
+
+        return cardPanel;
+    }
+
     private Color GetCardColor(string element)
     {
         return element switch
