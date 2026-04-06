@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "generated_at": "2026-04-06T18:07:32.758986+00:00",
+  "analyzed_files": [],
+  "not_analyzed_files": [
+    {
+      "path": "MagicalDeckbuilder.Shared\\Assets\\PlaceholderGenerator.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Cards\\Card.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Combining\\CardCombiner.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Decks\\DeckManager.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Game\\CardFactory.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Game\\Game.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Game\\OpponentAI.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\Logging\\ErrorLogger.cs",
+      "reason": "other"
+    },
+    {
+      "path": "MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+      "reason": "other"
+    },
+    {
+      "path": "new.sln",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\App.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\App.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\AssemblyInfo.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Controls\\CardControl.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Controls\\CardControl.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Controls\\CardZoomOverlay.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Controls\\CardZoomOverlay.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Converters\\ValueConverters.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\MainWindow.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\MainWindow.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\NewGame.UI.csproj",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Styles\\BaseStyles.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\ViewModels\\CardViewModel.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\ViewModels\\MainViewModel.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\ViewModels\\RelayCommand.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\ViewModels\\ViewModelBase.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\BattleSelectView.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\BattleSelectView.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\BrowserView.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\BrowserView.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\DeckBuilderView.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\DeckBuilderView.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\ErrorWindow.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\ErrorWindow.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\GalleryView.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\GalleryView.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\GameView.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\GameView.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\MenuView.xaml",
+      "reason": "other"
+    },
+    {
+      "path": "NewGame.UI\\Views\\MenuView.xaml.cs",
+      "reason": "other"
+    },
+    {
+      "path": "README.md",
+      "reason": "other"
+    }
+  ],
+  "summary": {
+    "total_files": 41,
+    "analyzed": 0,
+    "not_analyzed": 41,
+    "not_analyzed_by_reason": {
+      "other": 41
+    }
+  }
+}

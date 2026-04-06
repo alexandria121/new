@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "generated_at": "2026-04-06T18:07:32.758986+00:00",
+    "commit_hash": "",
+    "repo_name": "new",
+    "depth_level": 1,
+    "file_coverage_summary": {
+      "total_files": 41,
+      "analyzed": 0,
+      "not_analyzed": 41,
+      "not_analyzed_by_reason": {
+        "other": 41
+      }
+    }
+  },
+  "description": "The component architecture for the 'new' project (Magical Deckbuilder) follows an MVVM pattern to cleanly separate presentation from core game mechanics. The main flow starts at UI Views that capture user intent and bind to the ViewModel Orchestration. ViewModels mediate between the UI and the Game Engine & AI, delegating game rules and turn-based logic. The Game Engine manipulates the Card & Deck Domain, which is the source of truth for card data and deck mechanics. Supporting UI Controls & Infrastructure provide visual building blocks and utilities used by the UI Views.",
+  "files": {},
+  "methods_index": {},
+  "components": [
+    {
+      "name": "UI Views",
+      "description": "The primary visual layer containing the main application screens and navigation logic. It handles user input events and displays the current game state through data binding.",
+      "key_entities": [],
+      "source_cluster_ids": [
+        1,
+        8
+      ],
+      "file_methods": [],
+      "component_id": "1",
+      "can_expand": false
+    },
+    {
+      "name": "UI Controls & Infrastructure",
+      "description": "Provides reusable UI components and utility services. This includes specialized controls for card visualization and value converters that translate raw data into UI-friendly formats.",
+      "key_entities": [],
+      "source_cluster_ids": [
+        7,
+        11
+      ],
+      "file_methods": [],
+      "component_id": "2",
+      "can_expand": false
+    },
+    {
+      "name": "ViewModel Orchestration",
+      "description": "The mediator between the UI and the Game Engine. It maintains the application state, exposes commands for user actions, and formats domain data for the view.",
+      "key_entities": [],
+      "source_cluster_ids": [
+        2,
+        9
+      ],
+      "file_methods": [],
+      "component_id": "3",
+      "can_expand": false
+    },
+    {
+      "name": "Game Engine & AI",
+      "description": "The core logic center of the application. It manages the game loop, turn transitions, and the automated decision-making logic for the opponent.",
+      "key_entities": [],
+      "source_cluster_ids": [
+        3,
+        4,
+        10
+      ],
+      "file_methods": [],
+      "component_id": "4",
+      "can_expand": false
+    },
+    {
+      "name": "Card & Deck Domain",
+      "description": "Manages the fundamental data structures and mechanics of the card game, including deck shuffling, card drawing, and the logic for combining cards.",
+      "key_entities": [],
+      "source_cluster_ids": [
+        5,
+        6
+      ],
+      "file_methods": [],
+      "component_id": "5",
+      "can_expand": false
+    }
+  ],
+  "components_relations": [
+    {
+      "relation": "Binds to properties and executes commands to trigger application logic",
+      "src_name": "UI Views",
+      "dst_name": "ViewModel Orchestration",
+      "src_id": "1",
+      "dst_id": "3",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Provides specialized visual elements and data conversion for the main screens",
+      "src_name": "UI Controls & Infrastructure",
+      "dst_name": "UI Views",
+      "src_id": "2",
+      "dst_id": "1",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Invokes game rules and state transitions based on user actions",
+      "src_name": "ViewModel Orchestration",
+      "dst_name": "Game Engine & AI",
+      "src_id": "3",
+      "dst_id": "4",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Directly accesses card data models to populate the UI",
+      "src_name": "ViewModel Orchestration",
+      "dst_name": "Card & Deck Domain",
+      "src_id": "3",
+      "dst_id": "5",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Manipulates decks and card instances to execute game mechanics",
+      "src_name": "Game Engine & AI",
+      "dst_name": "Card & Deck Domain",
+      "src_id": "4",
+      "dst_id": "5",
+      "edge_count": 0,
+      "is_static": false
+    }
+  ]
+}
