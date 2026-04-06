@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\App.xaml
-13-2086944602
+132025488668
 
-21-812518473
+21-2038260083
 202364243512
-Controls\CardControl.xaml;Controls\CardZoomOverlay.xaml;MainWindow.xaml;Styles\BaseStyles.xaml;Views\BattleSelectView.xaml;Views\BrowserView.xaml;Views\DeckBuilderView.xaml;Views\DeckSelectionView.xaml;Views\ErrorWindow.xaml;Views\GalleryView.xaml;Views\GameView.xaml;Views\MenuView.xaml;Views\UnsavedChangesDialog.xaml;
+Controls\CardZoomOverlay.xaml;MainWindow.xaml;Styles\BaseStyles.xaml;Views\BattleSelectView.xaml;Views\BrowserView.xaml;Views\DeckBuilderView.xaml;Views\DeckNameDialog.xaml;Views\DeckSelectionView.xaml;Views\ErrorWindow.xaml;Views\GalleryView.xaml;Views\GameView.xaml;Views\MenuView.xaml;Views\UnsavedChangesDialog.xaml;
 
 False
 

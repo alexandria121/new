@@ -23,14 +23,12 @@ C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\NewGame.
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\ref\NewGame.UI.dll
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Styles\BaseStyles.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\GeneratedInternalTypeHelper.g.cs
-C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Controls\CardControl.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\BrowserView.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckBuilderView.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\GalleryView.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\MenuView.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\GameView.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\App.baml
-C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Controls\CardControl.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\BrowserView.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckBuilderView.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\GalleryView.baml
@@ -48,3 +46,5 @@ C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\De
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\UnsavedChangesDialog.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\UnsavedChangesDialog.g.cs
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckSelectionView.baml
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckNameDialog.baml
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckNameDialog.g.cs

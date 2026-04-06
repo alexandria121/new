@@ -50,10 +50,10 @@
                     Margin="0,10,0,0"
                     FontSize="18"/>
             
-            <Button Content="Deck Builder" 
+            <Button Content="Deck Selection" 
                     Style="{StaticResource BaseButtonStyle}"
                     Command="{Binding NavigateCommand}"
-                    CommandParameter="DeckBuilder"
+                    CommandParameter="DeckSelection"
                     Height="60"
                     Margin="0,10,0,0"
                     FontSize="18"/>

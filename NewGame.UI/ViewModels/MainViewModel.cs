@@ -170,19 +170,42 @@ public class MainViewModel : ViewModelBase
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        
-        var deckName = PromptForDeckName(_currentDeckId != null ? 
-            DeckStorageService.Instance.GetDeckIndex().FirstOrDefault(d => d.Id == _currentDeckId)?.Name : null);
+
+        string? deckName = null;
+
+        // If editing existing deck, get its name; otherwise show dialog for new name
+        if (!string.IsNullOrEmpty(_currentDeckId))
+        {
+            var indexEntry = DeckStorageService.Instance.GetDeckIndex()
+                .FirstOrDefault(d => d.Id == _currentDeckId);
+            deckName = indexEntry?.Name;
+        }
+        else
+        {
+            // Show dialog to get deck name
+            var dialog = new Views.DeckNameDialog("MyDeck");
+            if (dialog.ShowDialog() != true)
+            {
+                return; // User cancelled
+            }
+            deckName = dialog.DeckName;
+        }
         
         if (string.IsNullOrWhiteSpace(deckName)) return;
         
         // Convert CardViewModels to Cards
         var cards = PlayerDeckCards.Select(cvm => cvm.Card).ToList();
         
-        // Use async save method
-        await DeckStorageService.Instance.SaveDeckAsync(deckName, cards, DeckType.Player, Difficulty);
-        
-        _currentDeckId = null; // Clear to force reload
+        // If editing existing deck, update it; otherwise create new
+        if (!string.IsNullOrEmpty(_currentDeckId))
+        {
+            await DeckStorageService.Instance.UpdateDeckAsync(_currentDeckId, cards);
+        }
+        else
+        {
+            await DeckStorageService.Instance.SaveDeckAsync(deckName, cards, DeckType.Player, Difficulty);
+        }
+
         _hasUnsavedDeckChanges = false;
         
         // Refresh the deck list
@@ -190,35 +213,6 @@ public class MainViewModel : ViewModelBase
         
         MessageBox.Show($"Deck '{deckName}' saved successfully!", "Save Deck",
             MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-    
-    private string? PromptForDeckName(string? currentName)
-    {
-        // Simple input dialog - could be enhanced with a proper dialog window
-        var input = currentName ?? "NewDeck";
-        
-        // For now, use a simple approach - generate unique name if needed
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            input = "NewDeck";
-        }
-        
-        // Check if we need to generate a unique name
-        var existingDecks = DeckStorageService.Instance.GetPlayerDecks();
-        var existingNames = existingDecks.Select(d => d.Name).ToHashSet();
-        
-        if (existingNames.Contains(input) && input != currentName)
-        {
-            // Generate a unique name
-            int counter = 1;
-            string baseName = input;
-            while (existingNames.Contains(input))
-            {
-                input = $"{baseName}{counter++}";
-            }
-        }
-        
-        return input;
     }
     
     public void MarkDeckAsChanged()
@@ -411,13 +405,11 @@ public class MainViewModel : ViewModelBase
     public ICommand EquipArmorCommand { get; }
     public ICommand UnequipWeaponCommand { get; }
     public ICommand UnequipArmorCommand { get; }
-    public ICommand? SelectBattleCommand { get; }
     public ICommand SelectDeckCommand { get; }
     public ICommand EditDeckCommand { get; }
     public ICommand DeleteDeckCommand { get; }
     public ICommand NewDeckCommand { get; }
     public ICommand SaveDeckCommand { get; }
-    public ICommand RefreshDecksCommand { get; private set; }
     
     public ObservableCollection<SavedDeckViewModel> PlayerDecks { get; } = new();
 
@@ -485,6 +477,7 @@ public class MainViewModel : ViewModelBase
         PlayerDeckCards.Add(card);
         OnPropertyChanged(nameof(PlayerDeckCardCount));
         OnPropertyChanged(nameof(DeckCountText));
+        MarkDeckAsChanged();
     }
 
     public void RemoveCardFromDeck(CardViewModel? card)
@@ -493,6 +486,7 @@ public class MainViewModel : ViewModelBase
         PlayerDeckCards.Remove(card);
         OnPropertyChanged(nameof(PlayerDeckCardCount));
         OnPropertyChanged(nameof(DeckCountText));
+        MarkDeckAsChanged();
     }
 
     public void ClearDeck()
@@ -500,6 +494,7 @@ public class MainViewModel : ViewModelBase
         PlayerDeckCards.Clear();
         OnPropertyChanged(nameof(PlayerDeckCardCount));
         OnPropertyChanged(nameof(DeckCountText));
+        MarkDeckAsChanged();
     }
 
     public string DeckCountText => $"{PlayerDeckCards.Count} cards";
@@ -875,6 +870,29 @@ public class MainViewModel : ViewModelBase
     private void Navigate(string? view)
     {
         if (string.IsNullOrEmpty(view)) return;
+
+        // Check for unsaved changes when leaving deck builder
+        if (CurrentView == "DeckBuilder" && _hasUnsavedDeckChanges && view != "DeckBuilder")
+        {
+            var dialog = new Views.UnsavedChangesDialog();
+            dialog.ShowDialog();
+
+            switch (dialog.Result)
+            {
+                case Views.UnsavedChangesDialog.UnsavedDialogResult.Save:
+                    // Save and then navigate
+                    SaveDeck();
+                    break;
+                case Views.UnsavedChangesDialog.UnsavedDialogResult.Discard:
+                    // Just continue navigating (discard changes)
+                    break;
+                case Views.UnsavedChangesDialog.UnsavedDialogResult.Cancel:
+                default:
+                    // Cancel navigation
+                    return;
+            }
+        }
+
         CurrentView = view;
     }
     

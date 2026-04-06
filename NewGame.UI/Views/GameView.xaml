@@ -192,13 +192,46 @@
                         <TextBlock Text=" | Mana: " Foreground="{StaticResource ManaBrush}" FontSize="12" Margin="15,0,0,0"/>
                         <TextBlock Text="{Binding PlayerMana}" Foreground="{StaticResource ManaBrush}" FontSize="12" FontWeight="Bold"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="32" Height="44" Margin="2"/>
-                        <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="32" Height="44" Margin="2"/>
-                        <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="32" Height="44" Margin="2"/>
-                        <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="32" Height="44" Margin="2"/>
-                        <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="32" Height="44" Margin="2"/>
-                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding PlayerHand}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="80" Height="110" Margin="2" Cursor="Hand"
+                                        Tag="{Binding}"
+                                        MouseLeftButtonDown="OnHandCardPreviewMouseLeftButtonDown"
+                                        MouseLeftButtonUp="OnHandCardPreviewMouseLeftButtonUp"
+                                        MouseMove="OnHandCardPreviewMouseMove"
+                                        MouseRightButtonDown="OnHandCardRightClick">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" Foreground="White" FontSize="9" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="60"/>
+                                            <Border Background="{StaticResource ManaBrush}" CornerRadius="3" Padding="3,1" Margin="4,0,0,0">
+                                                <TextBlock Text="{Binding ManaCost}" Foreground="White" FontSize="8" FontWeight="Bold"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <Border Grid.Row="1" Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}" Margin="2,4" CornerRadius="2">
+                                            <TextBlock Text="{Binding Type}" Foreground="#80FFFFFF" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,8,0"/>
+                                            <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
 
                 <!-- Player Equipment (25%) -->
@@ -229,5 +262,8 @@
                 <Button Grid.Column="3" Content="End Turn" Style="{StaticResource AccentButtonStyle}" Command="{Binding EndTurnCommand}" Padding="15,10" Margin="10,0,0,0" VerticalAlignment="Center"/>
             </Grid>
         </Border>
+
+        <!-- Card Zoom Overlay -->
+        <controls:CardZoomOverlay DataContext="{Binding}" Visibility="{Binding IsCardZoomed, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </UserControl>
