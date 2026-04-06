@@ -1,0 +1,45 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force batch scripts to always use LF line endings so that converting a repository to/from Git does not change the line endings
+*.sh text eol=lf
+
+# Force VC++ files to use CRLF
+*.vcxproj text eol=crlf
+*.vcxitems text eol=crlf
+
+# Source files
+*.cs text eol=lf
+*.xaml text eol=lf
+*.csproj text eol=lf
+*.props text eol=lf
+*.targets text eol=lf
+
+# Text files
+*.json text eol=lf
+*.xml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+
+# Define explicit file types that should use LF (common in .NET projects)
+.cs text eol=lf
+.xaml text eol=lf
+.csproj text eol=lf
+
+# Binary files - don't attempt to normalize
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.dll binary
+*.exe binary
+*.pdb binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
