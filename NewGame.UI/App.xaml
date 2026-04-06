@@ -21,6 +21,14 @@
             <Converters:BoolToTurnTextConverter x:Key="BoolToTurnTextConverter"/>
             <Converters:BoolToTurnColorConverter x:Key="BoolToTurnColorConverter"/>
             <Converters:StringEqualityToVisibilityConverter x:Key="StringEqualityToVisibilityConverter"/>
+            <Converters:ElementToGradientConverter x:Key="ElementToGradientConverter"/>
+            <Converters:ElementToGlowConverter x:Key="ElementToGlowConverter"/>
+            <Converters:RarityToGradientConverter x:Key="RarityToGradientConverter"/>
+            <Converters:RarityToGlowConverter x:Key="RarityToGlowConverter"/>
+            <Converters:EffectTypeToIconConverter x:Key="EffectTypeToIconConverter"/>
+            <Converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+            <Converters:CanAffordToOpacityConverter x:Key="CanAffordToOpacityConverter"/>
+            <Converters:CanAffordToColorConverter x:Key="CanAffordToColorConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

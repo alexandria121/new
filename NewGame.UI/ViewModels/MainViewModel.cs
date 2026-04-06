@@ -4,6 +4,7 @@ using MagicalDeckbuilder.Cards;
 using MagicalDeckbuilder.Combining;
 using MagicalDeckbuilder.Decks;
 using MagicalDeckbuilder.Game;
+using MagicalDeckbuilder.Logging;
 using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
@@ -188,32 +189,55 @@ public class MainViewModel : ViewModelBase
 
     private void InitializeGame()
     {
-        // Clear field slots first to avoid any stale state
-        for (int i = 0; i < FieldSlots.Length; i++)
+        ErrorLogger.Instance.Debug("MainViewModel", "[Operation: InitializeGame] Starting game initialization");
+        try
         {
-            FieldSlots[i] = null;
+            // Clear all field slots
+            for (int i = 0; i < FieldSlots.Length; i++)
+            {
+                FieldSlots[i] = null;
+            }
+            
+            // Initialize opponent AI and deck
+            _opponentAI = new OpponentAI(_difficulty);
+            var newOpponentDeck = OpponentAI.CreateDeckForDifficulty(_difficulty);
+            OpponentDeck = newOpponentDeck;
+
+            // Generate and initialize player deck
+            var playerCards = CardFactory.GenerateRandomDeck();
+            PlayerDeck.InitializeDeck(playerCards);
+            PlayerDeck.DrawCards(PlayerDeck.StartingHandSize);
+
+            // Draw cards for opponent
+            OpponentDeck.DrawCards(4);
+
+            // Reset game state
+            PlayerHealth = 30;
+            PlayerMaxHealth = 30;
+            PlayerMana = 2;
+            PlayerMaxMana = 10;
+            OpponentHealth = 30;
+            TurnCount = 1;
+            IsPlayerTurn = true;
+            StatusMessage = "";
+
+            // Refresh UI bindings
+            RefreshHand();
+            OnPropertyChanged(nameof(FieldSlots));
+            OnPropertyChanged(nameof(PlayerHand));
+            
+            // Change view to game
+            CurrentView = "Game";
+            
+            ErrorLogger.Instance.Info("MainViewModel", "[Operation: InitializeGame] Game initialized successfully");
         }
-        
-        _opponentAI = new OpponentAI(_difficulty);
-        OpponentDeck = OpponentAI.CreateDeckForDifficulty(_difficulty);
-
-        var playerCards = CardFactory.GenerateRandomDeck();
-        PlayerDeck.InitializeDeck(playerCards);
-
-        OpponentDeck.DrawCards(4);
-
-        PlayerHealth = 30;
-        PlayerMaxHealth = 30;
-        PlayerMana = 2;
-        PlayerMaxMana = 10;
-        OpponentHealth = 30;
-        TurnCount = 1;
-        IsPlayerTurn = true;
-        StatusMessage = "";
-
-        RefreshHand();
-        OnPropertyChanged(nameof(FieldSlots));
-        CurrentView = "Game";
+        catch (Exception ex)
+        {
+            ErrorLogger.Instance.Error("MainViewModel", "[Operation: InitializeGame] Failed to initialize game", ex);
+            StatusMessage = $"Error: {ex.Message}";
+            // Don't throw - try to stay in current view
+            CurrentView = "Menu";
+        }
     }
 
     public void AddCardToDeck(CardViewModel card)
@@ -224,7 +248,7 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(DeckCountText));
     }
 
-    public void RemoveCardFromDeck(CardViewModel card)
+    public void RemoveCardFromDeck(CardViewModel? card)
     {
         if (card == null) return;
         PlayerDeckCards.Remove(card);
@@ -460,8 +484,15 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        PlayerDeck.PlayCard(ComboCard1.Id);
-        PlayerDeck.PlayCard(ComboCard2.Id);
+        // Remove combo cards from hand (properly, not via PlayCard which moves to InPlay)
+        PlayerDeck.DiscardFromHand(ComboCard1.Id);
+        PlayerDeck.DiscardFromHand(ComboCard2.Id);
+
+        // Also remove from ObservableCollection PlayerHand
+        var card1ToRemove = PlayerHand.FirstOrDefault(c => c.Id == ComboCard1.Id);
+        var card2ToRemove = PlayerHand.FirstOrDefault(c => c.Id == ComboCard2.Id);
+        if (card1ToRemove != null) PlayerHand.Remove(card1ToRemove);
+        if (card2ToRemove != null) PlayerHand.Remove(card2ToRemove);
 
         var newCard = new CardViewModel(result.ResultCard);
         PlayerDeck.Hand.Add(result.ResultCard);

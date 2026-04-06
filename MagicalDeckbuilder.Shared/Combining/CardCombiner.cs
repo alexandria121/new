@@ -652,6 +652,18 @@ public class CardCombiner
         {
             enhancedCard.Power += bonus + 1;
         }
+        else if (enhancedCard.Type == CardType.Weapon)
+        {
+            enhancedCard.Power += bonus + 1;
+        }
+        else if (enhancedCard.Type == CardType.Armor)
+        {
+            enhancedCard.Health += bonus + 1;
+        }
+        else if (enhancedCard.Type == CardType.Enchantment)
+        {
+            enhancedCard.Power += bonus;
+        }
         
         enhancedCard.Effects.Add(new CardEffect
         {

@@ -174,6 +174,32 @@ public class SpellCard : Card
     {
         Type = CardType.Spell;
     }
+
+    public override Card Clone()
+    {
+        return new SpellCard
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = this.Name,
+            Description = this.Description,
+            Type = this.Type,
+            Element = this.Element,
+            ManaCost = this.ManaCost,
+            Power = this.Power,
+            Health = this.Health,
+            Effects = this.Effects.Select(e => new CardEffect
+            {
+                Name = e.Name,
+                Description = e.Description,
+                Type = e.Type,
+                Value = e.Value,
+                Target = e.Target,
+                IsTemporary = e.IsTemporary
+            }).ToList(),
+            IsLegendary = this.IsLegendary,
+            Rarity = this.Rarity
+        };
+    }
 }
 
 /// <summary>
@@ -223,6 +249,32 @@ public class EventCard : Card
     {
         Type = CardType.Event;
     }
+
+    public override Card Clone()
+    {
+        return new EventCard
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = this.Name,
+            Description = this.Description,
+            Type = this.Type,
+            Element = this.Element,
+            ManaCost = this.ManaCost,
+            Power = this.Power,
+            Health = this.Health,
+            Effects = this.Effects.Select(e => new CardEffect
+            {
+                Name = e.Name,
+                Description = e.Description,
+                Type = e.Type,
+                Value = e.Value,
+                Target = e.Target,
+                IsTemporary = e.IsTemporary
+            }).ToList(),
+            IsLegendary = this.IsLegendary,
+            Rarity = this.Rarity
+        };
+    }
 }
 
 /// <summary>
@@ -233,5 +285,105 @@ public class BlankCard : Card
     public BlankCard()
     {
         Type = CardType.Blank;
+    }
+
+    public override Card Clone()
+    {
+        return new BlankCard
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = this.Name,
+            Description = this.Description,
+            Type = this.Type,
+            Element = this.Element,
+            ManaCost = this.ManaCost,
+            Power = this.Power,
+            Health = this.Health,
+            Effects = this.Effects.Select(e => new CardEffect
+            {
+                Name = e.Name,
+                Description = e.Description,
+                Type = e.Type,
+                Value = e.Value,
+                Target = e.Target,
+                IsTemporary = e.IsTemporary
+            }).ToList(),
+            IsLegendary = this.IsLegendary,
+            Rarity = this.Rarity
+        };
+    }
+}
+
+/// <summary>
+/// Represents a weapon card that can be equipped to deal damage
+/// </summary>
+public class WeaponCard : Card
+{
+    public WeaponCard()
+    {
+        Type = CardType.Weapon;
+    }
+
+    public override Card Clone()
+    {
+        return new WeaponCard
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = this.Name,
+            Description = this.Description,
+            Type = this.Type,
+            Element = this.Element,
+            ManaCost = this.ManaCost,
+            Power = this.Power,
+            Health = this.Health,
+            Effects = this.Effects.Select(e => new CardEffect
+            {
+                Name = e.Name,
+                Description = e.Description,
+                Type = e.Type,
+                Value = e.Value,
+                Target = e.Target,
+                IsTemporary = e.IsTemporary
+            }).ToList(),
+            IsLegendary = this.IsLegendary,
+            Rarity = this.Rarity
+        };
+    }
+}
+
+/// <summary>
+/// Represents an armor card that provides defensive capabilities
+/// </summary>
+public class ArmorCard : Card
+{
+    public ArmorCard()
+    {
+        Type = CardType.Armor;
+    }
+
+    public override Card Clone()
+    {
+        return new ArmorCard
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = this.Name,
+            Description = this.Description,
+            Type = this.Type,
+            Element = this.Element,
+            ManaCost = this.ManaCost,
+            Power = this.Power,
+            Health = this.Health,
+            Effects = this.Effects.Select(e => new CardEffect
+            {
+                Name = e.Name,
+                Description = e.Description,
+                Type = e.Type,
+                Value = e.Value,
+                Target = e.Target,
+                IsTemporary = e.IsTemporary
+            }).ToList(),
+            IsLegendary = this.IsLegendary,
+            Rarity = this.Rarity
+        };
     }
 }

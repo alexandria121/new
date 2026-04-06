@@ -1,6 +1,7 @@
 using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using MagicalDeckbuilder.Decks;
+using MagicalDeckbuilder.Logging;
 
 namespace MagicalDeckbuilder.Game;
 
@@ -372,35 +373,45 @@ public class OpponentAI
 
     public static DeckManager CreateDeckForDifficulty(DifficultyLevel difficulty)
     {
-        var deck = new DeckManager();
-        var cards = CardFactory.CreateStarterDeck();
-        var filtered = difficulty switch
+        ErrorLogger.Instance.Debug("OpponentAI", $"[Operation: CreateDeckForDifficulty] Creating deck for difficulty: {difficulty}");
+        try
         {
-            DifficultyLevel.Apprentice => cards.Where(c => c.ManaCost <= 3).ToList(),
-            DifficultyLevel.Journeyman => cards.Where(c => c.ManaCost <= 5).ToList(),
-            DifficultyLevel.Expert => cards,
-            DifficultyLevel.Grandmaster => cards,
-            _ => cards
-        };
+            var deck = new DeckManager();
+            var cards = CardFactory.CreateStarterDeck();
+            var filtered = difficulty switch
+            {
+                DifficultyLevel.Apprentice => cards.Where(c => c.ManaCost <= 3).ToList(),
+                DifficultyLevel.Journeyman => cards.Where(c => c.ManaCost <= 5).ToList(),
+                DifficultyLevel.Expert => cards,
+                DifficultyLevel.Grandmaster => cards,
+                _ => cards
+            };
 
-        var random = new Random();
-        var deckCards = new List<Card>();
-        int size = difficulty switch
-        {
-            DifficultyLevel.Apprentice => random.Next(8, 12),
-            DifficultyLevel.Journeyman => random.Next(10, 15),
-            DifficultyLevel.Expert => random.Next(12, 18),
-            DifficultyLevel.Grandmaster => random.Next(15, 22),
-            _ => random.Next(11, 20)
-        };
+            var random = new Random();
+            var deckCards = new List<Card>();
+            int size = difficulty switch
+            {
+                DifficultyLevel.Apprentice => random.Next(8, 12),
+                DifficultyLevel.Journeyman => random.Next(10, 15),
+                DifficultyLevel.Expert => random.Next(12, 18),
+                DifficultyLevel.Grandmaster => random.Next(15, 22),
+                _ => random.Next(11, 20)
+            };
 
-        for (int i = 0; i < size && i < filtered.Count * 3; i++)
-        {
-            var template = filtered[random.Next(filtered.Count)];
-            deckCards.Add(template.Clone());
+            for (int i = 0; i < size && i < filtered.Count * 3; i++)
+            {
+                var template = filtered[random.Next(filtered.Count)];
+                deckCards.Add(template.Clone());
+            }
+
+            deck.InitializeDeck(deckCards);
+            ErrorLogger.Instance.Info("OpponentAI", $"[Operation: CreateDeckForDifficulty] Created deck with {deckCards.Count} cards for {difficulty}");
+            return deck;
         }
-
-        deck.InitializeDeck(deckCards);
-        return deck;
+        catch (Exception ex)
+        {
+            ErrorLogger.Instance.Error("OpponentAI", $"[Operation: CreateDeckForDifficulty] Failed to create deck for {difficulty}", ex);
+            throw;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
+using MagicalDeckbuilder.Logging;
 
 namespace MagicalDeckbuilder.Decks;
 
@@ -37,9 +38,9 @@ public class DeckManager
     public List<Card> DiscardPile { get; private set; } = new();
     public List<Card> InPlay { get; private set; } = new();
     
-    // Creature slots (0-4, five slots total)
+    // Creature slots (0-5 for opponent, 6-11 for player = 12 total)
     public List<CreatureSlot> CreatureSlots { get; private set; } = new();
-    public int MaxCreatureSlots { get; set; } = 5;
+    public int MaxCreatureSlots { get; set; } = 6;
     
     public int MaxHandSize { get; set; } = 7;
     public int StartingHandSize { get; set; } = 4;
@@ -49,25 +50,33 @@ public class DeckManager
     /// </summary>
     public void InitializeDeck(List<Card> cardTemplates)
     {
-        DrawPile.Clear();
-        Hand.Clear();
-        DiscardPile.Clear();
-        InPlay.Clear();
-        
-        // Initialize creature slots
-        CreatureSlots.Clear();
-        for (int i = 0; i < MaxCreatureSlots; i++)
+        ErrorLogger.Instance.Debug("DeckManager", "[Operation: InitializeDeck] Starting deck initialization");
+        try
         {
-            CreatureSlots.Add(new CreatureSlot { SlotIndex = i });
+            DrawPile.Clear();
+            Hand.Clear();
+            DiscardPile.Clear();
+            InPlay.Clear();
+            
+            CreatureSlots.Clear();
+            for (int i = 0; i < MaxCreatureSlots; i++)
+            {
+                CreatureSlots.Add(new CreatureSlot { SlotIndex = i });
+            }
+            
+            foreach (var card in cardTemplates)
+            {
+                DrawPile.Add(card.Clone());
+            }
+            
+            ShuffleDrawPile();
+            ErrorLogger.Instance.Info("DeckManager", $"[Operation: InitializeDeck] Deck initialized with {cardTemplates.Count} cards");
         }
-        
-        // Create copies of all cards in the deck
-        foreach (var card in cardTemplates)
+        catch (Exception ex)
         {
-            DrawPile.Add(card.Clone());
+            ErrorLogger.Instance.Error("DeckManager", "[Operation: InitializeDeck] Failed to initialize deck", ex);
+            throw;
         }
-        
-        ShuffleDrawPile();
     }
     
     /// <summary>
@@ -87,22 +96,24 @@ public class DeckManager
     /// </summary>
     public List<Card> DrawCards(int count)
     {
+        ErrorLogger.Instance.Debug("DeckManager", $"[Operation: DrawCards] Drawing {count} cards");
         var drawnCards = new List<Card>();
         
         for (int i = 0; i < count; i++)
         {
             if (DrawPile.Count == 0)
             {
-                // Reshuffle discard pile into draw pile
                 if (DiscardPile.Count > 0)
                 {
+                    ErrorLogger.Instance.Info("DeckManager", "[Operation: DrawCards] Draw pile empty, reshuffling discard pile");
                     DrawPile = new List<Card>(DiscardPile);
                     DiscardPile.Clear();
                     ShuffleDrawPile();
                 }
                 else
                 {
-                    break; // No cards left
+                    ErrorLogger.Instance.Warning("DeckManager", "[Operation: DrawCards] No cards left to draw - both draw pile and discard pile are empty");
+                    break;
                 }
             }
             
@@ -114,6 +125,9 @@ public class DeckManager
                 drawnCards.Add(card);
             }
         }
+        
+        if (drawnCards.Count > 0)
+            ErrorLogger.Instance.Debug("DeckManager", $"[Operation: DrawCards] Drew {drawnCards.Count} cards");
         
         return drawnCards;
     }
@@ -128,8 +142,10 @@ public class DeckManager
         {
             Hand.Remove(card);
             InPlay.Add(card);
+            ErrorLogger.Instance.Debug("DeckManager", $"[Operation: PlayCard] Played card: {card.Name}");
             return card;
         }
+        ErrorLogger.Instance.Warning("DeckManager", $"[Operation: PlayCard] Card not found in hand: {cardId}");
         return null;
     }
     
@@ -140,17 +156,27 @@ public class DeckManager
     {
         var card = Hand.FirstOrDefault(c => c.Id == cardId);
         if (card == null || card.Type != CardType.Creature)
+        {
+            ErrorLogger.Instance.Warning("DeckManager", $"[Operation: PlayCreatureToSlot] Card not found or not a creature: {cardId}");
             return null;
+        }
             
         if (slotIndex < 0 || slotIndex >= CreatureSlots.Count)
+        {
+            ErrorLogger.Instance.Warning("DeckManager", $"[Operation: PlayCreatureToSlot] Invalid slot index: {slotIndex}");
             return null;
+        }
             
         if (!CreatureSlots[slotIndex].IsEmpty)
+        {
+            ErrorLogger.Instance.Warning("DeckManager", $"[Operation: PlayCreatureToSlot] Slot already occupied: {slotIndex}");
             return null;
+        }
             
         Hand.Remove(card);
         CreatureSlots[slotIndex].Creature = card;
         InPlay.Add(card);
+        ErrorLogger.Instance.Debug("DeckManager", $"[Operation: PlayCreatureToSlot] Played {card.Name} to slot {slotIndex}");
         return card;
     }
     

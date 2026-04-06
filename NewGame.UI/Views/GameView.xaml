@@ -290,15 +290,16 @@
                                         Margin="4">
                                     <!-- Inner wrapper for rarity glow -->
                                     <Border Effect="{Binding Card.Rarity, Converter={StaticResource RarityToGlowConverter}}">
-                                        <Border Background="{Binding ManaCost, Converter={StaticResource CanAffordToColorConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}" 
+                                        <Border Background="{StaticResource SurfaceLightBrush}" 
                                                 BorderBrush="{Binding Card.Element, Converter={StaticResource ElementToGradientConverter}}" 
                                                 BorderThickness="4" 
                                                 CornerRadius="8"
                                                 Width="120"
                                                 Height="160"
-                                                Opacity="{Binding Card.ManaCost, Converter={StaticResource CanAffordToOpacityConverter}, ConverterParameter={Binding DataContext.PlayerMana, RelativeSource={RelativeSource AncestorType=UserControl}}}"
+                                                Opacity="1"
                                                 MouseMove="OnHandCardMouseMove"
                                                 MouseLeftButtonDown="OnHandCardClick"
+                                                MouseRightButtonDown="OnHandCardRightClick"
                                                 Tag="{Binding}"
                                                 Cursor="Hand">
                                             <Grid>
@@ -426,6 +427,7 @@
                             <Border Background="#384638" CornerRadius="4" Margin="2"
                                     Visibility="{Binding FieldSlots[6], Converter={StaticResource NullToVisibilityConverter}}"
                                     MouseLeftButtonDown="OnFieldCardClick"
+                                    MouseRightButtonDown="OnFieldCardRightClick"
                                     Tag="{Binding FieldSlots[6]}">
                                 <StackPanel VerticalAlignment="Center" Margin="2">
                                     <TextBlock Text="{Binding FieldSlots[6].Card.Name}" Foreground="#64FF64" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
@@ -462,6 +464,7 @@
                             <Border Background="#384638" CornerRadius="4" Margin="2"
                                     Visibility="{Binding FieldSlots[7], Converter={StaticResource NullToVisibilityConverter}}"
                                     MouseLeftButtonDown="OnFieldCardClick"
+                                    MouseRightButtonDown="OnFieldCardRightClick"
                                     Tag="{Binding FieldSlots[7]}">
                                 <StackPanel VerticalAlignment="Center" Margin="2">
                                     <TextBlock Text="{Binding FieldSlots[7].Card.Name}" Foreground="#64FF64" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
@@ -498,6 +501,7 @@
                             <Border Background="#384638" CornerRadius="4" Margin="2"
                                     Visibility="{Binding FieldSlots[8], Converter={StaticResource NullToVisibilityConverter}}"
                                     MouseLeftButtonDown="OnFieldCardClick"
+                                    MouseRightButtonDown="OnFieldCardRightClick"
                                     Tag="{Binding FieldSlots[8]}">
                                 <StackPanel VerticalAlignment="Center" Margin="2">
                                     <TextBlock Text="{Binding FieldSlots[8].Card.Name}" Foreground="#64FF64" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
@@ -534,6 +538,7 @@
                             <Border Background="#384638" CornerRadius="4" Margin="2"
                                     Visibility="{Binding FieldSlots[9], Converter={StaticResource NullToVisibilityConverter}}"
                                     MouseLeftButtonDown="OnFieldCardClick"
+                                    MouseRightButtonDown="OnFieldCardRightClick"
                                     Tag="{Binding FieldSlots[9]}">
                                 <StackPanel VerticalAlignment="Center" Margin="2">
                                     <TextBlock Text="{Binding FieldSlots[9].Card.Name}" Foreground="#64FF64" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
@@ -570,6 +575,7 @@
                             <Border Background="#384638" CornerRadius="4" Margin="2"
                                     Visibility="{Binding FieldSlots[10], Converter={StaticResource NullToVisibilityConverter}}"
                                     MouseLeftButtonDown="OnFieldCardClick"
+                                    MouseRightButtonDown="OnFieldCardRightClick"
                                     Tag="{Binding FieldSlots[10]}">
                                 <StackPanel VerticalAlignment="Center" Margin="2">
                                     <TextBlock Text="{Binding FieldSlots[10].Card.Name}" Foreground="#64FF64" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
@@ -606,6 +612,7 @@
                             <Border Background="#384638" CornerRadius="4" Margin="2"
                                     Visibility="{Binding FieldSlots[11], Converter={StaticResource NullToVisibilityConverter}}"
                                     MouseLeftButtonDown="OnFieldCardClick"
+                                    MouseRightButtonDown="OnFieldCardRightClick"
                                     Tag="{Binding FieldSlots[11]}">
                                 <StackPanel VerticalAlignment="Center" Margin="2">
                                     <TextBlock Text="{Binding FieldSlots[11].Card.Name}" Foreground="#64FF64" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>

@@ -152,6 +152,24 @@ public partial class GameView : UserControl
         }
     }
 
+    private void OnHandCardRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            ViewModel?.ZoomCard(card);
+            e.Handled = true;
+        }
+    }
+
+    private void OnFieldCardRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            ViewModel?.ZoomCard(card);
+            e.Handled = true;
+        }
+    }
+
     private void OnSlotMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
     {
         if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && sender is Border slotBorder)

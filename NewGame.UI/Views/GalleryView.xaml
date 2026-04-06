@@ -29,7 +29,9 @@
                     <DataTemplate>
                         <!-- Outer wrapper for element glow effect -->
                         <Border Effect="{Binding Element, Converter={StaticResource ElementToGlowConverter}}"
-                                Margin="8">
+                                Margin="8"
+                                MouseRightButtonDown="OnCardRightClick"
+                                Cursor="Hand">
                             <!-- Inner wrapper for rarity glow -->
                             <Border Effect="{Binding Rarity, Converter={StaticResource RarityToGlowConverter}}">
                                 <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"

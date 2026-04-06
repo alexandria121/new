@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -7,11 +8,34 @@ namespace NewGame.UI.Controls;
 
 public partial class CardZoomOverlay : UserControl
 {
+    private MainViewModel? _mainViewModel;
+    
     public CardZoomOverlay()
     {
         InitializeComponent();
         Focusable = true;
-        Loaded += (s, e) => Focus();
+        Loaded += OnLoaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        // Find and store the MainViewModel for closing - don't overwrite DataContext
+        _mainViewModel = FindMainViewModel();
+        Focus();
+    }
+
+    private MainViewModel? FindMainViewModel()
+    {
+        DependencyObject current = this;
+        while (current != null)
+        {
+            if (current is FrameworkElement fe && fe.DataContext is MainViewModel vm)
+            {
+                return vm;
+            }
+            current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+        }
+        return null;
     }
 
     private void OnOverlayClick(object sender, MouseButtonEventArgs e)
@@ -39,6 +63,12 @@ public partial class CardZoomOverlay : UserControl
         CloseOverlay();
     }
 
+    private void OnOverlayRightClick(object sender, MouseButtonEventArgs e)
+    {
+        CloseOverlay();
+        e.Handled = true;
+    }
+
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape || e.Key == Key.Enter || e.Key == Key.Space)
@@ -50,9 +80,11 @@ public partial class CardZoomOverlay : UserControl
 
     private void CloseOverlay()
     {
-        if (DataContext is MainViewModel viewModel)
+        // Try cached reference first, then search if needed
+        if (_mainViewModel == null)
         {
-            viewModel.CloseZoom();
+            _mainViewModel = FindMainViewModel();
         }
+        _mainViewModel?.CloseZoom();
     }
 }

@@ -27,7 +27,8 @@
     <Grid>
         <!-- Dark overlay -->
         <Border Background="#CC000000" 
-                MouseLeftButtonDown="OnOverlayBackgroundClick"/>
+                MouseLeftButtonDown="OnOverlayBackgroundClick"
+                MouseRightButtonDown="OnOverlayRightClick"/>
 
         <!-- Outer wrapper for element glow effect -->
         <Border Effect="{Binding Element, Converter={StaticResource ElementToGlowConverter}}"
@@ -87,13 +88,43 @@
                                 <!-- Close button -->
                                 <Button Grid.Column="1" 
                                         Content="✕" 
-                                        FontSize="16"
+                                        FontSize="18"
+                                        FontWeight="Bold"
                                         Foreground="White"
-                                        Background="Transparent"
-                                        BorderThickness="0"
+                                        Background="#40FFFFFF"
+                                        BorderThickness="1"
+                                        BorderBrush="#60FFFFFF"
                                         Cursor="Hand"
                                         Click="OnCloseClick"
-                                        Padding="8,4"/>
+                                        Padding="10,6"
+                                        MinWidth="36"
+                                        MinHeight="36"
+                                        VerticalAlignment="Center">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="4">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#60FFFFFF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter Property="Background" Value="#80FFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </Grid>
                         </Border>
 

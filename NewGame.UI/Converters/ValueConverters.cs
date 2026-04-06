@@ -35,7 +35,7 @@ public class ElementToGradientConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
     }
 }
 
@@ -66,7 +66,7 @@ public class ElementToGlowConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new System.Windows.Media.Effects.DropShadowEffect { Color = Colors.Gray, BlurRadius = 10, ShadowDepth = 0, Opacity = 0.5 };
     }
 }
 
@@ -92,7 +92,7 @@ public class RarityToGradientConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new LinearGradientBrush(Color.FromRgb(128, 128, 128), Color.FromRgb(100, 100, 100), 45);
     }
 }
 
@@ -109,7 +109,8 @@ public class RarityToGlowConverter : IValueConverter
             {
                 4 => new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(255, 215, 0), BlurRadius = 20, ShadowDepth = 0, Opacity = 0.9 }, // Legendary - gold glow
                 3 => new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(80, 128, 255), BlurRadius = 15, ShadowDepth = 0, Opacity = 0.7 }, // Rare - blue glow
-                _ => null // Common/Uncommon - no glow
+                2 => new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(100, 200, 100), BlurRadius = 10, ShadowDepth = 0, Opacity = 0.5 }, // Uncommon - green glow
+                _ => null // Common - no glow
             };
         }
         return null;
@@ -117,7 +118,7 @@ public class RarityToGlowConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return null;
     }
 }
 
@@ -145,7 +146,7 @@ public class TypeToColorConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
     }
 }
 
@@ -173,7 +174,7 @@ public class ElementToColorConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
     }
 }
 
@@ -197,7 +198,7 @@ public class RarityToColorConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
     }
 }
 
@@ -214,7 +215,7 @@ public class IsCreatureConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return Visibility.Collapsed;
     }
 }
 
@@ -231,7 +232,7 @@ public class BoolToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return false;
     }
 }
 
@@ -248,7 +249,7 @@ public class InverseBoolToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return true;
     }
 }
 
@@ -265,7 +266,7 @@ public class BoolToTurnTextConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return false;
     }
 }
 
@@ -284,7 +285,7 @@ public class BoolToTurnColorConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new SolidColorBrush(Color.FromRgb(128, 128, 128));
     }
 }
 
@@ -297,7 +298,7 @@ public class NullToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return null;
     }
 }
 
@@ -314,7 +315,7 @@ public class EmptyToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return 1;
     }
 }
 
@@ -331,7 +332,7 @@ public class NotMenuToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return "Menu";
     }
 }
 
@@ -348,7 +349,7 @@ public class StringEqualityToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return "";
     }
 }
 
@@ -372,7 +373,7 @@ public class CanAffordToColorConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return new SolidColorBrush(Color.FromRgb(70, 70, 70));
     }
 }
 
@@ -392,7 +393,7 @@ public class CanAffordToOpacityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return 1.0;
     }
 }
 
@@ -425,7 +426,7 @@ public class EffectTypeToIconConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return EffectType.Damage;
     }
 }
 
@@ -445,6 +446,6 @@ public class IntToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return 0;
     }
 }

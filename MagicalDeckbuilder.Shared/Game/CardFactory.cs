@@ -4,6 +4,7 @@ using ElementType = MagicalDeckbuilder.Cards.ElementType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
 using MagicalDeckbuilder.Cards;
+using MagicalDeckbuilder.Logging;
 
 namespace MagicalDeckbuilder.Game;
 
@@ -17,19 +18,28 @@ public static class CardFactory
     /// </summary>
     public static List<Card> CreateStarterDeck()
     {
-        var deck = new List<Card>();
-        
-        // Add 15 cards per element
-        deck.AddRange(CreateRadioactivityDeck());
-        deck.AddRange(CreateFleshDeck());
-        deck.AddRange(CreateToxinDeck());
-        deck.AddRange(CreateFungusDeck());
-        deck.AddRange(CreateThermodynamicsDeck());
-        deck.AddRange(CreateTimeDeck());
-        deck.AddRange(CreateFoodDeck());
-        deck.AddRange(CreateEldritchDeck());
-        
-        return deck;
+        ErrorLogger.Instance.Debug("CardFactory", "[Operation: CreateStarterDeck] Starting starter deck creation");
+        try
+        {
+            var deck = new List<Card>();
+            
+            deck.AddRange(CreateRadioactivityDeck());
+            deck.AddRange(CreateFleshDeck());
+            deck.AddRange(CreateToxinDeck());
+            deck.AddRange(CreateFungusDeck());
+            deck.AddRange(CreateThermodynamicsDeck());
+            deck.AddRange(CreateTimeDeck());
+            deck.AddRange(CreateFoodDeck());
+            deck.AddRange(CreateEldritchDeck());
+            
+            ErrorLogger.Instance.Info("CardFactory", $"[Operation: CreateStarterDeck] Created deck with {deck.Count} cards");
+            return deck;
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Instance.Error("CardFactory", "[Operation: CreateStarterDeck] Failed to create starter deck", ex);
+            throw;
+        }
     }
     
     // ============ RADIOACTIVITY (15 cards) ============
@@ -558,7 +568,7 @@ public static class CardFactory
     private static Card CreateWeapon(string name, string description,
         ElementType element, int manaCost, int power)
     {
-        return new Card
+        return new WeaponCard
         {
             Name = name,
             Description = description,
@@ -576,6 +586,32 @@ public static class CardFactory
                     Type = EffectType.Damage,
                     Value = power,
                     Target = TargetType.Enemy
+                }
+            }
+        };
+    }
+
+    private static Card CreateArmor(string name, string description,
+        ElementType element, int manaCost, int defense)
+    {
+        return new ArmorCard
+        {
+            Name = name,
+            Description = description,
+            Type = CardType.Armor,
+            Element = element,
+            ManaCost = manaCost,
+            Health = defense,
+            Rarity = 1,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect
+                {
+                    Name = "Protect",
+                    Description = description,
+                    Type = EffectType.Shield,
+                    Value = defense,
+                    Target = TargetType.Self
                 }
             }
         };
@@ -650,19 +686,29 @@ public static class CardFactory
     /// </summary>
     public static List<Card> GenerateRandomDeck()
     {
-        var random = new Random();
-        var deck = new List<Card>();
-        
-        int deckSize = random.Next(11, 20);
-        
-        var allCards = CreateStarterDeck();
-        
-        for (int i = 0; i < deckSize; i++)
+        ErrorLogger.Instance.Debug("CardFactory", "[Operation: GenerateRandomDeck] Starting random deck generation");
+        try
         {
-            int cardIndex = random.Next(allCards.Count);
-            deck.Add(allCards[cardIndex].Clone());
+            var random = new Random();
+            var deck = new List<Card>();
+            
+            int deckSize = random.Next(11, 20);
+            
+            var allCards = CreateStarterDeck();
+            
+            for (int i = 0; i < deckSize; i++)
+            {
+                int cardIndex = random.Next(allCards.Count);
+                deck.Add(allCards[cardIndex].Clone());
+            }
+            
+            ErrorLogger.Instance.Info("CardFactory", $"[Operation: GenerateRandomDeck] Generated random deck with {deck.Count} cards");
+            return deck;
         }
-        
-        return deck;
+        catch (Exception ex)
+        {
+            ErrorLogger.Instance.Error("CardFactory", "[Operation: GenerateRandomDeck] Failed to generate random deck", ex);
+            throw;
+        }
     }
 }
