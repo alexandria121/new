@@ -29,6 +29,7 @@ public class MainViewModel : ViewModelBase
     private CardViewModel? _comboResult;
     private string _statusMessage = "";
     private bool _canCombine;
+    private bool _isComboLocked;
 
     private int _playerHealth = 30;
     private int _playerMaxHealth = 30;
@@ -135,6 +136,12 @@ public class MainViewModel : ViewModelBase
     {
         get => _canCombine;
         set => SetProperty(ref _canCombine, value);
+    }
+
+    public bool IsComboLocked
+    {
+        get => _isComboLocked;
+        set => SetProperty(ref _isComboLocked, value);
     }
 
     public string StatusMessage
@@ -540,23 +547,20 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        // Remove combo cards from hand (properly, not via PlayCard which moves to InPlay)
         PlayerDeck.DiscardFromHand(ComboCard1.Id);
         PlayerDeck.DiscardFromHand(ComboCard2.Id);
 
-        // Also remove from ObservableCollection PlayerHand
         var card1ToRemove = PlayerHand.FirstOrDefault(c => c.Id == ComboCard1.Id);
         var card2ToRemove = PlayerHand.FirstOrDefault(c => c.Id == ComboCard2.Id);
         if (card1ToRemove != null) PlayerHand.Remove(card1ToRemove);
         if (card2ToRemove != null) PlayerHand.Remove(card2ToRemove);
 
-        var newCard = new CardViewModel(result.ResultCard);
-        PlayerDeck.Hand.Add(result.ResultCard);
-        PlayerHand.Add(newCard);
-        CustomCards.Add(newCard);
+        ComboResult = new CardViewModel(result.ResultCard);
+        CustomCards.Add(ComboResult);
+        IsComboLocked = true;
+        CanCombine = false;
 
         StatusMessage = $"Created {result.ResultCard.Name}!";
-        ClearCombo();
         OnPropertyChanged(nameof(PlayerHand));
     }
 
@@ -566,6 +570,19 @@ public class MainViewModel : ViewModelBase
         ComboCard2 = null;
         ComboResult = null;
         CanCombine = false;
+        IsComboLocked = false;
+    }
+
+    public void TakeComboResult()
+    {
+        if (ComboResult == null || !IsComboLocked) return;
+
+        PlayerDeck.Hand.Add(ComboResult.Card);
+        PlayerHand.Add(ComboResult);
+
+        StatusMessage = $"Added {ComboResult.Card.Name} to hand!";
+        ClearCombo();
+        OnPropertyChanged(nameof(PlayerHand));
     }
 
     public void SetComboCard(CardViewModel card, int slot)

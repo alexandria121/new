@@ -86,7 +86,7 @@ public partial class GameView : UserControl
 
     private void OnComboSlotDragEnter(object sender, DragEventArgs e)
     {
-        if (sender is Border slot)
+        if (sender is Border slot && ViewModel?.IsComboLocked != true)
         {
             slot.Background = new SolidColorBrush(Color.FromRgb(70, 70, 90));
         }
@@ -104,6 +104,8 @@ public partial class GameView : UserControl
 
     private void OnComboSlot1Drop(object sender, DragEventArgs e)
     {
+        if (ViewModel?.IsComboLocked == true) return;
+
         if (e.Data.GetDataPresent("CardViewModel"))
         {
             var card = e.Data.GetData("CardViewModel") as CardViewModel;
@@ -117,6 +119,8 @@ public partial class GameView : UserControl
 
     private void OnComboSlot2Drop(object sender, DragEventArgs e)
     {
+        if (ViewModel?.IsComboLocked == true) return;
+
         if (e.Data.GetDataPresent("CardViewModel"))
         {
             var card = e.Data.GetData("CardViewModel") as CardViewModel;
@@ -243,5 +247,27 @@ public partial class GameView : UserControl
             ViewModel?.ZoomCard(card);
             e.Handled = true;
         }
+    }
+
+    private void OnComboResultMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && 
+            sender is Border comboSlot && 
+            ViewModel?.IsComboLocked == true)
+        {
+            if (comboSlot.Tag is CardViewModel card)
+            {
+                DragDrop.DoDragDrop(comboSlot, card, DragDropEffects.Move);
+            }
+        }
+    }
+
+    private void OnComboResultDrop(object sender, DragEventArgs e)
+    {
+        if (sender is Border comboSlot && ViewModel?.IsComboLocked == true)
+        {
+            ViewModel?.TakeComboResult();
+        }
+        e.Handled = true;
     }
 }

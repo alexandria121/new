@@ -449,3 +449,43 @@ public class IntToVisibilityConverter : IValueConverter
         return 0;
     }
 }
+
+/// <summary>
+/// Converts bool to opacity (true = 1.0, false = 0.5)
+/// </summary>
+public class BoolToOpacityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool boolValue)
+        {
+            return boolValue ? 1.0 : 0.5;
+        }
+        return 1.0;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return false;
+    }
+}
+
+/// <summary>
+/// Converts bool to text (true = "Drag to hand", false = "Preview")
+/// </summary>
+public class BoolToTextConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool boolValue)
+        {
+            return boolValue ? "Drag to hand" : "Preview";
+        }
+        return "Preview";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return false;
+    }
+}

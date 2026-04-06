@@ -24,6 +24,9 @@
         <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Converters:RarityToGradientConverter x:Key="RarityToGradientConverter"/>
         <Converters:RarityToGlowConverter x:Key="RarityToGlowConverter"/>
+        <Converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
+        <Converters:BoolToTextConverter x:Key="BoolToTextConverter"/>
+        <Converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
 
         <!-- Enhanced Card Border Style with Element Glow -->
         <Style x:Key="ElementCardStyle" TargetType="Border">
@@ -779,18 +782,31 @@
                                 BorderThickness="1"
                                 Margin="5,10"
                                 CornerRadius="6"
-                                Height="60"
-                                Visibility="{Binding ComboResult, Converter={StaticResource NullToVisibilityConverter}}">
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding ComboResult.Name}"
-                                           Foreground="{StaticResource AccentBrush}"
-                                           FontSize="12" FontWeight="Bold"
-                                           HorizontalAlignment="Center"/>
-                                <TextBlock Text="Preview"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                Height="70"
+                                Visibility="{Binding ComboResult, Converter={StaticResource NullToVisibilityConverter}}"
+                                Opacity="{Binding IsComboLocked, Converter={StaticResource BoolToOpacityConverter}}"
+                                MouseMove="OnComboResultMouseMove"
+                                AllowDrop="True"
+                                Drop="OnComboResultDrop"
+                                Tag="{Binding ComboResult}">
+                            <Grid>
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding ComboResult.Card.Name}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="12" FontWeight="Bold"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding IsComboLocked, Converter={StaticResource BoolToTextConverter}}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="10"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Locked"
+                                           Foreground="#606060"
                                            FontSize="10"
-                                           HorizontalAlignment="Center"/>
-                            </StackPanel>
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding IsComboLocked, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                            </Grid>
                         </Border>
 
                         <Button Grid.Row="3"
