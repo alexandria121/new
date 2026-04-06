@@ -6,12 +6,14 @@ using MagicalDeckbuilder.Combining;
 using MagicalDeckbuilder.Decks;
 using MagicalDeckbuilder.Game;
 using MagicalDeckbuilder.Logging;
+using MagicalDeckbuilder.Storage;
 using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
 using PileType = MagicalDeckbuilder.Decks.PileType;
 using CreatureSlot = MagicalDeckbuilder.Decks.CreatureSlot;
+using SavedDeckType = MagicalDeckbuilder.Storage.DeckType;
 
 namespace NewGame.UI.ViewModels;
 
@@ -20,6 +22,8 @@ public class MainViewModel : ViewModelBase
     private readonly CardCombiner _cardCombiner = new();
     private OpponentAI? _opponentAI;
     private DifficultyLevel _difficulty = DifficultyLevel.Journeyman;
+    private bool _hasUnsavedDeckChanges;
+    private string? _currentDeckId;
 
     private string _currentView = "Menu";
     private CardViewModel? _selectedCard;
@@ -64,6 +68,13 @@ public class MainViewModel : ViewModelBase
         EquipArmorCommand = new RelayCommand<CardViewModel>(EquipArmor);
         UnequipWeaponCommand = new RelayCommand(UnequipWeapon);
         UnequipArmorCommand = new RelayCommand(UnequipArmor);
+        
+        // Deck management commands
+        SelectDeckCommand = new RelayCommand<SavedDeckViewModel>(SelectDeck);
+        EditDeckCommand = new RelayCommand<SavedDeckViewModel>(EditDeck);
+        DeleteDeckCommand = new RelayCommand<SavedDeckViewModel>(DeleteDeck);
+        NewDeckCommand = new RelayCommand(NewDeck);
+        SaveDeckCommand = new RelayCommand(SaveDeck, () => _hasUnsavedDeckChanges);
 
         var allCards = CardFactory.CreateStarterDeck();
         AvailableCards = new ObservableCollection<CardViewModel>(
@@ -71,7 +82,152 @@ public class MainViewModel : ViewModelBase
 
         MenuCards = new ObservableCollection<CardViewModel>(
             CardFactory.CreateStarterDeck().Select(c => new CardViewModel(c)));
+        
+        // Load saved decks
+        LoadSavedDecks();
     }
+    
+    private void LoadSavedDecks()
+    {
+        PlayerDecks.Clear();
+        var savedDecks = DeckStorageService.Instance.GetPlayerDecks();
+        foreach (var deck in savedDecks)
+        {
+            PlayerDecks.Add(new SavedDeckViewModel(deck));
+        }
+    }
+    
+    private async void SelectDeck(SavedDeckViewModel? deck)
+    {
+        if (deck == null) return;
+        
+        // Load the full deck data
+        var fullDeck = await DeckStorageService.Instance.LoadDeckAsync(deck.Id);
+        if (fullDeck != null)
+        {
+            LoadDeckIntoBuilder(fullDeck);
+            _currentDeckId = fullDeck.Id;
+            _hasUnsavedDeckChanges = false;
+        }
+        
+        // Navigate to deck builder
+        CurrentView = "DeckBuilder";
+    }
+    
+    private void LoadDeckIntoBuilder(SavedDeck deck)
+    {
+        PlayerDeckCards.Clear();
+        
+        foreach (var savedCard in deck.Cards)
+        {
+            var card = CardFactory.GetCardByTemplateId(savedCard.CardTemplateId);
+            if (card != null)
+            {
+                PlayerDeckCards.Add(new CardViewModel(card));
+            }
+        }
+        
+        OnPropertyChanged(nameof(PlayerDeckCardCount));
+        OnPropertyChanged(nameof(DeckCountText));
+    }
+    
+    private void EditDeck(SavedDeckViewModel? deck)
+    {
+        if (deck == null) return;
+        SelectDeck(deck);
+    }
+    
+    private async void DeleteDeck(SavedDeckViewModel? deck)
+    {
+        if (deck == null) return;
+        
+        var result = MessageBox.Show(
+            $"Are you sure you want to delete '{deck.Name}'?",
+            "Delete Deck",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        
+        if (result == MessageBoxResult.Yes)
+        {
+            await DeckStorageService.Instance.DeleteDeckAsync(deck.Id);
+            PlayerDecks.Remove(deck);
+        }
+    }
+    
+    private void NewDeck()
+    {
+        ClearDeck();
+        _currentDeckId = null;
+        _hasUnsavedDeckChanges = false;
+        CurrentView = "DeckBuilder";
+    }
+    
+    private async void SaveDeck()
+    {
+        if (PlayerDeckCards.Count == 0)
+        {
+            MessageBox.Show("Cannot save an empty deck.", "Save Deck", 
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        
+        var deckName = PromptForDeckName(_currentDeckId != null ? 
+            DeckStorageService.Instance.GetDeckIndex().FirstOrDefault(d => d.Id == _currentDeckId)?.Name : null);
+        
+        if (string.IsNullOrWhiteSpace(deckName)) return;
+        
+        // Convert CardViewModels to Cards
+        var cards = PlayerDeckCards.Select(cvm => cvm.Card).ToList();
+        
+        // Use async save method
+        await DeckStorageService.Instance.SaveDeckAsync(deckName, cards, DeckType.Player, Difficulty);
+        
+        _currentDeckId = null; // Clear to force reload
+        _hasUnsavedDeckChanges = false;
+        
+        // Refresh the deck list
+        LoadSavedDecks();
+        
+        MessageBox.Show($"Deck '{deckName}' saved successfully!", "Save Deck",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+    
+    private string? PromptForDeckName(string? currentName)
+    {
+        // Simple input dialog - could be enhanced with a proper dialog window
+        var input = currentName ?? "NewDeck";
+        
+        // For now, use a simple approach - generate unique name if needed
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            input = "NewDeck";
+        }
+        
+        // Check if we need to generate a unique name
+        var existingDecks = DeckStorageService.Instance.GetPlayerDecks();
+        var existingNames = existingDecks.Select(d => d.Name).ToHashSet();
+        
+        if (existingNames.Contains(input) && input != currentName)
+        {
+            // Generate a unique name
+            int counter = 1;
+            string baseName = input;
+            while (existingNames.Contains(input))
+            {
+                input = $"{baseName}{counter++}";
+            }
+        }
+        
+        return input;
+    }
+    
+    public void MarkDeckAsChanged()
+    {
+        _hasUnsavedDeckChanges = true;
+        OnPropertyChanged(nameof(HasUnsavedDeckChanges));
+    }
+    
+    public bool HasUnsavedDeckChanges => _hasUnsavedDeckChanges;
 
     public ObservableCollection<CardViewModel> AvailableCards { get; }
     public ObservableCollection<CardViewModel> MenuCards { get; }
@@ -95,6 +251,12 @@ public class MainViewModel : ViewModelBase
 
     // Event slot (1 slot for player events)
     public CardViewModel? PlayerEventSlot { get; private set; }
+
+    // Opponent artifact slots (3 slots)
+    public CardViewModel?[] OpponentArtifactSlots { get; } = new CardViewModel?[3];
+
+    // Opponent event slot (1 slot)
+    public CardViewModel? OpponentEventSlot { get; private set; }
 
     public string CurrentView
     {
@@ -250,6 +412,14 @@ public class MainViewModel : ViewModelBase
     public ICommand UnequipWeaponCommand { get; }
     public ICommand UnequipArmorCommand { get; }
     public ICommand? SelectBattleCommand { get; }
+    public ICommand SelectDeckCommand { get; }
+    public ICommand EditDeckCommand { get; }
+    public ICommand DeleteDeckCommand { get; }
+    public ICommand NewDeckCommand { get; }
+    public ICommand SaveDeckCommand { get; }
+    public ICommand RefreshDecksCommand { get; private set; }
+    
+    public ObservableCollection<SavedDeckViewModel> PlayerDecks { get; } = new();
 
     private void Close()
     {

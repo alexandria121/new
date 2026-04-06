@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at": "2026-04-06T18:07:32.758986+00:00",
+    "generated_at": "2026-04-06T19:09:01.072523+00:00",
     "commit_hash": "",
     "repo_name": "new",
     "depth_level": 1,
@@ -13,115 +13,126 @@
       }
     }
   },
-  "description": "The component architecture for the 'new' project (Magical Deckbuilder) follows an MVVM pattern to cleanly separate presentation from core game mechanics. The main flow starts at UI Views that capture user intent and bind to the ViewModel Orchestration. ViewModels mediate between the UI and the Game Engine & AI, delegating game rules and turn-based logic. The Game Engine manipulates the Card & Deck Domain, which is the source of truth for card data and deck mechanics. Supporting UI Controls & Infrastructure provide visual building blocks and utilities used by the UI Views.",
+  "description": "Magical Deckbuilder is organized as a decoupled MVVM application where the WPF Presentation Layer communicates with an Application Controller (MVVM) that orchestrates interactions with core shared game logic. The primary flow is: user actions in the UI are handled via ViewModels in the Application Controller, which then update or query core systems — Game Mechanics Core for turn and character logic, Card & Deck System for creating/managing cards and decks, the Card Crafting Engine for combining cards, and the AI Strategy Module for opponent decisions — with updated state propagated back to the UI via data binding.",
   "files": {},
   "methods_index": {},
   "components": [
     {
-      "name": "UI Views",
-      "description": "The primary visual layer containing the main application screens and navigation logic. It handles user input events and displays the current game state through data binding.",
+      "name": "Presentation Layer",
+      "description": "Handles the visual rendering of the game and user interactions via WPF Views and custom Controls.",
       "key_entities": [],
-      "source_cluster_ids": [
-        1,
-        8
-      ],
+      "source_cluster_ids": [],
       "file_methods": [],
       "component_id": "1",
       "can_expand": false
     },
     {
-      "name": "UI Controls & Infrastructure",
-      "description": "Provides reusable UI components and utility services. This includes specialized controls for card visualization and value converters that translate raw data into UI-friendly formats.",
+      "name": "Application Controller (MVVM)",
+      "description": "The central hub of the UI application, managing state, commands, and data flow between the UI and core logic.",
       "key_entities": [],
-      "source_cluster_ids": [
-        7,
-        11
-      ],
+      "source_cluster_ids": [],
       "file_methods": [],
       "component_id": "2",
       "can_expand": false
     },
     {
-      "name": "ViewModel Orchestration",
-      "description": "The mediator between the UI and the Game Engine. It maintains the application state, exposes commands for user actions, and formats domain data for the view.",
+      "name": "Game Mechanics Core",
+      "description": "Defines the fundamental rules and entities of the game, including characters, health, and turn-based logic.",
       "key_entities": [],
-      "source_cluster_ids": [
-        2,
-        9
-      ],
+      "source_cluster_ids": [],
       "file_methods": [],
       "component_id": "3",
       "can_expand": false
     },
     {
-      "name": "Game Engine & AI",
-      "description": "The core logic center of the application. It manages the game loop, turn transitions, and the automated decision-making logic for the opponent.",
+      "name": "Card & Deck System",
+      "description": "Manages the lifecycle of cards and decks, including creation, shuffling, and drawing mechanics.",
       "key_entities": [],
-      "source_cluster_ids": [
-        3,
-        4,
-        10
-      ],
+      "source_cluster_ids": [],
       "file_methods": [],
       "component_id": "4",
       "can_expand": false
     },
     {
-      "name": "Card & Deck Domain",
-      "description": "Manages the fundamental data structures and mechanics of the card game, including deck shuffling, card drawing, and the logic for combining cards.",
+      "name": "Card Crafting Engine",
+      "description": "Specialized logic for the card combination system, allowing players to merge cards into new variants.",
       "key_entities": [],
-      "source_cluster_ids": [
-        5,
-        6
-      ],
+      "source_cluster_ids": [],
       "file_methods": [],
       "component_id": "5",
+      "can_expand": false
+    },
+    {
+      "name": "AI Strategy Module",
+      "description": "Provides automated decision-making for the opponent, including move selection and difficulty-based deck building.",
+      "key_entities": [],
+      "source_cluster_ids": [],
+      "file_methods": [],
+      "component_id": "6",
       "can_expand": false
     }
   ],
   "components_relations": [
     {
-      "relation": "Binds to properties and executes commands to trigger application logic",
-      "src_name": "UI Views",
-      "dst_name": "ViewModel Orchestration",
+      "relation": "Binds UI elements to ViewModel properties and executes user commands.",
+      "src_name": "Presentation Layer",
+      "dst_name": "Application Controller (MVVM)",
       "src_id": "1",
+      "dst_id": "2",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Updates character health/mana and manages turn transitions.",
+      "src_name": "Application Controller (MVVM)",
+      "dst_name": "Game Mechanics Core",
+      "src_id": "2",
       "dst_id": "3",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Provides specialized visual elements and data conversion for the main screens",
-      "src_name": "UI Controls & Infrastructure",
-      "dst_name": "UI Views",
+      "relation": "Manages player hand state and deck initialization via the CardFactory.",
+      "src_name": "Application Controller (MVVM)",
+      "dst_name": "Card & Deck System",
       "src_id": "2",
-      "dst_id": "1",
+      "dst_id": "4",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Invokes game rules and state transitions based on user actions",
-      "src_name": "ViewModel Orchestration",
-      "dst_name": "Game Engine & AI",
+      "relation": "Triggers the combination of selected cards into new custom cards.",
+      "src_name": "Application Controller (MVVM)",
+      "dst_name": "Card Crafting Engine",
+      "src_id": "2",
+      "dst_id": "5",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Requests opponent move calculations and difficulty-based deck generation.",
+      "src_name": "Application Controller (MVVM)",
+      "dst_name": "AI Strategy Module",
+      "src_id": "2",
+      "dst_id": "6",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Utilizes DeckManagers to track character resources and in-play cards.",
+      "src_name": "Game Mechanics Core",
+      "dst_name": "Card & Deck System",
       "src_id": "3",
       "dst_id": "4",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Directly accesses card data models to populate the UI",
-      "src_name": "ViewModel Orchestration",
-      "dst_name": "Card & Deck Domain",
-      "src_id": "3",
-      "dst_id": "5",
-      "edge_count": 0,
-      "is_static": false
-    },
-    {
-      "relation": "Manipulates decks and card instances to execute game mechanics",
-      "src_name": "Game Engine & AI",
-      "dst_name": "Card & Deck Domain",
-      "src_id": "4",
-      "dst_id": "5",
+      "relation": "Evaluates card values for move selection and populates opponent decks.",
+      "src_name": "AI Strategy Module",
+      "dst_name": "Card & Deck System",
+      "src_id": "6",
+      "dst_id": "4",
       "edge_count": 0,
       "is_static": false
     }

@@ -1,0 +1,157 @@
+<UserControl x:Class="NewGame.UI.Views.DeckSelectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ViewModels="clr-namespace:NewGame.UI.ViewModels"
+             mc:Ignorable="d"
+             Background="{StaticResource BackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <TextBlock Text="SELECT YOUR DECK" 
+                       Style="{StaticResource TitleStyle}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Choose a deck for battle" 
+                       Style="{StaticResource SubtitleStyle}"
+                       HorizontalAlignment="Center"
+                       Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- Deck List -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <!-- Player Decks Section -->
+                <TextBlock Text="YOUR DECKS" 
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontWeight="Bold"
+                           FontSize="14"
+                           Margin="0,0,0,10"
+                           Visibility="{Binding PlayerDecks.Count, Converter={StaticResource CountToVisibilityConverter}}"/>
+                
+                <ItemsControl ItemsSource="{Binding PlayerDecks}" Margin="0,0,0,20">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource SurfaceBrush}" 
+                                    CornerRadius="8"
+                                    Padding="15"
+                                    Margin="8"
+                                    Width="280"
+                                    Cursor="Hand">
+                                <Border.Effect>
+                                    <DropShadowEffect ShadowDepth="2" BlurRadius="8" Opacity="0.3"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Deck Name -->
+                                    <TextBlock Grid.Row="0" 
+                                               Text="{Binding Name}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="Bold"
+                                               FontSize="16"
+                                               HorizontalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <!-- Card Count -->
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+                                        <TextBlock Text="🃏 " 
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding CardCountText}"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text=" | " 
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding ElementSummary}"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Modified Date -->
+                                    <TextBlock Grid.Row="2"
+                                               Text="{Binding ModifiedDateText, StringFormat='Modified: {0}'}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,10"/>
+
+                                    <!-- Action Buttons -->
+                                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="SELECT" 
+                                                Style="{StaticResource AccentButtonStyle}"
+                                                Padding="15,8"
+                                                Margin="5,0"
+                                                Command="{Binding DataContext.SelectDeckCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="EDIT" 
+                                                Style="{StaticResource BaseButtonStyle}"
+                                                Padding="15,8"
+                                                Margin="5,0"
+                                                Command="{Binding DataContext.EditDeckCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="DEL" 
+                                                Style="{StaticResource DangerButtonStyle}"
+                                                Padding="15,8"
+                                                Margin="5,0"
+                                                Command="{Binding DataContext.DeleteDeckCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Empty State for Player Decks -->
+                <TextBlock Text="No player decks yet. Create one to get started!"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontStyle="Italic"
+                           HorizontalAlignment="Center"
+                           Margin="0,20,0,30"
+                           Visibility="{Binding PlayerDecks.Count, Converter={StaticResource CountToVisibilityInverseConverter}}"/>
+
+                <!-- New Deck Button -->
+                <Button Content="+ CREATE NEW DECK" 
+                        Style="{StaticResource AccentButtonStyle}"
+                        HorizontalAlignment="Center"
+                        Padding="30,15"
+                        Margin="0,0,0,30"
+                        FontSize="14"
+                        Command="{Binding NewDeckCommand}"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Bottom Actions -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button Content="Back" 
+                    Style="{StaticResource BaseButtonStyle}"
+                    Command="{Binding NavigateCommand}"
+                    CommandParameter="Menu"
+                    Padding="20,10"
+                    Margin="0,0,20,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

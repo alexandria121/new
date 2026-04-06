@@ -29,6 +29,8 @@
             <Converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
             <Converters:CanAffordToOpacityConverter x:Key="CanAffordToOpacityConverter"/>
             <Converters:CanAffordToColorConverter x:Key="CanAffordToColorConverter"/>
+            <Converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+            <Converters:CountToVisibilityInverseConverter x:Key="CountToVisibilityInverseConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

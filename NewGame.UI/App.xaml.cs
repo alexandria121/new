@@ -4,12 +4,13 @@ using System.Windows.Threading;
 using MagicalDeckbuilder.Assets;
 using MagicalDeckbuilder.Game;
 using MagicalDeckbuilder.Logging;
+using MagicalDeckbuilder.Storage;
 
 namespace NewGame.UI;
 
 public partial class App : Application
 {
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         // Set up global exception handlers FIRST
         SetupExceptionHandlers();
@@ -39,6 +40,18 @@ public partial class App : Application
         // Generate some sample cards for display
         var newCards = CardFactory.CreateStarterDeck();
         Console.WriteLine($"Generated {newCards.Count} sample cards\n");
+        
+        // Initialize deck storage service
+        try
+        {
+            await DeckStorageService.Instance.InitializeAsync();
+            Console.WriteLine("Deck storage service initialized successfully\n");
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Instance.Error("App", "[Operation: OnStartup] Failed to initialize deck storage", ex);
+            Console.WriteLine($"Warning: Failed to initialize deck storage: {ex.Message}");
+        }
         
         var mainWindow = new MainWindow();
         mainWindow.Show();

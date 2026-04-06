@@ -711,4 +711,21 @@ public static class CardFactory
             throw;
         }
     }
+    
+    /// <summary>
+    /// Get a card template by its template ID (name_type_element format)
+    /// </summary>
+    public static Card? GetCardByTemplateId(string templateId)
+    {
+        var allCards = CreateStarterDeck();
+        return allCards.FirstOrDefault(c => $"{c.Name}_{c.Type}_{c.Element}" == templateId);
+    }
+    
+    /// <summary>
+    /// Get all card templates for lookup purposes
+    /// </summary>
+    public static IReadOnlyList<Card> GetAllTemplates()
+    {
+        return CreateStarterDeck();
+    }
 }

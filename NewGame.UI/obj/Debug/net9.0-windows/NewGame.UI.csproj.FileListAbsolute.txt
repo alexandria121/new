@@ -44,3 +44,7 @@ C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Controls
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Controls\CardZoomOverlay.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\ErrorWindow.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\ErrorWindow.g.cs
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckSelectionView.g.cs
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\UnsavedChangesDialog.baml
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\UnsavedChangesDialog.g.cs
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckSelectionView.baml
