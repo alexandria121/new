@@ -90,6 +90,12 @@ public class MainViewModel : ViewModelBase
     public CardViewModel? OpponentWeapon { get; private set; }
     public CardViewModel? OpponentArmor { get; private set; }
 
+    // Artifact slots (3 slots for player artifacts)
+    public CardViewModel?[] PlayerArtifactSlots { get; } = new CardViewModel?[3];
+
+    // Event slot (1 slot for player events)
+    public CardViewModel? PlayerEventSlot { get; private set; }
+
     public string CurrentView
     {
         get => _currentView;
@@ -620,15 +626,29 @@ public class MainViewModel : ViewModelBase
     public void PlayCardToSlot(CardViewModel card, int slotIndex)
     {
         if (slotIndex < 6 || slotIndex > 11) return;
-        if (card.Card.Type != CardType.Creature) return;
-        if (card.Card.ManaCost > PlayerMana) return;
+        if (card.Card.Type != CardType.Creature)
+        {
+            StatusMessage = "Only creature cards can be played to the field!";
+            return;
+        }
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
         if (FieldSlots[slotIndex] != null) return;
 
         PlayerMana -= card.Card.ManaCost;
         PlayerDeck.PlayCard(card.Id);
 
+        // Find CardViewModel by ID, not reference
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+
         FieldSlots[slotIndex] = card;
-        PlayerHand.Remove(card);
 
         OnPropertyChanged(nameof(FieldSlots));
         OnPropertyChanged(nameof(PlayerHand));
@@ -636,7 +656,8 @@ public class MainViewModel : ViewModelBase
 
     public void MoveCardToSlot(CardViewModel card, int targetSlotIndex)
     {
-        if (targetSlotIndex < 6 || targetSlotIndex > 11) return;
+        if (targetSlotIndex < 6 || targetSlotIndex > 11) 
+            return;
         
         int sourceSlotIndex = -1;
         for (int i = 6; i < 12; i++)
@@ -717,8 +738,17 @@ public class MainViewModel : ViewModelBase
         if (card == null || card.Card.Type != CardType.Weapon) return;
         PlayerWeapon = card;
         PlayerWeaponBonus = card.Card.Power;
+        
+        // Find CardViewModel by ID and remove from hand
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+        
         OnPropertyChanged(nameof(PlayerWeapon));
         OnPropertyChanged(nameof(PlayerWeaponBonus));
+        OnPropertyChanged(nameof(PlayerHand));
     }
 
     public void EquipArmor(CardViewModel? card)
@@ -726,8 +756,17 @@ public class MainViewModel : ViewModelBase
         if (card == null || card.Card.Type != CardType.Armor) return;
         PlayerArmor = card;
         PlayerArmorBonus = card.Card.Health;
+        
+        // Find CardViewModel by ID and remove from hand
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+        
         OnPropertyChanged(nameof(PlayerArmor));
         OnPropertyChanged(nameof(PlayerArmorBonus));
+        OnPropertyChanged(nameof(PlayerHand));
     }
 
     public void UnequipWeapon()
@@ -744,5 +783,89 @@ public class MainViewModel : ViewModelBase
         PlayerArmorBonus = 0;
         OnPropertyChanged(nameof(PlayerArmor));
         OnPropertyChanged(nameof(PlayerArmorBonus));
+    }
+
+    /// <summary>
+    /// Play an artifact card to one of the artifact slots
+    /// </summary>
+    public void PlayArtifactToSlot(CardViewModel card, int slotIndex)
+    {
+        if (card == null || card.Card.Type != CardType.Artifact)
+        {
+            StatusMessage = "Only artifact cards can be played to artifact slots!";
+            return;
+        }
+        
+        if (slotIndex < 0 || slotIndex >= 3)
+        {
+            StatusMessage = "Invalid artifact slot!";
+            return;
+        }
+        
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
+        
+        if (PlayerArtifactSlots[slotIndex] != null)
+        {
+            StatusMessage = "Artifact slot is already occupied!";
+            return;
+        }
+
+        PlayerMana -= card.Card.ManaCost;
+        
+        // Remove from hand
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+
+        PlayerArtifactSlots[slotIndex] = card;
+
+        OnPropertyChanged(nameof(PlayerArtifactSlots));
+        OnPropertyChanged(nameof(PlayerHand));
+        StatusMessage = $"Played {card.Name} to artifact slot!";
+    }
+
+    /// <summary>
+    /// Play an event card to the event slot
+    /// </summary>
+    public void PlayEventToSlot(CardViewModel card)
+    {
+        if (card == null || card.Card.Type != CardType.Event)
+        {
+            StatusMessage = "Only event cards can be played to the event slot!";
+            return;
+        }
+        
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
+        
+        if (PlayerEventSlot != null)
+        {
+            StatusMessage = "Event slot is already occupied!";
+            return;
+        }
+
+        PlayerMana -= card.Card.ManaCost;
+        
+        // Remove from hand
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+
+        PlayerEventSlot = card;
+
+        OnPropertyChanged(nameof(PlayerEventSlot));
+        OnPropertyChanged(nameof(PlayerHand));
+        StatusMessage = $"Played {card.Name} to event slot!";
     }
 }
