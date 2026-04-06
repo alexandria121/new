@@ -1,0 +1,42 @@
+# Build results
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+.vscode/
+.VSCodeCounter/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE
+.idea/
+*.swp
+*~
+
+# Kilo
+.kilo/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Rider
+*.sln.iml
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
