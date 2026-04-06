@@ -167,4 +167,81 @@ public partial class GameView : UserControl
             }
         }
     }
+
+    private void OnWeaponSlotDragEnter(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(100, 80, 60));
+            e.Effects = DragDropEffects.Move;
+        }
+        e.Handled = true;
+    }
+
+    private void OnWeaponSlotDragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
+        }
+        e.Handled = true;
+    }
+
+    private void OnWeaponSlotDrop(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot && e.Data.GetDataPresent("CardViewModel"))
+        {
+            var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
+
+            if (card != null)
+            {
+                ViewModel?.EquipWeapon(card);
+            }
+        }
+        e.Handled = true;
+    }
+
+    private void OnArmorSlotDragEnter(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(60, 80, 100));
+            e.Effects = DragDropEffects.Move;
+        }
+        e.Handled = true;
+    }
+
+    private void OnArmorSlotDragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
+        }
+        e.Handled = true;
+    }
+
+    private void OnArmorSlotDrop(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot && e.Data.GetDataPresent("CardViewModel"))
+        {
+            var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
+
+            if (card != null)
+            {
+                ViewModel?.EquipArmor(card);
+            }
+        }
+        e.Handled = true;
+    }
+
+    private void OnEquipmentRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            ViewModel?.ZoomCard(card);
+            e.Handled = true;
+        }
+    }
 }

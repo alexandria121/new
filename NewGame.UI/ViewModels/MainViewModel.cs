@@ -35,8 +35,13 @@ public class MainViewModel : ViewModelBase
     private int _playerMana = 2;
     private int _playerMaxMana = 10;
     private int _opponentHealth = 30;
+    private int _opponentMaxHealth = 30;
     private int _turnCount = 1;
     private bool _isPlayerTurn = true;
+    private int _playerWeaponBonus = 0;
+    private int _playerArmorBonus = 0;
+    private int _opponentWeaponBonus = 0;
+    private int _opponentArmorBonus = 0;
 
     public MainViewModel()
     {
@@ -54,6 +59,10 @@ public class MainViewModel : ViewModelBase
         ClearDeckCommand = new RelayCommand(ClearDeck);
         CloseZoomCommand = new RelayCommand(CloseZoom);
         CloseCommand = new RelayCommand(Close);
+        EquipWeaponCommand = new RelayCommand<CardViewModel>(EquipWeapon);
+        EquipArmorCommand = new RelayCommand<CardViewModel>(EquipArmor);
+        UnequipWeaponCommand = new RelayCommand(UnequipWeapon);
+        UnequipArmorCommand = new RelayCommand(UnequipArmor);
 
         var allCards = CardFactory.CreateStarterDeck();
         AvailableCards = new ObservableCollection<CardViewModel>(
@@ -74,6 +83,11 @@ public class MainViewModel : ViewModelBase
     public int PlayerDeckCardCount => PlayerDeckCards.Count;
 
     public CardViewModel?[] FieldSlots { get; } = new CardViewModel?[12];
+
+    public CardViewModel? PlayerWeapon { get; private set; }
+    public CardViewModel? PlayerArmor { get; private set; }
+    public CardViewModel? OpponentWeapon { get; private set; }
+    public CardViewModel? OpponentArmor { get; private set; }
 
     public string CurrentView
     {
@@ -159,6 +173,36 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _opponentHealth, value);
     }
 
+    public int OpponentMaxHealth
+    {
+        get => _opponentMaxHealth;
+        set => SetProperty(ref _opponentMaxHealth, value);
+    }
+
+    public int PlayerWeaponBonus
+    {
+        get => _playerWeaponBonus;
+        set => SetProperty(ref _playerWeaponBonus, value);
+    }
+
+    public int PlayerArmorBonus
+    {
+        get => _playerArmorBonus;
+        set => SetProperty(ref _playerArmorBonus, value);
+    }
+
+    public int OpponentWeaponBonus
+    {
+        get => _opponentWeaponBonus;
+        set => SetProperty(ref _opponentWeaponBonus, value);
+    }
+
+    public int OpponentArmorBonus
+    {
+        get => _opponentArmorBonus;
+        set => SetProperty(ref _opponentArmorBonus, value);
+    }
+
     public int TurnCount
     {
         get => _turnCount;
@@ -188,6 +232,10 @@ public class MainViewModel : ViewModelBase
     public ICommand ClearDeckCommand { get; }
     public ICommand CloseZoomCommand { get; }
     public ICommand CloseCommand { get; }
+    public ICommand EquipWeaponCommand { get; }
+    public ICommand EquipArmorCommand { get; }
+    public ICommand UnequipWeaponCommand { get; }
+    public ICommand UnequipArmorCommand { get; }
     public ICommand? SelectBattleCommand { get; }
 
     private void Close()
@@ -645,5 +693,39 @@ public class MainViewModel : ViewModelBase
     public void ZoomCard(CardViewModel card)
     {
         ZoomedCard = card;
+    }
+
+    public void EquipWeapon(CardViewModel? card)
+    {
+        if (card == null || card.Card.Type != CardType.Weapon) return;
+        PlayerWeapon = card;
+        PlayerWeaponBonus = card.Card.Power;
+        OnPropertyChanged(nameof(PlayerWeapon));
+        OnPropertyChanged(nameof(PlayerWeaponBonus));
+    }
+
+    public void EquipArmor(CardViewModel? card)
+    {
+        if (card == null || card.Card.Type != CardType.Armor) return;
+        PlayerArmor = card;
+        PlayerArmorBonus = card.Card.Health;
+        OnPropertyChanged(nameof(PlayerArmor));
+        OnPropertyChanged(nameof(PlayerArmorBonus));
+    }
+
+    public void UnequipWeapon()
+    {
+        PlayerWeapon = null;
+        PlayerWeaponBonus = 0;
+        OnPropertyChanged(nameof(PlayerWeapon));
+        OnPropertyChanged(nameof(PlayerWeaponBonus));
+    }
+
+    public void UnequipArmor()
+    {
+        PlayerArmor = null;
+        PlayerArmorBonus = 0;
+        OnPropertyChanged(nameof(PlayerArmor));
+        OnPropertyChanged(nameof(PlayerArmorBonus));
     }
 }

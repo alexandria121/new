@@ -107,6 +107,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" 
@@ -254,6 +255,36 @@
                         </Grid>
                     </Border>
                 </UniformGrid>
+
+                <!-- Opponent Equipment Slots -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <!-- Opponent Weapon Slot -->
+                    <Border Background="#503232" BorderBrush="#804040" BorderThickness="2" Margin="5" CornerRadius="6" Width="80" Height="70">
+                        <Grid>
+                            <TextBlock Text="Weapon" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                            <Border Background="#3A2828" CornerRadius="4" Margin="2"
+                                    Visibility="{Binding OpponentWeapon, Converter={StaticResource NullToVisibilityConverter}}">
+                                <StackPanel VerticalAlignment="Center" Margin="2">
+                                    <TextBlock Text="{Binding OpponentWeapon.Card.Name}" Foreground="#FF6464" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding OpponentWeapon.Card.Power, StringFormat='+{0} PWR'}" Foreground="#FF9632" FontSize="8" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <!-- Opponent Armor Slot -->
+                    <Border Background="#503232" BorderBrush="#804040" BorderThickness="2" Margin="5" CornerRadius="6" Width="80" Height="70">
+                        <Grid>
+                            <TextBlock Text="Armor" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                            <Border Background="#3A2828" CornerRadius="4" Margin="2"
+                                    Visibility="{Binding OpponentArmor, Converter={StaticResource NullToVisibilityConverter}}">
+                                <StackPanel VerticalAlignment="Center" Margin="2">
+                                    <TextBlock Text="{Binding OpponentArmor.Card.Name}" Foreground="#FF6464" FontSize="9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding OpponentArmor.Card.Health, StringFormat='+{0} DEF'}" Foreground="#64FF64" FontSize="8" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -402,13 +433,17 @@
                 CornerRadius="6"
                 Padding="10">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="280"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Player Field Slots -->
-                <UniformGrid Grid.Column="0" Rows="1" Columns="6" VerticalAlignment="Center">
+                <UniformGrid Grid.Row="0" Grid.Column="0" Rows="1" Columns="6" VerticalAlignment="Center">
                     <Border x:Name="Slot0" 
                             Background="#465046" 
                             BorderBrush="#506050" 
@@ -627,8 +662,62 @@
                     </Border>
                 </UniformGrid>
 
+                <!-- Player Equipment Slots -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <!-- Player Weapon Slot -->
+                    <Border x:Name="PlayerWeaponSlot"
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="5" 
+                            CornerRadius="6" 
+                            Width="90" Height="80"
+                            AllowDrop="True"
+                            Drop="OnWeaponSlotDrop"
+                            DragEnter="OnWeaponSlotDragEnter"
+                            DragLeave="OnWeaponSlotDragLeave">
+                        <Grid>
+                            <TextBlock Text="Weapon" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+                            <Border Background="#384638" CornerRadius="4" Margin="2"
+                                    Visibility="{Binding PlayerWeapon, Converter={StaticResource NullToVisibilityConverter}}"
+                                    MouseRightButtonDown="OnEquipmentRightClick"
+                                    Tag="{Binding PlayerWeapon}">
+                                <StackPanel VerticalAlignment="Center" Margin="2">
+                                    <TextBlock Text="{Binding PlayerWeapon.Card.Name}" Foreground="#64FF64" FontSize="10" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding PlayerWeapon.Card.Power, StringFormat='+{0} PWR'}" Foreground="#FF9632" FontSize="9" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <!-- Player Armor Slot -->
+                    <Border x:Name="PlayerArmorSlot"
+                            Background="#465046" 
+                            BorderBrush="#506050" 
+                            BorderThickness="2" 
+                            Margin="5" 
+                            CornerRadius="6" 
+                            Width="90" Height="80"
+                            AllowDrop="True"
+                            Drop="OnArmorSlotDrop"
+                            DragEnter="OnArmorSlotDragEnter"
+                            DragLeave="OnArmorSlotDragLeave">
+                        <Grid>
+                            <TextBlock Text="Armor" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+                            <Border Background="#384638" CornerRadius="4" Margin="2"
+                                    Visibility="{Binding PlayerArmor, Converter={StaticResource NullToVisibilityConverter}}"
+                                    MouseRightButtonDown="OnEquipmentRightClick"
+                                    Tag="{Binding PlayerArmor}">
+                                <StackPanel VerticalAlignment="Center" Margin="2">
+                                    <TextBlock Text="{Binding PlayerArmor.Card.Name}" Foreground="#64FF64" FontSize="10" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding PlayerArmor.Card.Health, StringFormat='+{0} DEF'}" Foreground="#64FF64" FontSize="9" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
                 <!-- Combo Area -->
-                <Border Grid.Column="1" 
+                <Border Grid.Row="0" Grid.Column="1" 
                         Background="{StaticResource SurfaceBrush}" 
                         CornerRadius="6"
                         Padding="10"
