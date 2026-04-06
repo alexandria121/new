@@ -3,6 +3,8 @@ using System.Text;
 
 namespace MagicalDeckbuilder.Logging;
 
+public enum LogLevel
+{
     Debug,
     Info,
     Warning,

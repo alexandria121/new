@@ -10,7 +10,7 @@ public partial class GameView : UserControl
 {
     private Point _clickStartPoint;
     private bool _isDragging;
-    private const double DragThreshold = 5.0;
+    private const double DragThreshold = 15.0;
 
     public GameView()
     {
@@ -139,19 +139,6 @@ public partial class GameView : UserControl
         }
     }
 
-    private void OnHandCardClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
-        {
-            // Only zoom if it wasn't a drag
-            if (!_isDragging)
-            {
-                ViewModel?.ZoomCard(card);
-            }
-            _isDragging = false;
-        }
-    }
-
     private void OnHandCardRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
@@ -179,19 +166,5 @@ public partial class GameView : UserControl
                 DragDrop.DoDragDrop(slotBorder, card, DragDropEffects.Move);
             }
         }
-    }
-
-    private void OnFieldCardClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
-        {
-            // Only zoom if it wasn't a drag
-            if (!_isDragging)
-            {
-                ViewModel?.ZoomCard(card);
-            }
-            _isDragging = false;
-        }
-        e.Handled = true;
     }
 }

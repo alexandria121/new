@@ -56,11 +56,18 @@
                             Padding="15,6"/>
                 </StackPanel>
 
-                <TextBlock Grid.Column="2"
-                           Text="Magical Deckbuilder"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           FontSize="12"
-                           VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Magical Deckbuilder"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Margin="0,0,15,0"/>
+                    <Button Content="X"
+                            Style="{StaticResource BaseButtonStyle}"
+                            Command="{Binding CloseCommand}"
+                            Padding="10,6"
+                            ToolTip="Close Application"/>
+                </StackPanel>
             </Grid>
         </Border>
 

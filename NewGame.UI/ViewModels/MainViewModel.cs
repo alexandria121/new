@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using MagicalDeckbuilder.Cards;
 using MagicalDeckbuilder.Combining;
@@ -52,6 +53,7 @@ public class MainViewModel : ViewModelBase
         RemoveCardFromDeckCommand = new RelayCommand<CardViewModel>(RemoveCardFromDeck);
         ClearDeckCommand = new RelayCommand(ClearDeck);
         CloseZoomCommand = new RelayCommand(CloseZoom);
+        CloseCommand = new RelayCommand(Close);
 
         var allCards = CardFactory.CreateStarterDeck();
         AvailableCards = new ObservableCollection<CardViewModel>(
@@ -185,7 +187,13 @@ public class MainViewModel : ViewModelBase
     public ICommand RemoveCardFromDeckCommand { get; }
     public ICommand ClearDeckCommand { get; }
     public ICommand CloseZoomCommand { get; }
+    public ICommand CloseCommand { get; }
     public ICommand? SelectBattleCommand { get; }
+
+    private void Close()
+    {
+        Application.Current.Shutdown();
+    }
 
     private void InitializeGame()
     {
