@@ -8,7 +8,11 @@
              xmlns:controls="clr-namespace:NewGame.UI.Controls"
              xmlns:Converters="clr-namespace:NewGame.UI.Converters"
              mc:Ignorable="d"
-             Background="{StaticResource BackgroundBrush}">
+             Background="{StaticResource BackgroundBrush}"
+             AllowDrop="True"
+             Drop="OnSpellDrop"
+             DragEnter="OnSpellDragEnter"
+             DragLeave="OnSpellDragLeave">
 
     <UserControl.Resources>
         <Converters:BoolToTurnTextConverter x:Key="BoolToTurnTextConverter"/>
@@ -110,14 +114,30 @@
 
                 <!-- Opponent Equipment (25%) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Background="#503232" BorderBrush="#804040" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50">
-                        <Grid><TextBlock Text="Event" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid>
+                    <!-- Opponent Event Slot -->
+                    <Border Background="{Binding OpponentEventSlot, Converter={StaticResource ElementToColorConverter}, FallbackValue=#503232}" 
+                            BorderBrush="#804040" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding OpponentEventSlot}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            Drop="OnOpponentEventSlotDrop" DragEnter="OnOpponentEventSlotDragEnter" DragLeave="OnOpponentEventSlotDragLeave">
+                        <Grid>
+                            <TextBlock Text="{Binding OpponentEventSlot.Name, FallbackValue=Event}" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                        </Grid>
                     </Border>
-                    <Border Background="#503232" BorderBrush="#804040" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50">
-                        <Grid><TextBlock Text="Weapon" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid>
+                    <!-- Opponent Weapon Slot -->
+                    <Border Background="{Binding OpponentWeapon, Converter={StaticResource ElementToColorConverter}, FallbackValue=#503232}" 
+                            BorderBrush="#804040" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding OpponentWeapon}" MouseRightButtonDown="OnEquipmentRightClick">
+                        <Grid>
+                            <TextBlock Text="{Binding OpponentWeapon.Name, FallbackValue=Weapon}" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                        </Grid>
                     </Border>
-                    <Border Background="#503232" BorderBrush="#804040" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50">
-                        <Grid><TextBlock Text="Armor" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid>
+                    <!-- Opponent Armor Slot -->
+                    <Border Background="{Binding OpponentArmor, Converter={StaticResource ElementToColorConverter}, FallbackValue=#503232}" 
+                            BorderBrush="#804040" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding OpponentArmor}" MouseRightButtonDown="OnEquipmentRightClick">
+                        <Grid>
+                            <TextBlock Text="{Binding OpponentArmor.Name, FallbackValue=Armor}" Foreground="#808080" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                        </Grid>
                     </Border>
                 </StackPanel>
 
@@ -143,34 +163,106 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Opponent Creatures + Artifacts -->
-                <UniformGrid Grid.Row="0" Rows="1" Columns="9" VerticalAlignment="Center">
-                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="O1" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="O2" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="O3" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="O4" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="O5" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#503232" BorderBrush="#604040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="O6" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#4A3030" BorderBrush="#6A4040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="A1" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9"/></Grid></Border>
-                    <Border Background="#4A3030" BorderBrush="#6A4040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="A2" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9"/></Grid></Border>
-                    <Border Background="#4A3030" BorderBrush="#6A4040" BorderThickness="1" Margin="2" CornerRadius="4" Height="55"><Grid><TextBlock Text="A3" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9"/></Grid></Border>
-                </UniformGrid>
+                <!-- Opponent Creatures and Artifacts -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ItemsControl ItemsSource="{Binding OpponentCreatureSlotsObs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#503232}" 
+                                        BorderBrush="#604040" BorderThickness="2" Margin="3" CornerRadius="5" Width="80" Height="70"
+                                        MouseRightButtonDown="OnFieldCardRightClick" Tag="{Binding}">
+                                    <Grid>
+                                        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                            <TextBlock Text="{Binding Name, FallbackValue=?}" Foreground="White" HorizontalAlignment="Center" FontSize="8" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="72"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                            <TextBlock Text="P:" Foreground="#FF6464" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Power, FallbackValue=0}" Foreground="#FF6464" FontSize="9" FontWeight="Bold" Margin="2,0,5,0"/>
+                                            <TextBlock Text="H:" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Health, FallbackValue=0}" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding OpponentArtifactSlots}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8C864}" 
+                                        BorderBrush="#D4D474" BorderThickness="2" Margin="3" CornerRadius="4" Width="80" Height="70"
+                                        Tag="{Binding}" MouseRightButtonDown="OnFieldCardRightClick">
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name, FallbackValue=A}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
 
                 <!-- Divider -->
                 <Border Grid.Row="1" Height="3" Background="#3A4040" Margin="30,5"/>
 
-                <!-- Player Creatures + Artifacts -->
-                <UniformGrid Grid.Row="2" Rows="1" Columns="9" VerticalAlignment="Center">
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Height="55" Tag="6" AllowDrop="True" Drop="OnSlotDrop" DragEnter="OnSlotDragEnter" DragLeave="OnSlotDragLeave" MouseMove="OnSlotMouseMove"><Grid><TextBlock Text="P1" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Height="55" Tag="7" AllowDrop="True" Drop="OnSlotDrop" DragEnter="OnSlotDragEnter" DragLeave="OnSlotDragLeave" MouseMove="OnSlotMouseMove"><Grid><TextBlock Text="P2" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Height="55" Tag="8" AllowDrop="True" Drop="OnSlotDrop" DragEnter="OnSlotDragEnter" DragLeave="OnSlotDragLeave" MouseMove="OnSlotMouseMove"><Grid><TextBlock Text="P3" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Height="55" Tag="9" AllowDrop="True" Drop="OnSlotDrop" DragEnter="OnSlotDragEnter" DragLeave="OnSlotDragLeave" MouseMove="OnSlotMouseMove"><Grid><TextBlock Text="P4" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Height="55" Tag="10" AllowDrop="True" Drop="OnSlotDrop" DragEnter="OnSlotDragEnter" DragLeave="OnSlotDragLeave" MouseMove="OnSlotMouseMove"><Grid><TextBlock Text="P5" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Height="55" Tag="11" AllowDrop="True" Drop="OnSlotDrop" DragEnter="OnSlotDragEnter" DragLeave="OnSlotDragLeave" MouseMove="OnSlotMouseMove"><Grid><TextBlock Text="P6" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid></Border>
-                    <Border Background="#C8C864" BorderBrush="#D4D474" BorderThickness="2" Margin="2" CornerRadius="4" Height="55" Tag="20"><Grid><TextBlock Text="A1" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9"/></Grid></Border>
-                    <Border Background="#C8C864" BorderBrush="#D4D474" BorderThickness="2" Margin="2" CornerRadius="4" Height="55" Tag="21"><Grid><TextBlock Text="A2" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9"/></Grid></Border>
-                    <Border Background="#C8C864" BorderBrush="#D4D474" BorderThickness="2" Margin="2" CornerRadius="4" Height="55" Tag="22"><Grid><TextBlock Text="A3" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9"/></Grid></Border>
-                </UniformGrid>
+                <!-- Player Creatures and Artifacts -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ItemsControl ItemsSource="{Binding PlayerCreatureSlotsObs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
+                                        BorderBrush="#506050" BorderThickness="2" Margin="3" CornerRadius="5" Width="80" Height="70"
+                                        Tag="{Binding}" AllowDrop="True" Drop="OnPlayerSlotDrop" DragEnter="OnPlayerSlotDragEnter" DragLeave="OnPlayerSlotDragLeave" MouseMove="OnPlayerSlotMouseMove"
+                                        MouseRightButtonDown="OnFieldCardRightClick">
+                                    <Grid>
+                                        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                            <TextBlock Text="{Binding Name, FallbackValue=?}" Foreground="White" HorizontalAlignment="Center" FontSize="8" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="72"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                            <TextBlock Text="P:" Foreground="#FF6464" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Power, FallbackValue=0}" Foreground="#FF6464" FontSize="9" FontWeight="Bold" Margin="2,0,5,0"/>
+                                            <TextBlock Text="H:" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Health, FallbackValue=0}" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding PlayerArtifactSlots}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8C864}" 
+                                        BorderBrush="#D4D474" BorderThickness="2" Margin="3" CornerRadius="4" Width="80" Height="70"
+                                        Tag="{Binding}" AllowDrop="True" Drop="OnArtifactSlotDrop" DragEnter="OnArtifactSlotDragEnter" DragLeave="OnArtifactSlotDragLeave" MouseMove="OnArtifactSlotMouseMove"
+                                        MouseRightButtonDown="OnFieldCardRightClick">
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name, FallbackValue=A}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -236,14 +328,32 @@
 
                 <!-- Player Equipment (25%) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Background="#C8A050" BorderBrush="#D4B060" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50">
-                        <Grid><TextBlock Text="Event" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid>
+                    <!-- Player Event Slot -->
+                    <Border Background="{Binding PlayerEventSlot, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8A050}" 
+                            BorderBrush="#D4B060" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding PlayerEventSlot}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            Drop="OnEventSlotDrop" DragEnter="OnEventSlotDragEnter" DragLeave="OnEventSlotDragLeave">
+                        <Grid>
+                            <TextBlock Text="{Binding PlayerEventSlot.Name, FallbackValue=Event}" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                        </Grid>
                     </Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50">
-                        <Grid><TextBlock Text="Weapon" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid>
+                    <!-- Player Weapon Slot -->
+                    <Border Background="{Binding PlayerWeapon, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
+                            BorderBrush="#506050" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding PlayerWeapon}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            Drop="OnWeaponSlotDrop" DragEnter="OnWeaponSlotDragEnter" DragLeave="OnWeaponSlotDragLeave">
+                        <Grid>
+                            <TextBlock Text="{Binding PlayerWeapon.Name, FallbackValue=Weapon}" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                        </Grid>
                     </Border>
-                    <Border Background="#465046" BorderBrush="#506050" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50">
-                        <Grid><TextBlock Text="Armor" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/></Grid>
+                    <!-- Player Armor Slot -->
+                    <Border Background="{Binding PlayerArmor, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
+                            BorderBrush="#506050" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding PlayerArmor}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            Drop="OnArmorSlotDrop" DragEnter="OnArmorSlotDragEnter" DragLeave="OnArmorSlotDragLeave">
+                        <Grid>
+                            <TextBlock Text="{Binding PlayerArmor.Name, FallbackValue=Armor}" Foreground="#606060" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                        </Grid>
                     </Border>
                 </StackPanel>
 
@@ -263,7 +373,7 @@
             </Grid>
         </Border>
 
-        <!-- Card Zoom Overlay -->
-        <controls:CardZoomOverlay DataContext="{Binding}" Visibility="{Binding IsCardZoomed, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        <!-- Card Zoom Overlay: Default collapsed, only shows when both conditions are met -->
+        <controls:CardZoomOverlay x:Name="CardZoomPopup" DataContext="{Binding ZoomedCard}" Visibility="Collapsed"/>
     </Grid>
 </UserControl>

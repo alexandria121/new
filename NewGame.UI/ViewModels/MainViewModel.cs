@@ -264,6 +264,68 @@ public class MainViewModel : ViewModelBase
     // Opponent event slot (1 slot)
     public CardViewModel? OpponentEventSlot { get; private set; }
 
+    // Cached arrays for UI binding - include property change notifications
+    private CardViewModel?[] _cachedOpponentCreatureSlots = new CardViewModel?[6];
+    private CardViewModel?[] _cachedPlayerCreatureSlots = new CardViewModel?[6];
+    
+    // Additional observable collections for WPF binding
+    public System.Collections.ObjectModel.ObservableCollection<CardViewModel?> OpponentCreatureSlotsObs { get; } = new();
+    public System.Collections.ObjectModel.ObservableCollection<CardViewModel?> PlayerCreatureSlotsObs { get; } = new();
+    public System.Collections.ObjectModel.ObservableCollection<CardViewModel?> PlayerArtifactSlotsObs { get; } = new();
+    public System.Collections.ObjectModel.ObservableCollection<CardViewModel?> OpponentArtifactSlotsObs { get; } = new();
+    
+    // Debug file logging
+    private static readonly string DebugLogPath = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.Desktop), 
+        "NewGame_debug.txt");
+    
+    private static void LogToFile(string msg)
+    {
+        try { System.IO.File.AppendAllText(DebugLogPath, $"[{DateTime.Now:HH:mm:ss.fff}] {msg}\n"); }
+        catch { }
+    }
+    
+    // Computed properties for UI binding - use cached arrays
+    public CardViewModel?[] OpponentCreatureSlots => _cachedOpponentCreatureSlots;
+    public CardViewModel?[] PlayerCreatureSlots => _cachedPlayerCreatureSlots;
+    
+    private void RefreshCreatureSlotCaches()
+    {
+        LogToFile("[RefreshCaches] Before refresh:");
+        for (int i = 0; i < 6; i++)
+        {
+            _cachedOpponentCreatureSlots[i] = FieldSlots[i];
+            _cachedPlayerCreatureSlots[i] = FieldSlots[i + 6];
+            LogToFile($"  [{i}] Opp: {FieldSlots[i]?.Name ?? "null"}, Player: {FieldSlots[i+6]?.Name ?? "null"}");
+        }
+        
+        // Create NEW arrays to force WPF to detect the change
+        var newOppSlots = new CardViewModel?[6];
+        var newPlayerSlots = new CardViewModel?[6];
+        for (int i = 0; i < 6; i++)
+        {
+            newOppSlots[i] = _cachedOpponentCreatureSlots[i];
+            newPlayerSlots[i] = _cachedPlayerCreatureSlots[i];
+        }
+        _cachedOpponentCreatureSlots = newOppSlots;
+        _cachedPlayerCreatureSlots = newPlayerSlots;
+        
+        LogToFile("[RefreshCaches] After refresh: PlayerSlots[0]=" + (_cachedPlayerCreatureSlots[0]?.Name ?? "null"));
+        
+        // Update ObservableCollections for UI binding
+        OpponentCreatureSlotsObs.Clear();
+        PlayerCreatureSlotsObs.Clear();
+        for (int i = 0; i < 6; i++)
+        {
+            OpponentCreatureSlotsObs.Add(_cachedOpponentCreatureSlots[i]);
+            PlayerCreatureSlotsObs.Add(_cachedPlayerCreatureSlots[i]);
+        }
+        
+        // Notify UI of changes
+        OnPropertyChanged(nameof(OpponentCreatureSlots));
+        OnPropertyChanged(nameof(PlayerCreatureSlots));
+    }
+
     public string CurrentView
     {
         get => _currentView;
@@ -281,7 +343,15 @@ public class MainViewModel : ViewModelBase
         get => _zoomedCard;
         set
         {
-            SetProperty(ref _zoomedCard, value);
+            // Don't update if same value - prevents binding cycles
+            if (EqualityComparer<CardViewModel?>.Default.Equals(_zoomedCard, value))
+            {
+                ErrorLogger.Instance.Debug("MainViewModel", $"[ZoomedCard setter] SKIPPED - already set");
+                return;
+            }
+            ErrorLogger.Instance.Debug("MainViewModel", $"[ZoomedCard setter] old={_zoomedCard?.Name}, new={value?.Name}");
+            _zoomedCard = value;
+            OnPropertyChanged(nameof(ZoomedCard));
             OnPropertyChanged(nameof(IsCardZoomed));
         }
     }
@@ -443,6 +513,13 @@ public class MainViewModel : ViewModelBase
                 FieldSlots[i] = null;
             }
             
+            // Refresh cached slot arrays
+            RefreshCreatureSlotCaches();
+            LogToFile("[InitializeGame] Calling OnPropertyChanged for slots");
+            OnPropertyChanged(nameof(FieldSlots));
+            OnPropertyChanged(nameof(OpponentCreatureSlots));
+            OnPropertyChanged(nameof(PlayerCreatureSlots));
+            
             // Initialize opponent AI and deck
             _opponentAI = new OpponentAI(_difficulty);
             var newOpponentDeck = OpponentAI.CreateDeckForDifficulty(_difficulty);
@@ -581,7 +658,10 @@ public class MainViewModel : ViewModelBase
                             OpponentDeck.PlayCreatureToSlot(card.Id, decision.SlotIndex.Value);
                             opponentMana -= card.ManaCost;
                             FieldSlots[decision.SlotIndex.Value] = new CardViewModel(card);
+                            RefreshCreatureSlotCaches();
                             OnPropertyChanged(nameof(FieldSlots));
+                            OnPropertyChanged(nameof(OpponentCreatureSlots));
+                            OnPropertyChanged(nameof(PlayerCreatureSlots));
                             UpdateOpponentSlotDisplay(decision.SlotIndex.Value, card);
                         }
                         else
@@ -654,7 +734,11 @@ public class MainViewModel : ViewModelBase
                             if (target.Card.Health <= 0)
                             {
                                 var idx = Array.IndexOf(FieldSlots, target);
-                                if (idx >= 0) FieldSlots[idx] = null;
+                                if (idx >= 0) 
+                                {
+                                    FieldSlots[idx] = null;
+                                    RefreshCreatureSlotCaches();
+                                }
                                 OnPropertyChanged(nameof(FieldSlots));
                             }
                         }
@@ -683,6 +767,7 @@ public class MainViewModel : ViewModelBase
                     if (playerCreature.Health <= 0)
                     {
                         FieldSlots[i + 6] = null;
+                        RefreshCreatureSlotCaches();
                         PlayerHealth -= opponentCreature.Power;
                     }
                 }
@@ -710,6 +795,7 @@ public class MainViewModel : ViewModelBase
                     if (opponentCreature.Health <= 0)
                     {
                         FieldSlots[i] = null;
+                        RefreshCreatureSlotCaches();
                         OpponentHealth -= playerCreature.Power;
                     }
                 }
@@ -804,18 +890,31 @@ public class MainViewModel : ViewModelBase
 
     public void PlayCardToSlot(CardViewModel card, int slotIndex)
     {
-        if (slotIndex < 6 || slotIndex > 11) return;
+        LogToFile($"[PlayCardToSlot] card={card?.Name}, Type={card?.Card?.Type}, slotIndex={slotIndex}, Mana={PlayerMana}, Cost={card?.Card?.ManaCost}");
+        
+        if (slotIndex < 6 || slotIndex > 11) 
+        {
+            LogToFile("[PlayCardToSlot] FAIL: invalid slot index");
+            return;
+        }
+        
         if (card.Card.Type != CardType.Creature)
         {
             StatusMessage = "Only creature cards can be played to the field!";
+            LogToFile("[PlayCardToSlot] FAIL: not a creature");
             return;
         }
         if (card.Card.ManaCost > PlayerMana)
         {
             StatusMessage = "Not enough mana!";
+            LogToFile("[PlayCardToSlot] FAIL: not enough mana");
             return;
         }
-        if (FieldSlots[slotIndex] != null) return;
+        if (FieldSlots[slotIndex] != null) 
+        {
+            LogToFile("[PlayCardToSlot] FAIL: slot occupied");
+            return;
+        }
 
         PlayerMana -= card.Card.ManaCost;
         PlayerDeck.PlayCard(card.Id);
@@ -828,15 +927,26 @@ public class MainViewModel : ViewModelBase
         }
 
         FieldSlots[slotIndex] = card;
+        RefreshCreatureSlotCaches();
 
+        LogToFile($"[PlayCardToSlot] SUCCESS: FieldSlots[{slotIndex}]={card.Name}");
+        
+        // Force refresh by creating new array instances to trigger UI update
         OnPropertyChanged(nameof(FieldSlots));
+        OnPropertyChanged(nameof(OpponentCreatureSlots));
+        OnPropertyChanged(nameof(PlayerCreatureSlots));
         OnPropertyChanged(nameof(PlayerHand));
     }
 
     public void MoveCardToSlot(CardViewModel card, int targetSlotIndex)
     {
+        LogToFile($"[MoveCardToSlot] card={card?.Name}, Type={card?.Card?.Type}, targetSlotIndex={targetSlotIndex}");
+        
         if (targetSlotIndex < 6 || targetSlotIndex > 11) 
+        {
+            LogToFile("[MoveCardToSlot] FAIL: invalid slot index");
             return;
+        }
         
         int sourceSlotIndex = -1;
         for (int i = 6; i < 12; i++)
@@ -860,6 +970,7 @@ public class MainViewModel : ViewModelBase
         {
             FieldSlots[targetSlotIndex] = card;
             FieldSlots[sourceSlotIndex] = null;
+            RefreshCreatureSlotCaches();
         }
 
         OnPropertyChanged(nameof(FieldSlots));
@@ -924,20 +1035,33 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     public void CloseZoom()
     {
-        ZoomedCard = null;
+        ErrorLogger.Instance.Debug("MainViewModel", "[CloseZoom] called");
+        _zoomedCard = null;
+        OnPropertyChanged(nameof(ZoomedCard));
+        OnPropertyChanged(nameof(IsCardZoomed));
+        ErrorLogger.Instance.Debug("MainViewModel", $"[CloseZoom] complete, IsCardZoomed={IsCardZoomed}");
     }
 
     /// <summary>
     /// Zoom in on a card to show full details
     /// </summary>
-    public void ZoomCard(CardViewModel card)
+    public void ZoomCard(CardViewModel? card)
     {
+        if (card == null) return;
         ZoomedCard = card;
     }
 
     public void EquipWeapon(CardViewModel? card)
     {
         if (card == null || card.Card.Type != CardType.Weapon) return;
+        
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
+        
+        PlayerMana -= card.Card.ManaCost;
         PlayerWeapon = card;
         PlayerWeaponBonus = card.Card.Power;
         
@@ -956,6 +1080,14 @@ public class MainViewModel : ViewModelBase
     public void EquipArmor(CardViewModel? card)
     {
         if (card == null || card.Card.Type != CardType.Armor) return;
+        
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
+        
+        PlayerMana -= card.Card.ManaCost;
         PlayerArmor = card;
         PlayerArmorBonus = card.Card.Health;
         
@@ -1027,9 +1159,197 @@ public class MainViewModel : ViewModelBase
 
         PlayerArtifactSlots[slotIndex] = card;
 
+        // Update ObservableCollection for WPF binding
+        PlayerArtifactSlotsObs.Clear();
+        for (int i = 0; i < 3; i++)
+            PlayerArtifactSlotsObs.Add(PlayerArtifactSlots[i]);
+
         OnPropertyChanged(nameof(PlayerArtifactSlots));
         OnPropertyChanged(nameof(PlayerHand));
         StatusMessage = $"Played {card.Name} to artifact slot!";
+    }
+
+    /// <summary>
+    /// Cast a spell card (no slot needed, just mana cost and removes from hand)
+    /// </summary>
+    public void CastSpell(CardViewModel card)
+    {
+        if (card == null || card.Card.Type != CardType.Spell)
+        {
+            StatusMessage = "Only spell cards can be cast!";
+            return;
+        }
+        
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
+        
+        // Check if spell needs a target - for now cast as global
+        PlayerMana -= card.Card.ManaCost;
+        
+        // Remove from hand
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+        
+        // Apply spell effects (global - affects all)
+        ApplySpellEffects(card.Card, null);
+        
+        OnPropertyChanged(nameof(PlayerHand));
+        StatusMessage = $"Cast {card.Name}!";
+    }
+
+    /// <summary>
+    /// Cast a spell targeting a specific creature slot
+    /// </summary>
+    public void CastSpellOnCreature(CardViewModel card, int targetSlotIndex)
+    {
+        if (card == null || card.Card.Type != CardType.Spell)
+        {
+            StatusMessage = "Only spell cards can be cast!";
+            return;
+        }
+        
+        if (card.Card.ManaCost > PlayerMana)
+        {
+            StatusMessage = "Not enough mana!";
+            return;
+        }
+        
+        // Validate target - creature slots are 0-5 for opponent, 6-11 for player
+        if (targetSlotIndex < 0 || targetSlotIndex > 11 || FieldSlots[targetSlotIndex] == null)
+        {
+            StatusMessage = "No creature in target slot!";
+            return;
+        }
+        
+        PlayerMana -= card.Card.ManaCost;
+        
+        // Remove from hand
+        var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
+        if (cardInHand != null)
+        {
+            PlayerHand.Remove(cardInHand);
+        }
+        
+        // Apply spell effects to target creature
+        ApplySpellEffects(card.Card, targetSlotIndex);
+        
+        OnPropertyChanged(nameof(PlayerHand));
+        StatusMessage = $"Cast {card.Name} on {FieldSlots[targetSlotIndex]?.Name}!";
+    }
+
+    /// <summary>
+    /// Apply spell effects based on card effects
+    /// </summary>
+    private void ApplySpellEffects(Card spellCard, int? targetSlotIndex)
+    {
+        foreach (var effect in spellCard.Effects)
+        {
+            switch (effect.Type)
+            {
+                case EffectType.Damage:
+                    if (targetSlotIndex.HasValue)
+                    {
+                        // Damage single creature
+                        var target = FieldSlots[targetSlotIndex.Value];
+                        if (target?.Card != null)
+                        {
+                            target.Card.Health -= effect.Value;
+                            LogToFile($"[Spell] Damaged {target.Name} for {effect.Value}");
+                            if (target.Card.Health <= 0)
+                            {
+                                // Creature dies
+                                FieldSlots[targetSlotIndex.Value] = null;
+                                RefreshCreatureSlotCaches();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Global damage to all opponent creatures
+                        for (int i = 0; i < 6; i++)
+                        {
+                            var oppCreature = FieldSlots[i];
+                            if (oppCreature?.Card != null)
+                            {
+                                oppCreature.Card.Health -= effect.Value;
+                                if (oppCreature.Card.Health <= 0)
+                                {
+                                    FieldSlots[i] = null;
+                                }
+                            }
+                        }
+                        RefreshCreatureSlotCaches();
+                    }
+                    break;
+                    
+                case EffectType.Heal:
+                    if (targetSlotIndex.HasValue)
+                    {
+                        // Heal single creature
+                        var target = FieldSlots[targetSlotIndex.Value];
+                        if (target?.Card != null)
+                        {
+                            target.Card.Health += effect.Value;
+                            LogToFile($"[Spell] Healed {target.Name} for {effect.Value}");
+                        }
+                    }
+                    else
+                    {
+                        // Global heal to all player creatures
+                        for (int i = 6; i < 12; i++)
+                        {
+                            var playerCreature = FieldSlots[i];
+                            if (playerCreature?.Card != null)
+                            {
+                                playerCreature.Card.Health += effect.Value;
+                            }
+                        }
+                    }
+                    break;
+                    
+                case EffectType.Debuff:
+                    // Direct damage to opponent
+                    OpponentHealth -= effect.Value;
+                    LogToFile($"[Spell] Damage to opponent: {effect.Value}");
+                    break;
+                    
+                case EffectType.Buff:
+                    // Direct heal to player
+                    PlayerHealth = Math.Min(PlayerHealth + effect.Value, PlayerMaxHealth);
+                    LogToFile($"[Spell] Heal to player: {effect.Value}");
+                    break;
+                    
+                case EffectType.ManaGain:
+                    PlayerMana += effect.Value;
+                    LogToFile($"[Spell] Mana gained: {effect.Value}");
+                    break;
+                    
+                case EffectType.DrawCard:
+                    // Draw extra cards
+                    PlayerDeck.DrawCards(effect.Value);
+                    RefreshHand();
+                    LogToFile($"[Spell] Drew {effect.Value} cards");
+                    break;
+                    
+                case EffectType.Destroy:
+                    // Destroy target artifact
+                    if (targetSlotIndex.HasValue)
+                    {
+                        PlayerArtifactSlots[targetSlotIndex.Value - 6] = null;
+                    }
+                    break;
+                    
+                default:
+                    LogToFile($"[Spell] Unhandled effect type: {effect.Type}");
+                    break;
+            }
+        }
     }
 
     /// <summary>

@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using NewGame.UI.ViewModels;
+using System.IO;
+using CardType = MagicalDeckbuilder.Cards.CardType;
 
 namespace NewGame.UI.Views;
 
@@ -11,6 +13,19 @@ public partial class GameView : UserControl
     private Point _clickStartPoint;
     private bool _isDragging;
     private const double DragThreshold = 15.0;
+    private int _lastHoveredPlayerSlotIndex = -1;
+    private int _lastHoveredArtifactSlotIndex = -1;
+    
+    // Debug file logging
+    private static readonly string DebugLogPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.Desktop), 
+        "NewGame_debug.txt");
+    
+    private static void LogToFile(string msg)
+    {
+        try { File.AppendAllText(DebugLogPath, $"[{DateTime.Now:HH:mm:ss.fff}] {msg}\n"); }
+        catch { }
+    }
     
     // Track what was clicked for drag operations
     private CardViewModel? _pendingDragCard;
@@ -58,6 +73,7 @@ public partial class GameView : UserControl
                 
                 // Use explicit DataObject to ensure proper data format
                 var dataObject = new DataObject("CardViewModel", _pendingDragCard);
+                LogToFile($"[DRAG] Starting drag for card: {_pendingDragCard?.Name}, Type={_pendingDragCard?.Card?.Type}, hash={_pendingDragCard?.GetHashCode()}");
                 DragDrop.DoDragDrop(_pendingDragSource, dataObject, DragDropEffects.Move);
                 
                 _isDragging = false;
@@ -71,6 +87,13 @@ public partial class GameView : UserControl
     private void OnHandCardPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         _isDragging = false;
+        // Only clear if drag didn't complete
+        if (_pendingDragCard != null)
+        {
+            // Reset the slot index in case drag ended without drop
+            _lastHoveredPlayerSlotIndex = -1;
+            _lastHoveredArtifactSlotIndex = -1;
+        }
         _pendingDragCard = null;
         _pendingDragSource = null;
     }
@@ -145,9 +168,22 @@ public partial class GameView : UserControl
                 var card = e.Data.GetData("CardViewModel") as CardViewModel;
                 slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
 
-                if (card != null && slotIndex >= 6 && slotIndex <= 11)
+                if (card != null)
                 {
-                    ViewModel?.MoveCardToSlot(card, slotIndex);
+                    // Check if this is a spell card
+                    if (card.Card.Type == CardType.Spell && slotIndex >= 0 && slotIndex <= 11)
+                    {
+                        // Cast spell on the creature at this slot
+                        LogToFile($"[SPELL] OnSlotDrop: Casting {card.Name} on slot {slotIndex}");
+                        ViewModel?.CastSpellOnCreature(card, slotIndex);
+                        return;
+                    }
+                    
+                    // Regular card - move to slot
+                    if (slotIndex >= 6 && slotIndex <= 11)
+                    {
+                        ViewModel?.MoveCardToSlot(card, slotIndex);
+                    }
                 }
             }
         }
@@ -207,6 +243,7 @@ public partial class GameView : UserControl
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
         {
             ViewModel?.ZoomCard(card);
+            ShowCardZoom();
             e.Handled = true;
         }
     }
@@ -216,6 +253,7 @@ public partial class GameView : UserControl
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
         {
             ViewModel?.ZoomCard(card);
+            ShowCardZoom();
             e.Handled = true;
         }
     }
@@ -304,6 +342,7 @@ public partial class GameView : UserControl
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
         {
             ViewModel?.ZoomCard(card);
+            ShowCardZoom();
             e.Handled = true;
         }
     }
@@ -327,6 +366,182 @@ public partial class GameView : UserControl
         {
             ViewModel?.TakeComboResult();
         }
+        e.Handled = true;
+    }
+
+    // ========== Player Creature Slot Handlers ==========
+    private void OnPlayerSlotDragEnter(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            // Get global position relative to this GameView
+            var pos = e.GetPosition(this);
+            
+            // Player slots start at around column index 0 of itemscontrol - actual positions vary
+            // Better: use slot's actual position relative to GameView
+            var slotPos = slot.TranslatePoint(new Point(40, 35), this);
+            int slotWidth = 86;
+            int index = (int)(slotPos.X / slotWidth);
+            index = Math.Clamp(index, 0, 5);
+            
+            LogToFile($"[DRAGENTER] PlayerSlot: slotPos.X={slotPos.X}, index={index}");
+            
+            _lastHoveredPlayerSlotIndex = index;
+            
+            if (ViewModel?.FieldSlots[index + 6] == null)
+            {
+                slot.Background = new SolidColorBrush(Color.FromRgb(80, 120, 80));
+                e.Effects = DragDropEffects.Move;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+    }
+
+    private void OnPlayerSlotDragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
+        }
+        _lastHoveredPlayerSlotIndex = -1;
+        e.Handled = true;
+    }
+
+    private void OnPlayerSlotDrop(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            int slotIndex = GetPlayerSlotIndex(slot);
+            
+            LogToFile($"[DROP] PlayerSlot: slotIndex={slotIndex}, lastHovered={_lastHoveredPlayerSlotIndex}, hasCardData={e.Data.GetDataPresent("CardViewModel")}");
+            
+            if (e.Data.GetDataPresent("CardViewModel"))
+            {
+                var card = e.Data.GetData("CardViewModel") as CardViewModel;
+                slot.Background = new SolidColorBrush(Color.FromRgb(70, 80, 70));
+                
+                LogToFile($"[DROP] card={card?.Name}, Type={card?.Card?.Type}, hash={card?.GetHashCode()}");
+
+                if (card != null)
+                {
+                    // Check if this is a spell card
+                    if (card.Card.Type == CardType.Spell)
+                    {
+                        // Cast spell on the creature in this slot
+                        if (slotIndex >= 0 && slotIndex < 6 && ViewModel?.FieldSlots[slotIndex + 6] != null)
+                        {
+                            LogToFile($"[SPELL] Casting {card.Name} on player creature at slot {slotIndex + 6}");
+                            ViewModel?.CastSpellOnCreature(card, slotIndex + 6);
+                        }
+                        else if (slotIndex >= 0 && slotIndex < 6)
+                        {
+                            // No creature there - try to cast on opponent creature
+                            if (ViewModel?.FieldSlots[slotIndex] != null)
+                            {
+                                LogToFile($"[SPELL] Casting {card.Name} on opponent creature at slot {slotIndex}");
+                                ViewModel?.CastSpellOnCreature(card, slotIndex);
+                            }
+                            else
+                            {
+                                LogToFile($"[SPELL] No creature at slot to target");
+                            }
+                        }
+                        return;
+                    }
+                    
+                    // Regular creature card - move to slot
+                    if (slotIndex >= 0 && slotIndex < 6)
+                    {
+                        LogToFile($"[DROP] Calling MoveCardToSlot with {slotIndex + 6}");
+                        ViewModel?.MoveCardToSlot(card, slotIndex + 6);
+                        LogToFile($"[DROP] After call, PlayerSlots[0] hash={ViewModel?.PlayerCreatureSlots?[0]?.GetHashCode()}");
+                    }
+                    else
+                    {
+                        LogToFile($"[DROP] FAILED: card={card != null}, slotIndex={slotIndex}");
+                    }
+                }
+            }
+            else
+            {
+                LogToFile("[DROP] No card data present!");
+            }
+            
+            _lastHoveredPlayerSlotIndex = -1;
+        }
+        e.Handled = true;
+    }
+
+    private void OnPlayerSlotMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && sender is Border slotBorder)
+        {
+            if (slotBorder.Tag is CardViewModel card)
+            {
+                DragDrop.DoDragDrop(slotBorder, card, DragDropEffects.Move);
+            }
+        }
+    }
+
+    private int GetPlayerSlotIndex(Border slot)
+    {
+        // First check cached index from DragEnter
+        if (_lastHoveredPlayerSlotIndex >= 0)
+        {
+            LogToFile($"[GetPlayerSlotIndex] Using cached: {_lastHoveredPlayerSlotIndex}");
+            return _lastHoveredPlayerSlotIndex;
+        }
+        
+        // Try Panel.Children.IndexOf
+        if (slot.Parent is Panel panel)
+        {
+            int idx = panel.Children.IndexOf(slot);
+            LogToFile($"[GetPlayerSlotIndex] Panel.IndexOf: {idx}");
+            return idx;
+        }
+        
+        // Try Tag as last resort
+        if (slot.Tag is int tagInt)
+            return tagInt;
+        
+        if (slot.Tag is string tagStr && int.TryParse(tagStr, out int parsed))
+            return parsed;
+        
+        LogToFile("[GetPlayerSlotIndex] Failed to find index");
+        return -1;
+    }
+
+    // ========== Opponent Event Slot Handlers ==========
+    private void OnOpponentEventSlotDragEnter(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot && ViewModel?.OpponentEventSlot == null)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(160, 60, 60));
+            e.Effects = DragDropEffects.Move;
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
+        e.Handled = true;
+    }
+
+    private void OnOpponentEventSlotDragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border slot)
+        {
+            slot.Background = new SolidColorBrush(Color.FromRgb(80, 50, 50));
+        }
+        e.Handled = true;
+    }
+
+    private void OnOpponentEventSlotDrop(object sender, DragEventArgs e)
+    {
+        // Opponent event slots are read-only for the player
         e.Handled = true;
     }
 
@@ -375,18 +590,18 @@ public partial class GameView : UserControl
     {
         if (sender is Border slot)
         {
-            // Determine slot index from Tag
-            int slotIndex = 0;
-            if (slot.Tag is string tagStr && int.TryParse(tagStr, out int parsed))
-            {
-                slotIndex = parsed - 20; // 20, 21, 22 -> 0, 1, 2
-            }
-            else if (slot.Tag is int tagInt)
-            {
-                slotIndex = tagInt - 20;
-            }
+            // Artifact slots appear at roughly X = 500-700
+            var slotPos = slot.TranslatePoint(new Point(40, 35), this);
             
-            if (slotIndex >= 0 && slotIndex < 3 && ViewModel?.PlayerArtifactSlots[slotIndex] == null)
+            // Map X=500-700 to index 0-2
+            int index = (int)((slotPos.X - 500) / 80);
+            index = Math.Clamp(index, 0, 2);
+            
+            LogToFile($"[DRAGENTER] Artifact Slot: slotPos.X={slotPos.X}, index={index}");
+            
+            _lastHoveredArtifactSlotIndex = index;
+            
+            if (ViewModel?.PlayerArtifactSlots[index] == null)
             {
                 slot.Background = new SolidColorBrush(Color.FromRgb(180, 180, 80));
                 e.Effects = DragDropEffects.Move;
@@ -395,8 +610,8 @@ public partial class GameView : UserControl
             {
                 e.Effects = DragDropEffects.None;
             }
+            e.Handled = true;
         }
-        e.Handled = true;
     }
 
     private void OnArtifactSlotDragLeave(object sender, DragEventArgs e)
@@ -405,6 +620,7 @@ public partial class GameView : UserControl
         {
             slot.Background = new SolidColorBrush(Color.FromRgb(200, 200, 100));
         }
+        _lastHoveredArtifactSlotIndex = -1;
         e.Handled = true;
     }
 
@@ -415,20 +631,123 @@ public partial class GameView : UserControl
             var card = e.Data.GetData("CardViewModel") as CardViewModel;
             slot.Background = new SolidColorBrush(Color.FromRgb(200, 200, 100));
 
-            // Determine slot index from Tag
-            int slotIndex = 0;
-            if (slot.Tag is string tagStr && int.TryParse(tagStr, out int parsed))
+            // Check if this is a spell card - spells can destroy artifacts
+            if (card?.Card?.Type == CardType.Spell)
             {
-                slotIndex = parsed - 20; // 20, 21, 22 -> 0, 1, 2
+                LogToFile($"[SPELL] Dropped on artifact slot - casting {card.Name}");
+                // For now, cast as global spell
+                ViewModel?.CastSpell(card);
+                _lastHoveredArtifactSlotIndex = -1;
+                e.Handled = true;
+                return;
             }
-            else if (slot.Tag is int tagInt)
+
+            // Use cached index from DragEnter
+            int slotIndex = _lastHoveredArtifactSlotIndex;
+            
+            // Fallback: calculate from Tag if not available
+            if (slotIndex < 0)
             {
-                slotIndex = tagInt - 20;
+                if (slot.Tag is string tagStr && int.TryParse(tagStr, out int parsed))
+                    slotIndex = parsed - 20;
+                else if (slot.Tag is int tagInt)
+                    slotIndex = tagInt - 20;
             }
 
             if (card != null && slotIndex >= 0 && slotIndex < 3)
             {
                 ViewModel?.PlayArtifactToSlot(card, slotIndex);
+            }
+            
+            _lastHoveredArtifactSlotIndex = -1;
+        }
+        e.Handled = true;
+    }
+
+    private void OnArtifactSlotMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed && sender is Border slotBorder)
+        {
+            if (slotBorder.Tag is CardViewModel card)
+            {
+                DragDrop.DoDragDrop(slotBorder, card, DragDropEffects.Move);
+            }
+        }
+    }
+
+    // ========== Manual Card Zoom Control ==========
+    private void ShowCardZoom()
+    {
+        if (CardZoomPopup != null && ViewModel?.ZoomedCard != null)
+        {
+            CardZoomPopup.DataContext = ViewModel.ZoomedCard;
+            CardZoomPopup.Visibility = Visibility.Visible;
+        }
+    }
+
+    public void HideCardZoom()
+    {
+        if (CardZoomPopup != null)
+        {
+            CardZoomPopup.Visibility = Visibility.Collapsed;
+            CardZoomPopup.DataContext = null;
+        }
+    }
+
+    // ========== Spell Drag Drop Handlers ==========
+    private void OnSpellDragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent("CardViewModel"))
+        {
+            var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            if (card?.Card?.Type == CardType.Spell)
+            {
+                LogToFile("[SPELL] DragEnter spell: " + card.Name);
+                // Show status message
+                if (ViewModel != null)
+                {
+                    ViewModel.StatusMessage = $"Drag {card.Name} to target or release to cast globally";
+                }
+                e.Effects = DragDropEffects.Move;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+        e.Handled = true;
+    }
+
+    private void OnSpellDragLeave(object sender, DragEventArgs e)
+    {
+        LogToFile("[SPELL] DragLeave");
+        // Clear status message when leaving
+        if (ViewModel != null && ViewModel.StatusMessage.Contains("Drag"))
+        {
+            ViewModel.StatusMessage = "";
+        }
+        e.Handled = true;
+    }
+
+    private void OnSpellDrop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent("CardViewModel"))
+        {
+            var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            LogToFile("[SPELL] Drop: " + card?.Name + " Type=" + card?.Card?.Type);
+            
+            if (card != null && card.Card.Type == CardType.Spell)
+            {
+                // Global spell cast - no target
+                if (ViewModel?.PlayerMana >= card.Card.ManaCost)
+                {
+                    ViewModel?.CastSpell(card);
+                    LogToFile("[SPELL] Cast successfully: " + card.Name);
+                }
+                else
+                {
+                    LogToFile("[SPELL] Not enough mana!");
+                }
             }
         }
         e.Handled = true;

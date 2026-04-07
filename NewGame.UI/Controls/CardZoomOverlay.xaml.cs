@@ -86,5 +86,9 @@ public partial class CardZoomOverlay : UserControl
             _mainViewModel = FindMainViewModel();
         }
         _mainViewModel?.CloseZoom();
+        
+        // Manually hide this overlay since we removed the binding
+        // This ensures it closes immediately when X is clicked
+        Visibility = Visibility.Collapsed;
     }
 }
