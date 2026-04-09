@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "//gXon2Ff3s=",
+  "dgSpecHash": "X8gsGRWnyX4=",
   "success": true,
-  "projectFilePath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj",
+  "projectFilePath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\atw61\\.nuget\\packages\\microsoft.win32.systemevents\\8.0.0\\microsoft.win32.systemevents.8.0.0.nupkg.sha512",
     "C:\\Users\\atw61\\.nuget\\packages\\system.drawing.common\\8.0.0\\system.drawing.common.8.0.0.nupkg.sha512"

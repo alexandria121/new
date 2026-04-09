@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj": {}
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj": {}
   },
   "projects": {
-    "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+        "projectUniqueName": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
         "projectName": "MagicalDeckbuilder.Shared",
-        "projectPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+        "projectPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
         "packagesPath": "C:\\Users\\atw61\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\obj\\",
+        "outputPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\atw61\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -69,14 +69,14 @@
         }
       }
     },
-    "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj": {
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj",
+        "projectUniqueName": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj",
         "projectName": "NewGame.UI",
-        "projectPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj",
+        "projectPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\NewGame.UI.csproj",
         "packagesPath": "C:\\Users\\atw61\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\obj\\",
+        "outputPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\NewGame.UI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\atw61\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -91,8 +91,8 @@
           "net9.0-windows7.0": {
             "targetAlias": "net9.0-windows",
             "projectReferences": {
-              "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
-                "projectPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj"
+              "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
+                "projectPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj"
               }
             }
           }

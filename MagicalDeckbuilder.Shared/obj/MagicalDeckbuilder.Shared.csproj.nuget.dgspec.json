@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {}
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {}
   },
   "projects": {
-    "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+        "projectUniqueName": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
         "projectName": "MagicalDeckbuilder.Shared",
-        "projectPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+        "projectPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
         "packagesPath": "C:\\Users\\atw61\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\obj\\",
+        "outputPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\atw61\\AppData\\Roaming\\NuGet\\NuGet.Config"
