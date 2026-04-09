@@ -11,6 +11,8 @@ public class CardViewModel : ViewModelBase
     private readonly Card _card;
     private bool _isSelected;
     private bool _isDragging;
+    private int _damageTaken;
+    private readonly List<string> _statusEffects = new();
 
     public CardViewModel(Card card)
     {
@@ -24,8 +26,170 @@ public class CardViewModel : ViewModelBase
     public CardType Type => _card.Type;
     public ElementType Element => _card.Element;
     public int ManaCost => _card.ManaCost;
-    public int Power => _card.Power;
-    public int Health => _card.Health;
+    
+    /// <summary>
+    /// Base power from the card data
+    /// </summary>
+    public int BasePower => _card.Power;
+    
+    /// <summary>
+    /// Current power considering status effects
+    /// </summary>
+    public int Power => Math.Max(0, _card.Power + GetPowerModifier());
+    
+    /// <summary>
+    /// Base health from the card data
+    /// </summary>
+    public int BaseHealth => _card.Health;
+    
+    /// <summary>
+    /// Current health considering damage taken
+    /// </summary>
+    public int Health => Math.Max(0, _card.Health - _damageTaken);
+    
+    /// <summary>
+    /// Tracks how much damage has been applied to this card
+    /// </summary>
+    public int DamageTaken
+    {
+        get => _damageTaken;
+        set => SetProperty(ref _damageTaken, value);
+    }
+    
+    /// <summary>
+    /// Returns true if the card has taken damage (is on field with damage)
+    /// </summary>
+    public bool HasDamage => _damageTaken > 0;
+    
+    /// <summary>
+    /// Gets the list of active status effects
+    /// </summary>
+    public IReadOnlyList<string> StatusEffects => _statusEffects.AsReadOnly();
+    
+    /// <summary>
+    /// Returns true if the card has any status effects
+    /// </summary>
+    public bool HasStatusEffects => _statusEffects.Count > 0;
+    
+    /// <summary>
+    /// Add a status effect to this card
+    /// </summary>
+    public void AddStatusEffect(string effect)
+    {
+        if (!_statusEffects.Contains(effect))
+        {
+            _statusEffects.Add(effect);
+            OnPropertyChanged(nameof(StatusEffects));
+            OnPropertyChanged(nameof(HasStatusEffects));
+            OnPropertyChanged(nameof(Power));
+            OnPropertyChanged(nameof(Health));
+        }
+    }
+    
+    /// <summary>
+    /// Remove a status effect from this card
+    /// </summary>
+    public void RemoveStatusEffect(string effect)
+    {
+        if (_statusEffects.Remove(effect))
+        {
+            OnPropertyChanged(nameof(StatusEffects));
+            OnPropertyChanged(nameof(HasStatusEffects));
+            OnPropertyChanged(nameof(Power));
+            OnPropertyChanged(nameof(Health));
+        }
+    }
+    
+    /// <summary>
+    /// Clear all status effects from this card
+    /// </summary>
+    public void ClearStatusEffects()
+    {
+        if (_statusEffects.Count > 0)
+        {
+            _statusEffects.Clear();
+            OnPropertyChanged(nameof(StatusEffects));
+            OnPropertyChanged(nameof(HasStatusEffects));
+            OnPropertyChanged(nameof(Power));
+            OnPropertyChanged(nameof(Health));
+        }
+    }
+    
+    /// <summary>
+    /// Apply damage to this card
+    /// </summary>
+    public void ApplyDamage(int amount)
+    {
+        if (amount > 0)
+        {
+            _damageTaken += amount;
+            OnPropertyChanged(nameof(DamageTaken));
+            OnPropertyChanged(nameof(HasDamage));
+            OnPropertyChanged(nameof(Health));
+        }
+    }
+    
+    /// <summary>
+    /// Heal damage on this card
+    /// </summary>
+    public void HealDamage(int amount)
+    {
+        if (amount > 0)
+        {
+            _damageTaken = Math.Max(0, _damageTaken - amount);
+            OnPropertyChanged(nameof(DamageTaken));
+            OnPropertyChanged(nameof(HasDamage));
+            OnPropertyChanged(nameof(Health));
+        }
+    }
+    
+    /// <summary>
+    /// Reset damage (e.g., when card dies or is removed)
+    /// </summary>
+    public void ResetDamage()
+    {
+        if (_damageTaken > 0)
+        {
+            _damageTaken = 0;
+            OnPropertyChanged(nameof(DamageTaken));
+            OnPropertyChanged(nameof(HasDamage));
+            OnPropertyChanged(nameof(Health));
+        }
+    }
+    
+    private int GetPowerModifier()
+    {
+        int modifier = 0;
+        if (_statusEffects.Contains("Buffed")) modifier += 2;
+        if (_statusEffects.Contains("Empowered")) modifier += 3;
+        if (_statusEffects.Contains("Weakened")) modifier -= 2;
+        if (_statusEffects.Contains("Enraged")) modifier += 1;
+        return modifier;
+    }
+    
+    /// <summary>
+    /// Whether this card is currently on the field (has been played)
+    /// </summary>
+    public bool IsOnField { get; set; }
+    
+    /// <summary>
+    /// Display text for current power (shows modification if damaged)
+    /// </summary>
+    public string CurrentPowerText => HasDamage || HasStatusEffects 
+        ? $"{Power} ({_card.Power:+0;-0;0})" 
+        : Power.ToString();
+    
+    /// <summary>
+    /// Display text for current health (shows modification if damaged)
+    /// </summary>
+    public string CurrentHealthText => HasDamage || HasStatusEffects 
+        ? $"{Health} ({_card.Health:+0;-0;0})" 
+        : Health.ToString();
+    
+    /// <summary>
+    /// Returns true if this card shows modified stats in the zoom view
+    /// </summary>
+    public bool ShowsModifiedStats => HasDamage || HasStatusEffects;
     public bool IsLegendary => _card.IsLegendary;
     public int Rarity => _card.Rarity;
     public IReadOnlyList<CardEffect> Effects => _card.Effects;

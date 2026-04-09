@@ -74,6 +74,15 @@ public enum ElementType
 }
 
 /// <summary>
+/// Target type for weapons - what the weapon damages
+/// </summary>
+public enum WeaponTargetType
+{
+    DamageToOpponent,
+    DamageToCreatures
+}
+
+/// <summary>
 /// Base class representing a card in the game
 /// </summary>
 public class Card
@@ -319,6 +328,8 @@ public class BlankCard : Card
 /// </summary>
 public class WeaponCard : Card
 {
+    public WeaponTargetType TargetType { get; set; } = WeaponTargetType.DamageToOpponent;
+
     public WeaponCard()
     {
         Type = CardType.Weapon;
@@ -346,7 +357,8 @@ public class WeaponCard : Card
                 IsTemporary = e.IsTemporary
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            TargetType = this.TargetType
         };
     }
 }

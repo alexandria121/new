@@ -2,6 +2,8 @@ using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
+using WeaponTargetType = MagicalDeckbuilder.Cards.WeaponTargetType;
+using WeaponCard = MagicalDeckbuilder.Cards.WeaponCard;
 using CreatureSlot = MagicalDeckbuilder.Decks.CreatureSlot;
 using MagicalDeckbuilder.Decks;
 using MagicalDeckbuilder.Combining;
@@ -525,6 +527,16 @@ public class Game
             return;
         }
         
+        // WEAPON PHASE: Player weapons deal damage at end of turn
+        Console.WriteLine("\n⚔️  WEAPON PHASE: Your weapons attack!");
+        ResolveWeaponDamage(_player, _opponent);
+        
+        // Check for game over after weapon damage
+        if (_opponent.Health <= 0 || _player.Health <= 0)
+        {
+            return;
+        }
+        
         // Opponent's turn
         OpponentTurn();
         
@@ -648,6 +660,85 @@ public class Game
     }
     
     /// <summary>
+    /// Resolve weapon damage at end of turn
+    /// Weapons in InPlay deal damage based on their TargetType:
+    /// - DamageToOpponent: Deal power directly to opponent health
+    /// - DamageToCreatures: Start at slot 0 (leftmost), scan left-to-right,
+    ///   attack first enemy creature found. If none, move to next slot.
+    /// </summary>
+    private void ResolveWeaponDamage(Character attacker, Character defender)
+    {
+        var weapons = attacker.Deck.InPlay
+            .Where(c => c is WeaponCard)
+            .Cast<WeaponCard>()
+            .ToList();
+        
+        if (weapons.Count == 0)
+        {
+            Console.WriteLine("  (No weapons in play)");
+            return;
+        }
+        
+        foreach (var weapon in weapons)
+        {
+            if (weapon.TargetType == WeaponTargetType.DamageToOpponent)
+            {
+                // Direct damage to opponent
+                int damage = weapon.Power;
+                defender.TakeDamage(damage);
+                Console.WriteLine($"  ⚔️ {weapon.Name} deals {damage} damage to {defender.Name}!");
+            }
+            else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
+            {
+                // Attack enemy creatures, starting from slot 0 (leftmost)
+                var target = FindWeaponTarget(defender.Deck.CreatureSlots, defender);
+                
+                if (target != null)
+                {
+                    int damage = weapon.Power;
+                    target.Health -= damage;
+                    Console.WriteLine($"  ⚔️ {weapon.Name} attacks {target.Name} for {damage} damage!");
+                    
+                    // Check if target creature died
+                    if (target.Health <= 0)
+                    {
+                        defender.Deck.RemoveCreatureFromSlot(
+                            defender.Deck.CreatureSlots.FindIndex(s => s.Creature?.Id == target.Id));
+                        Console.WriteLine($"  💀 {target.Name} was destroyed!");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"  ⚔️ {weapon.Name} attacks but no enemy creatures found!");
+                }
+            }
+        }
+        
+        // Clear damage indicators after display
+        defender.ClearDamageIndicator();
+    }
+    
+    /// <summary>
+    /// Find a target for a weapon that damages creatures
+    /// Starts at slot 0 (leftmost) and scans left-to-right like reading a book
+    /// </summary>
+    private Card? FindWeaponTarget(List<CreatureSlot> defenderSlots, Character defender)
+    {
+        // Scan slots left-to-right starting from slot 0
+        for (int i = 0; i < defenderSlots.Count; i++)
+        {
+            var creature = defenderSlots[i].Creature;
+            if (creature != null)
+            {
+                return creature;
+            }
+        }
+        
+        // No enemy creatures found
+        return null;
+    }
+    
+    /// <summary>
     /// Simple AI opponent turn
     /// </summary>
     private void OpponentTurn()
@@ -719,6 +810,16 @@ public class Game
         ResolveCombat(_opponent, _player);
         
         // Check for game over after opponent combat
+        if (_player.Health <= 0)
+        {
+            return;
+        }
+        
+        // WEAPON PHASE: Opponent weapons deal damage at end of turn
+        Console.WriteLine("\n⚔️  WEAPON PHASE: Enemy weapons attack!");
+        ResolveWeaponDamage(_opponent, _player);
+        
+        // Check for game over after weapon damage
         if (_player.Health <= 0)
         {
             return;

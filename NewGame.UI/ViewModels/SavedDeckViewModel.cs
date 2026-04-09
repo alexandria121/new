@@ -1,5 +1,6 @@
 using MagicalDeckbuilder.Storage;
 using MagicalDeckbuilder.Game;
+using Card = MagicalDeckbuilder.Cards.Card;
 
 namespace NewGame.UI.ViewModels;
 
@@ -157,6 +158,46 @@ public class SavedDeckViewModel : ViewModelBase
         "Food" => "🍖",
         "Eldritch" => "👁",
         _ => "❓"
+    };
+
+    /// <summary>
+    /// Get card type distribution summary
+    /// </summary>
+    public string CardTypeSummary
+    {
+        get
+        {
+            if (_fullDeck == null) return "Load deck for details";
+
+            var typeCounts = new Dictionary<string, int>();
+            foreach (var card in _fullDeck.Cards)
+            {
+                var cardObj = CardFactory.GetCardByTemplateId(card.CardTemplateId);
+                var typeName = cardObj?.Type.ToString() ?? "Unknown";
+                if (!typeCounts.ContainsKey(typeName))
+                    typeCounts[typeName] = 0;
+                typeCounts[typeName]++;
+            }
+
+            if (typeCounts.Count == 0) return "No cards";
+
+            return string.Join(", ", typeCounts
+                .OrderByDescending(t => t.Value)
+                .Take(3)
+                .Select(t => $"{GetCardTypeIcon(t.Key)}{t.Value}"));
+        }
+    }
+
+    private static string GetCardTypeIcon(string type) => type switch
+    {
+        "Creature" => "👤",
+        "Spell" => "✨",
+        "Artifact" => "🏺",
+        "Weapon" => "⚔",
+        "Armor" => "🛡",
+        "Enchantment" => "🔮",
+        "Event" => "⚡",
+        _ => "🃏"
     };
     
     /// <summary>

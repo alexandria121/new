@@ -590,18 +590,12 @@ public partial class GameView : UserControl
     {
         if (sender is Border slot)
         {
-            // Artifact slots appear at roughly X = 500-700
-            var slotPos = slot.TranslatePoint(new Point(40, 35), this);
-            
-            // Map X=500-700 to index 0-2
-            int index = (int)((slotPos.X - 500) / 80);
-            index = Math.Clamp(index, 0, 2);
-            
-            LogToFile($"[DRAGENTER] Artifact Slot: slotPos.X={slotPos.X}, index={index}");
+            var index = GetArtifactSlotIndex(slot);
+            LogToFile($"[DRAGENTER] Artifact Slot: index={index}");
             
             _lastHoveredArtifactSlotIndex = index;
             
-            if (ViewModel?.PlayerArtifactSlots[index] == null)
+            if (index >= 0 && ViewModel?.PlayerArtifactSlots[index] == null)
             {
                 slot.Background = new SolidColorBrush(Color.FromRgb(180, 180, 80));
                 e.Effects = DragDropEffects.Move;
@@ -612,6 +606,28 @@ public partial class GameView : UserControl
             }
             e.Handled = true;
         }
+    }
+    
+    private int GetArtifactSlotIndex(Border slot)
+    {
+        // Check cached first
+        if (_lastHoveredArtifactSlotIndex >= 0)
+            return _lastHoveredArtifactSlotIndex;
+        
+        // Try Panel.Children.IndexOf
+        if (slot.Parent is Panel panel)
+        {
+            int idx = panel.Children.IndexOf(slot);
+            LogToFile($"[GetArtifactSlotIndex] Raw index: {idx}");
+            
+            // Subtract creature slot count (6) since artifacts come after creatures in the same panel
+            idx = idx - 6;
+            LogToFile($"[GetArtifactSlotIndex] Adjusted index: {idx}");
+            return idx;
+        }
+        
+        LogToFile("[GetArtifactSlotIndex] Failed to find index");
+        return -1;
     }
 
     private void OnArtifactSlotDragLeave(object sender, DragEventArgs e)

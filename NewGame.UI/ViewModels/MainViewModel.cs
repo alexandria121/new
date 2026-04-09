@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using MagicalDeckbuilder.Cards;
+using NewGame.UI.Views;
 using MagicalDeckbuilder.Combining;
 using MagicalDeckbuilder.Decks;
 using MagicalDeckbuilder.Game;
@@ -11,6 +12,8 @@ using Card = MagicalDeckbuilder.Cards.Card;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
+using WeaponTargetType = MagicalDeckbuilder.Cards.WeaponTargetType;
+using WeaponCard = MagicalDeckbuilder.Cards.WeaponCard;
 using PileType = MagicalDeckbuilder.Decks.PileType;
 using CreatureSlot = MagicalDeckbuilder.Decks.CreatureSlot;
 using SavedDeckType = MagicalDeckbuilder.Storage.DeckType;
@@ -24,6 +27,7 @@ public class MainViewModel : ViewModelBase
     private DifficultyLevel _difficulty = DifficultyLevel.Journeyman;
     private bool _hasUnsavedDeckChanges;
     private string? _currentDeckId;
+    private string? _selectedBattleDeckId;
 
     private string _currentView = "Menu";
     private CardViewModel? _selectedCard;
@@ -87,13 +91,19 @@ public class MainViewModel : ViewModelBase
         LoadSavedDecks();
     }
     
-    private void LoadSavedDecks()
+    private async void LoadSavedDecks()
     {
         PlayerDecks.Clear();
-        var savedDecks = DeckStorageService.Instance.GetPlayerDecks();
-        foreach (var deck in savedDecks)
+        
+        // Load full deck data for each player deck to enable element/type breakdown display
+        var deckIds = DeckStorageService.Instance.GetPlayerDecks();
+        foreach (var entry in deckIds)
         {
-            PlayerDecks.Add(new SavedDeckViewModel(deck));
+            var fullDeck = await DeckStorageService.Instance.LoadDeckAsync(entry.Id);
+            if (fullDeck != null)
+            {
+                PlayerDecks.Add(new SavedDeckViewModel(fullDeck));
+            }
         }
     }
     
@@ -107,6 +117,7 @@ public class MainViewModel : ViewModelBase
         {
             LoadDeckIntoBuilder(fullDeck);
             _currentDeckId = fullDeck.Id;
+            _selectedBattleDeckId = fullDeck.Id;
             _hasUnsavedDeckChanges = false;
         }
         
@@ -171,8 +182,23 @@ public class MainViewModel : ViewModelBase
             return;
         }
         
-        var deckName = PromptForDeckName(_currentDeckId != null ? 
-            DeckStorageService.Instance.GetDeckIndex().FirstOrDefault(d => d.Id == _currentDeckId)?.Name : null);
+        // Get current deck name for default value (using dialog now)
+        string? currentName = null;
+        if (!string.IsNullOrEmpty(_currentDeckId))
+        {
+            currentName = DeckStorageService.Instance.GetDeckIndex()
+                .FirstOrDefault(d => d.Id == _currentDeckId)?.Name;
+        }
+
+        // Create and show the deck name dialog
+        var dialog = new DeckNameDialog(currentName ?? "NewDeck");
+        
+        if (dialog.ShowDialog() != true)
+        {
+            return; // User cancelled
+        }
+
+        var deckName = dialog.DeckName;
         
         if (string.IsNullOrWhiteSpace(deckName)) return;
         
@@ -186,7 +212,8 @@ public class MainViewModel : ViewModelBase
         }
         else
         {
-            await DeckStorageService.Instance.SaveDeckAsync(deckName, cards, DeckType.Player, Difficulty);
+            var savedDeck = await DeckStorageService.Instance.SaveDeckAsync(deckName, cards, DeckType.Player, Difficulty);
+            _currentDeckId = savedDeck.Id;
         }
 
         _hasUnsavedDeckChanges = false;
@@ -253,13 +280,15 @@ public class MainViewModel : ViewModelBase
     public CardViewModel? OpponentArmor { get; private set; }
 
     // Artifact slots (3 slots for player artifacts)
-    public CardViewModel?[] PlayerArtifactSlots { get; } = new CardViewModel?[3];
+    private CardViewModel?[] _playerArtifactSlots = new CardViewModel?[3];
+    public CardViewModel?[] PlayerArtifactSlots => _playerArtifactSlots;
 
     // Event slot (1 slot for player events)
     public CardViewModel? PlayerEventSlot { get; private set; }
 
     // Opponent artifact slots (3 slots)
-    public CardViewModel?[] OpponentArtifactSlots { get; } = new CardViewModel?[3];
+    private CardViewModel?[] _opponentArtifactSlots = new CardViewModel?[3];
+    public CardViewModel?[] OpponentArtifactSlots => _opponentArtifactSlots;
 
     // Opponent event slot (1 slot)
     public CardViewModel? OpponentEventSlot { get; private set; }
@@ -310,7 +339,8 @@ public class MainViewModel : ViewModelBase
         _cachedOpponentCreatureSlots = newOppSlots;
         _cachedPlayerCreatureSlots = newPlayerSlots;
         
-        LogToFile("[RefreshCaches] After refresh: PlayerSlots[0]=" + (_cachedPlayerCreatureSlots[0]?.Name ?? "null"));
+        LogToFile("[RefreshCaches] After refresh: PlayerSlots[0]=" + (_cachedPlayerCreatureSlots[0]?.Name ?? "null") + 
+            ", OppSlots[0]=" + (_cachedOpponentCreatureSlots[0]?.Name ?? "null"));
         
         // Update ObservableCollections for UI binding
         OpponentCreatureSlotsObs.Clear();
@@ -320,6 +350,7 @@ public class MainViewModel : ViewModelBase
             OpponentCreatureSlotsObs.Add(_cachedOpponentCreatureSlots[i]);
             PlayerCreatureSlotsObs.Add(_cachedPlayerCreatureSlots[i]);
         }
+        LogToFile($"[RefreshCaches] Obs collections updated, Obs[0]: Opp={OpponentCreatureSlotsObs[0]?.Name ?? "null"}, Player={PlayerCreatureSlotsObs[0]?.Name ?? "null"}");
         
         // Notify UI of changes
         OnPropertyChanged(nameof(OpponentCreatureSlots));
@@ -502,7 +533,7 @@ public class MainViewModel : ViewModelBase
         Application.Current.Shutdown();
     }
 
-    private void InitializeGame()
+    private async void InitializeGame()
     {
         ErrorLogger.Instance.Debug("MainViewModel", "[Operation: InitializeGame] Starting game initialization");
         try
@@ -526,7 +557,35 @@ public class MainViewModel : ViewModelBase
             OpponentDeck = newOpponentDeck;
 
             // Generate and initialize player deck
-            var playerCards = CardFactory.GenerateRandomDeck();
+            List<Card> playerCards;
+            
+            if (!string.IsNullOrEmpty(_selectedBattleDeckId))
+            {
+                // Load the saved deck
+                var savedDeck = await DeckStorageService.Instance.LoadDeckAsync(_selectedBattleDeckId);
+                if (savedDeck != null && savedDeck.Cards.Count > 0)
+                {
+                    playerCards = savedDeck.Cards
+                        .Select(c => CardFactory.GetCardByTemplateId(c.CardTemplateId))
+                        .Where(c => c != null)
+                        .Cast<Card>()
+                        .ToList();
+                    ErrorLogger.Instance.Info("MainViewModel", $"[InitializeGame] Loaded saved deck with {playerCards.Count} cards");
+                }
+                else
+                {
+                    // Fallback to random deck if saved deck not found
+                    playerCards = CardFactory.GenerateRandomDeck();
+                    ErrorLogger.Instance.Warning("MainViewModel", "[InitializeGame] Saved deck not found, using random deck");
+                }
+            }
+            else
+            {
+                // No deck selected - use random deck as fallback
+                playerCards = CardFactory.GenerateRandomDeck();
+                ErrorLogger.Instance.Warning("MainViewModel", "[InitializeGame] No deck selected, using random deck");
+            }
+            
             PlayerDeck.InitializeDeck(playerCards);
             PlayerDeck.DrawCards(PlayerDeck.StartingHandSize);
 
@@ -615,6 +674,14 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
+        // Player weapon deals damage at end of turn
+        ResolvePlayerWeaponDamage();
+
+        if (OpponentHealth <= 0 || PlayerHealth <= 0)
+        {
+            return;
+        }
+
         IsPlayerTurn = false;
         ExecuteOpponentTurn();
 
@@ -657,7 +724,10 @@ public class MainViewModel : ViewModelBase
                         {
                             OpponentDeck.PlayCreatureToSlot(card.Id, decision.SlotIndex.Value);
                             opponentMana -= card.ManaCost;
-                            FieldSlots[decision.SlotIndex.Value] = new CardViewModel(card);
+                            var cardVm = new CardViewModel(card) { IsOnField = true };
+                            FieldSlots[decision.SlotIndex.Value] = cardVm;
+                            LogToFile($"[ExecuteOpponentTurn] Played {card.Name} to slot {decision.SlotIndex.Value}, FieldSlots now: " + 
+                                string.Join(", ", Enumerable.Range(0, 6).Select(i => $"{i}:{FieldSlots[i]?.Name ?? "null"}")));
                             RefreshCreatureSlotCaches();
                             OnPropertyChanged(nameof(FieldSlots));
                             OnPropertyChanged(nameof(OpponentCreatureSlots));
@@ -709,6 +779,7 @@ public class MainViewModel : ViewModelBase
         }
 
         ResolveOpponentCombat();
+        ResolveOpponentWeaponDamage();
         OpponentDeck.DrawCards(1);
     }
 
@@ -730,9 +801,12 @@ public class MainViewModel : ViewModelBase
                         var target = playerCreatures.First();
                         if (target != null)
                         {
-                            target.Card.Health -= effect.Value;
-                            if (target.Card.Health <= 0)
+                            target.ApplyDamage(effect.Value);
+                            target.IsOnField = true;
+                            if (target.Health <= 0)
                             {
+                                target.ResetDamage();
+                                target.ClearStatusEffects();
                                 var idx = Array.IndexOf(FieldSlots, target);
                                 if (idx >= 0) 
                                 {
@@ -780,31 +854,183 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Resolve opponent weapon damage at end of turn
+    /// </summary>
+    private void ResolveOpponentWeaponDamage()
+    {
+        if (OpponentWeapon == null) return;
+
+        var weapon = OpponentWeapon.Card as WeaponCard;
+        if (weapon == null) return;
+
+        if (weapon.TargetType == WeaponTargetType.DamageToOpponent)
+        {
+            // Direct damage to player
+            int damage = weapon.Power;
+            PlayerHealth -= damage;
+            LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} deals {damage} direct damage to player");
+        }
+        else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
+        {
+            // Attack player creatures, starting from slot 0 (leftmost) - slot 6 in FieldSlots
+            var target = FindPlayerWeaponTarget();
+
+            if (target != null)
+            {
+                int damage = weapon.Power;
+                target.ApplyDamage(damage);
+                target.IsOnField = true;
+
+                // Check if target creature died
+                if (target.Health <= 0)
+                {
+                    target.ResetDamage();
+                    target.ClearStatusEffects();
+                    // Find and remove the creature from player slots (indices 6-11)
+                    int slotIndex = Array.FindIndex(FieldSlots, s => s?.Id == target.Id);
+                    if (slotIndex >= 6)
+                    {
+                        FieldSlots[slotIndex] = null;
+                    }
+                    RefreshCreatureSlotCaches();
+                }
+
+                LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} attacks {target.Name} for {damage} damage, remaining HP: {target.Health}");
+            }
+            else
+            {
+                LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} attacks but no player creatures found");
+            }
+        }
+
+        OnPropertyChanged(nameof(PlayerHealth));
+        OnPropertyChanged(nameof(FieldSlots));
+        OnPropertyChanged(nameof(PlayerCreatureSlots));
+    }
+
+    /// <summary>
+    /// Find a target for opponent weapon that damages creatures
+    /// Starts at slot 6 (leftmost player slot) and scans
+    /// </summary>
+    private CardViewModel? FindPlayerWeaponTarget()
+    {
+        // Player creature slots are at indices 6-11 in FieldSlots
+        for (int i = 6; i < 12; i++)
+        {
+            if (FieldSlots[i] != null)
+            {
+                return FieldSlots[i];
+            }
+        }
+        return null;
+    }
+
     private void ResolveCombat()
     {
         for (int i = 0; i < 6; i++)
         {
-            var playerCreature = FieldSlots[i + 6]?.Card;
-            var opponentCreature = FieldSlots[i]?.Card;
+            var playerCreatureVm = FieldSlots[i + 6];
+            var opponentCreatureVm = FieldSlots[i];
 
-            if (playerCreature != null && playerCreature.Power > 0)
+            if (playerCreatureVm != null && playerCreatureVm.Power > 0)
             {
-                if (opponentCreature != null)
+                if (opponentCreatureVm != null)
                 {
-                    opponentCreature.Health -= playerCreature.Power;
-                    if (opponentCreature.Health <= 0)
+                    // Damage opponent creature through CardViewModel tracking
+                    int damage = playerCreatureVm.Power;
+                    opponentCreatureVm.ApplyDamage(damage);
+                    opponentCreatureVm.IsOnField = true;
+                    
+                    if (opponentCreatureVm.Health <= 0)
                     {
+                        opponentCreatureVm.ResetDamage();
+                        opponentCreatureVm.ClearStatusEffects();
                         FieldSlots[i] = null;
                         RefreshCreatureSlotCaches();
-                        OpponentHealth -= playerCreature.Power;
+                        OpponentHealth -= damage;
                     }
                 }
                 else
                 {
-                    OpponentHealth -= playerCreature.Power;
+                    OpponentHealth -= playerCreatureVm.Power;
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Resolve player weapon damage at end of turn
+    /// </summary>
+    private void ResolvePlayerWeaponDamage()
+    {
+        if (PlayerWeapon == null) return;
+
+        var weapon = PlayerWeapon.Card as WeaponCard;
+        if (weapon == null) return;
+
+        if (weapon.TargetType == WeaponTargetType.DamageToOpponent)
+        {
+            // Direct damage to opponent
+            int damage = weapon.Power;
+            OpponentHealth -= damage;
+            StatusMessage = $"{weapon.Name} deals {damage} damage to opponent!";
+            LogToFile($"[ResolvePlayerWeaponDamage] {weapon.Name} deals {damage} direct damage to opponent");
+        }
+        else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
+        {
+            // Attack enemy creatures, starting from slot 0 (leftmost)
+            var target = FindWeaponTarget(OpponentCreatureSlots);
+
+            if (target != null)
+            {
+                int damage = weapon.Power;
+                target.ApplyDamage(damage);
+                target.IsOnField = true;
+                StatusMessage = $"{weapon.Name} attacks {target.Name} for {damage} damage!";
+
+                // Check if target creature died
+                if (target.Health <= 0)
+                {
+                    target.ResetDamage();
+                    target.ClearStatusEffects();
+                    // Find and remove the creature from slots
+                    int slotIndex = Array.FindIndex(OpponentCreatureSlots, s => s?.Id == target.Id);
+                    if (slotIndex >= 0)
+                    {
+                        FieldSlots[slotIndex] = null;
+                    }
+                    RefreshCreatureSlotCaches();
+                    StatusMessage = $"{target.Name} was destroyed!";
+                }
+
+                LogToFile($"[ResolvePlayerWeaponDamage] {weapon.Name} attacks {target.Name} for {damage} damage, remaining HP: {target.Health}");
+            }
+            else
+            {
+                LogToFile($"[ResolvePlayerWeaponDamage] {weapon.Name} attacks but no enemy creatures found");
+            }
+        }
+
+        OnPropertyChanged(nameof(OpponentHealth));
+        OnPropertyChanged(nameof(FieldSlots));
+        OnPropertyChanged(nameof(OpponentCreatureSlots));
+    }
+
+    /// <summary>
+    /// Find a target for a weapon that damages creatures
+    /// Starts at slot 0 (leftmost) and scans left-to-right
+    /// </summary>
+    private CardViewModel? FindWeaponTarget(CardViewModel?[] opponentSlots)
+    {
+        for (int i = 0; i < opponentSlots.Length; i++)
+        {
+            if (opponentSlots[i] != null)
+            {
+                return opponentSlots[i];
+            }
+        }
+        return null;
     }
 
     private void ExecuteCombine()
@@ -926,6 +1152,11 @@ public class MainViewModel : ViewModelBase
             PlayerHand.Remove(cardInHand);
         }
 
+        // Mark card as being on the field for damage tracking
+        card.IsOnField = true;
+        card.ResetDamage();
+        card.ClearStatusEffects();
+        
         FieldSlots[slotIndex] = card;
         RefreshCreatureSlotCaches();
 
@@ -1159,12 +1390,19 @@ public class MainViewModel : ViewModelBase
 
         PlayerArtifactSlots[slotIndex] = card;
 
-        // Update ObservableCollection for WPF binding
+        // Create new array reference to trigger UI update
+        var newArray = new CardViewModel?[3];
+        for (int i = 0; i < 3; i++)
+            newArray[i] = _playerArtifactSlots[i];
+        _playerArtifactSlots = newArray;
+
+        // Update ObservableCollection for additional UI binding
         PlayerArtifactSlotsObs.Clear();
         for (int i = 0; i < 3; i++)
-            PlayerArtifactSlotsObs.Add(PlayerArtifactSlots[i]);
+            PlayerArtifactSlotsObs.Add(_playerArtifactSlots[i]);
 
         OnPropertyChanged(nameof(PlayerArtifactSlots));
+        OnPropertyChanged(nameof(PlayerArtifactSlotsObs));
         OnPropertyChanged(nameof(PlayerHand));
         StatusMessage = $"Played {card.Name} to artifact slot!";
     }
@@ -1257,13 +1495,16 @@ public class MainViewModel : ViewModelBase
                     {
                         // Damage single creature
                         var target = FieldSlots[targetSlotIndex.Value];
-                        if (target?.Card != null)
+                        if (target != null)
                         {
-                            target.Card.Health -= effect.Value;
+                            target.ApplyDamage(effect.Value);
+                            target.IsOnField = true;
                             LogToFile($"[Spell] Damaged {target.Name} for {effect.Value}");
-                            if (target.Card.Health <= 0)
+                            if (target.Health <= 0)
                             {
                                 // Creature dies
+                                target.ResetDamage();
+                                target.ClearStatusEffects();
                                 FieldSlots[targetSlotIndex.Value] = null;
                                 RefreshCreatureSlotCaches();
                             }
@@ -1275,11 +1516,14 @@ public class MainViewModel : ViewModelBase
                         for (int i = 0; i < 6; i++)
                         {
                             var oppCreature = FieldSlots[i];
-                            if (oppCreature?.Card != null)
+                            if (oppCreature != null)
                             {
-                                oppCreature.Card.Health -= effect.Value;
-                                if (oppCreature.Card.Health <= 0)
+                                oppCreature.ApplyDamage(effect.Value);
+                                oppCreature.IsOnField = true;
+                                if (oppCreature.Health <= 0)
                                 {
+                                    oppCreature.ResetDamage();
+                                    oppCreature.ClearStatusEffects();
                                     FieldSlots[i] = null;
                                 }
                             }
@@ -1293,9 +1537,9 @@ public class MainViewModel : ViewModelBase
                     {
                         // Heal single creature
                         var target = FieldSlots[targetSlotIndex.Value];
-                        if (target?.Card != null)
+                        if (target != null)
                         {
-                            target.Card.Health += effect.Value;
+                            target.HealDamage(effect.Value);
                             LogToFile($"[Spell] Healed {target.Name} for {effect.Value}");
                         }
                     }
@@ -1305,9 +1549,9 @@ public class MainViewModel : ViewModelBase
                         for (int i = 6; i < 12; i++)
                         {
                             var playerCreature = FieldSlots[i];
-                            if (playerCreature?.Card != null)
+                            if (playerCreature != null)
                             {
-                                playerCreature.Card.Health += effect.Value;
+                                playerCreature.HealDamage(effect.Value);
                             }
                         }
                     }

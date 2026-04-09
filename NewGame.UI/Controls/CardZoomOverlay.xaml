@@ -169,6 +169,11 @@
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="{Binding Power}" Foreground="White" FontSize="13" FontWeight="Bold"/>
+                                        <!-- Show base power if modified -->
+                                        <TextBlock Text="{Binding CurrentPowerText, StringFormat=' ({0})'}" 
+                                                   Foreground="#80FFFFFF" 
+                                                   FontSize="10"
+                                                   Visibility="{Binding ShowsModifiedStats, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                     </StackPanel>
                                 </Border>
 
@@ -182,6 +187,11 @@
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="♥" Foreground="{StaticResource HealthBrush}" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="{Binding Health}" Foreground="White" FontSize="13" FontWeight="Bold"/>
+                                        <!-- Show base health if modified -->
+                                        <TextBlock Text="{Binding CurrentHealthText, StringFormat=' ({0})'}" 
+                                                   Foreground="#80FFFFFF" 
+                                                   FontSize="10"
+                                                   Visibility="{Binding ShowsModifiedStats, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                     </StackPanel>
                                 </Border>
 
@@ -305,6 +315,60 @@
                                            Foreground="{StaticResource TextSecondaryBrush}"
                                            Visibility="{Binding HasEffects, Converter={StaticResource InverseBoolToVisibilityConverter}}"
                                            Margin="0,5,0,0"/>
+                                
+                                <!-- Status Effects Section (shown when card has damage or effects) -->
+                                <TextBlock Text="STATUS EFFECTS"
+                                           FontSize="11"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,15,0,8"
+                                           Visibility="{Binding HasStatusEffects, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                
+                                <!-- Status effects list -->
+                                <ItemsControl ItemsSource="{Binding StatusEffects}"
+                                              Visibility="{Binding HasStatusEffects, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#4A3A6A"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    Margin="0,0,6,6">
+                                                <TextBlock Text="{Binding}" Foreground="#C8A0FF" FontSize="11" FontWeight="Bold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                
+                                <!-- Damage indicator -->
+                                <Border Background="#4A2020"
+                                        CornerRadius="6"
+                                        Padding="12,8"
+                                        Margin="0,8,0,0"
+                                        Visibility="{Binding HasDamage, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <TextBlock Text="DAMAGE TAKEN" 
+                                                   FontSize="11" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="#FF6464"
+                                                   Margin="0,0,0,4"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding DamageTaken}" 
+                                                       FontSize="18" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="#FF6464"/>
+                                            <TextBlock Text=" damage" 
+                                                       FontSize="12" 
+                                                       Foreground="#B0B0B0"
+                                                       VerticalAlignment="Bottom"
+                                                       Margin="0,0,0,2"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </ScrollViewer>
 

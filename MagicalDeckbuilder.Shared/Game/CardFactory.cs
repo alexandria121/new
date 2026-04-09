@@ -3,6 +3,7 @@ using CardType = MagicalDeckbuilder.Cards.CardType;
 using ElementType = MagicalDeckbuilder.Cards.ElementType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
+using WeaponTargetType = MagicalDeckbuilder.Cards.WeaponTargetType;
 using MagicalDeckbuilder.Cards;
 using MagicalDeckbuilder.Logging;
 
@@ -85,11 +86,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Plutonium Dagger", "A blade laced with radioactive material", 
-            ElementType.Radioactivity, 2, 3));
+            ElementType.Radioactivity, 2, 3, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Gamma Ray Gun", "Fires concentrated gamma radiation", 
-            ElementType.Radioactivity, 4, 5));
+            ElementType.Radioactivity, 4, 5, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Atomic Hammer", "Channels nuclear energy into devastating strikes", 
-            ElementType.Radioactivity, 6, 7));
+            ElementType.Radioactivity, 6, 7, WeaponTargetType.DamageToOpponent));
         
         return deck;
     }
@@ -137,11 +138,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Bone Blade", "A sword crafted from sharpened bones", 
-            ElementType.Flesh, 2, 3));
+            ElementType.Flesh, 2, 3, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Flesh Ripper", "Hooks designed to tear flesh", 
-            ElementType.Flesh, 3, 4));
+            ElementType.Flesh, 3, 4, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Skull Crusher", "A massive hammer topped with skulls", 
-            ElementType.Flesh, 5, 6));
+            ElementType.Flesh, 5, 6, WeaponTargetType.DamageToOpponent));
         
         return deck;
     }
@@ -189,11 +190,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Poisoned Dagger", "A blade coated with toxin", 
-            ElementType.Toxin, 1, 2));
+            ElementType.Toxin, 1, 2, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Viper Fangs", "Fangs that inject venom", 
-            ElementType.Toxin, 3, 3));
+            ElementType.Toxin, 3, 3, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Toxic Cannon", "Fires globules of acid", 
-            ElementType.Toxin, 5, 6));
+            ElementType.Toxin, 5, 6, WeaponTargetType.DamageToCreatures));
         
         return deck;
     }
@@ -241,11 +242,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Mushroom Staff", "A staff topped with fungal growth", 
-            ElementType.Fungus, 2, 2));
+            ElementType.Fungus, 2, 2, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Spore Launcher", "Fires concentrated fungal projectiles", 
-            ElementType.Fungus, 3, 4));
+            ElementType.Fungus, 3, 4, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Fungal Scythe", "A blade that spreads infection", 
-            ElementType.Fungus, 4, 5));
+            ElementType.Fungus, 4, 5, WeaponTargetType.DamageToCreatures));
         
         return deck;
     }
@@ -293,11 +294,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Plasma Torch", "A weapon that burns with plasma", 
-            ElementType.Thermodynamics, 2, 4));
+            ElementType.Thermodynamics, 2, 4, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Cryo Cannon", "Freezes targets with extreme cold", 
-            ElementType.Thermodynamics, 4, 4));
+            ElementType.Thermodynamics, 4, 4, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Thermal Lance", "Channels focused thermal energy", 
-            ElementType.Thermodynamics, 5, 7));
+            ElementType.Thermodynamics, 5, 7, WeaponTargetType.DamageToCreatures));
         
         return deck;
     }
@@ -345,11 +346,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Chrono Blade", "A sword that cuts through time", 
-            ElementType.Time, 3, 4));
+            ElementType.Time, 3, 4, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Temporal Bow", "Arrows that skip through time", 
-            ElementType.Time, 3, 5));
+            ElementType.Time, 3, 5, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Minute Glass", "A weapon that ages enemies", 
-            ElementType.Time, 4, 4));
+            ElementType.Time, 4, 4, WeaponTargetType.DamageToCreatures));
         
         return deck;
     }
@@ -397,11 +398,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Cooking Knife", "Sharp enough to slice anything", 
-            ElementType.Food, 1, 3));
+            ElementType.Food, 1, 3, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Cleaver", "A massive blade for chopping", 
-            ElementType.Food, 3, 4));
+            ElementType.Food, 3, 4, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Spear of Sustenance", "A weapon that nourishes the wielder", 
-            ElementType.Food, 4, 5));
+            ElementType.Food, 4, 5, WeaponTargetType.DamageToCreatures));
         
         return deck;
     }
@@ -449,11 +450,11 @@ public static class CardFactory
         
         // 3 Weapons
         deck.Add(CreateWeapon("Tentacle Whip", "A writhing appendage of flesh", 
-            ElementType.Eldritch, 2, 3));
+            ElementType.Eldritch, 2, 3, WeaponTargetType.DamageToOpponent));
         deck.Add(CreateWeapon("Starfire Staff", "Channels eldritch energies", 
-            ElementType.Eldritch, 4, 5));
+            ElementType.Eldritch, 4, 5, WeaponTargetType.DamageToCreatures));
         deck.Add(CreateWeapon("Cosmic Blade", "A sword of stellar matter", 
-            ElementType.Eldritch, 5, 7));
+            ElementType.Eldritch, 5, 7, WeaponTargetType.DamageToOpponent));
         
         return deck;
     }
@@ -577,6 +578,34 @@ public static class CardFactory
             ManaCost = manaCost,
             Power = power,
             Rarity = 1,
+            TargetType = WeaponTargetType.DamageToOpponent,
+            Effects = new List<CardEffect>
+            {
+                new CardEffect
+                {
+                    Name = "Strike",
+                    Description = description,
+                    Type = EffectType.Damage,
+                    Value = power,
+                    Target = TargetType.Enemy
+                }
+            }
+        };
+    }
+
+    private static Card CreateWeapon(string name, string description,
+        ElementType element, int manaCost, int power, WeaponTargetType targetType)
+    {
+        return new WeaponCard
+        {
+            Name = name,
+            Description = description,
+            Type = CardType.Weapon,
+            Element = element,
+            ManaCost = manaCost,
+            Power = power,
+            Rarity = 1,
+            TargetType = targetType,
             Effects = new List<CardEffect>
             {
                 new CardEffect
