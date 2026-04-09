@@ -320,6 +320,15 @@ public class MainViewModel : ViewModelBase
     
     private void RefreshCreatureSlotCaches()
     {
+        // Log the full state of FieldSlots before refreshing - with stack trace for debugging
+        LogToFile("[RefreshCaches] FieldSlots state before refresh - Stack trace:");
+        LogToFile(Environment.StackTrace);
+        
+        for (int i = 0; i < 12; i++)
+        {
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
+        }
+        
         LogToFile("[RefreshCaches] Before refresh:");
         for (int i = 0; i < 6; i++)
         {
@@ -341,6 +350,13 @@ public class MainViewModel : ViewModelBase
         
         LogToFile("[RefreshCaches] After refresh: PlayerSlots[0]=" + (_cachedPlayerCreatureSlots[0]?.Name ?? "null") + 
             ", OppSlots[0]=" + (_cachedOpponentCreatureSlots[0]?.Name ?? "null"));
+        
+        // Log FieldSlots state after refresh - check if creatures are still there
+        LogToFile("[RefreshCaches] FieldSlots after refresh:");
+        for (int i = 6; i < 12; i++)
+        {
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
+        }
         
         // Update ObservableCollections for UI binding
         OpponentCreatureSlotsObs.Clear();
@@ -536,6 +552,9 @@ public class MainViewModel : ViewModelBase
     private async void InitializeGame()
     {
         ErrorLogger.Instance.Debug("MainViewModel", "[Operation: InitializeGame] Starting game initialization");
+        LogToFile("[InitializeGame] CALLED - Stack trace:");
+        LogToFile(Environment.StackTrace);
+        
         try
         {
             // Clear all field slots
@@ -701,6 +720,10 @@ public class MainViewModel : ViewModelBase
     {
         if (_opponentAI == null) return;
 
+        LogToFile("[ExecuteOpponentTurn] START - FieldSlots before:");
+        for (int i = 6; i < 12; i++)
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
+        
         var playerSlots = Enumerable.Range(0, 6).Select(i => new CreatureSlot
         {
             SlotIndex = i,
@@ -728,6 +751,10 @@ public class MainViewModel : ViewModelBase
                             FieldSlots[decision.SlotIndex.Value] = cardVm;
                             LogToFile($"[ExecuteOpponentTurn] Played {card.Name} to slot {decision.SlotIndex.Value}, FieldSlots now: " + 
                                 string.Join(", ", Enumerable.Range(0, 6).Select(i => $"{i}:{FieldSlots[i]?.Name ?? "null"}")));
+                            
+                            // Update status message
+                            StatusMessage = $"Opponent summons {card.Name}!";
+                            
                             RefreshCreatureSlotCaches();
                             OnPropertyChanged(nameof(FieldSlots));
                             OnPropertyChanged(nameof(OpponentCreatureSlots));
@@ -755,6 +782,12 @@ public class MainViewModel : ViewModelBase
                         {
                             OpponentDeck.PlayCard(card.Id);
                             opponentMana -= card.ManaCost;
+                            LogToFile($"[ExecuteOpponentTurn] Playing {card.Name} (type={card.Type})");
+                            
+                            // Update status message to show opponent action
+                            string cardTypeStr = card.Type.ToString();
+                            StatusMessage = $"Opponent plays {card.Name}!";
+                            
                             ApplyOpponentCardEffects(card);
                         }
                         else
@@ -778,9 +811,17 @@ public class MainViewModel : ViewModelBase
             }
         }
 
+        LogToFile("[ExecuteOpponentTurn] Before ResolveOpponentCombat - FieldSlots:");
+        for (int i = 6; i < 12; i++)
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
+            
         ResolveOpponentCombat();
         ResolveOpponentWeaponDamage();
         OpponentDeck.DrawCards(1);
+        
+        LogToFile("[ExecuteOpponentTurn] END - FieldSlots:");
+        for (int i = 6; i < 12; i++)
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
     }
 
     private void UpdateOpponentSlotDisplay(int slotIndex, Card card)
@@ -789,25 +830,38 @@ public class MainViewModel : ViewModelBase
 
     private void ApplyOpponentCardEffects(Card card)
     {
+        LogToFile($"[ApplyOpponentCardEffects] Processing card: {card.Name}, Effects count: {card.Effects.Count}");
+        
         foreach (var effect in card.Effects)
         {
+            LogToFile($"[ApplyOpponentCardEffects] Effect: {effect.Type}, Target: {effect.Target}, Value: {effect.Value}");
+            
             if (effect.Type == EffectType.Damage)
             {
                 if (effect.Target == TargetType.Enemy)
                 {
                     var playerCreatures = FieldSlots.Skip(6).Where(s => s != null).ToList();
+                    LogToFile($"[ApplyOpponentCardEffects] Player creatures found: {playerCreatures.Count}");
+                    
                     if (playerCreatures.Count > 0)
                     {
                         var target = playerCreatures.First();
                         if (target != null)
                         {
+                            LogToFile($"[ApplyOpponentCardEffects] Applying {effect.Value} damage to {target.Name}, current HP: {target.Health}");
+                            
                             target.ApplyDamage(effect.Value);
                             target.IsOnField = true;
+                            
+                            LogToFile($"[ApplyOpponentCardEffects] After damage: {target.Name} HP = {target.Health}");
+                            
                             if (target.Health <= 0)
                             {
+                                LogToFile($"[ApplyOpponentCardEffects] Creature died! Removing from slot.");
                                 target.ResetDamage();
                                 target.ClearStatusEffects();
                                 var idx = Array.IndexOf(FieldSlots, target);
+                                LogToFile($"[ApplyOpponentCardEffects] Found at index {idx}");
                                 if (idx >= 0) 
                                 {
                                     FieldSlots[idx] = null;
@@ -819,6 +873,7 @@ public class MainViewModel : ViewModelBase
                     }
                     else
                     {
+                        LogToFile($"[ApplyOpponentCardEffects] No player creatures - applying {effect.Value} direct damage to player");
                         PlayerHealth -= effect.Value;
                     }
                 }
@@ -828,6 +883,10 @@ public class MainViewModel : ViewModelBase
 
     private void ResolveOpponentCombat()
     {
+        LogToFile("[ResolveOpponentCombat] START - FieldSlots before:");
+        for (int i = 6; i < 12; i++)
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
+            
         for (int i = 0; i < 6; i++)
         {
             var opponentCreature = FieldSlots[i]?.Card;
@@ -835,23 +894,37 @@ public class MainViewModel : ViewModelBase
 
             if (opponentCreature != null && opponentCreature.Power > 0)
             {
+                LogToFile($"[ResolveOpponentCombat] Opponent creature {opponentCreature.Name} (Power={opponentCreature.Power})");
+                
                 if (playerCreature != null)
                 {
+                    LogToFile($"[ResolveOpponentCombat] Attacking player creature {playerCreature.Name} (HP={playerCreature.Health})");
                     playerCreature.Health -= opponentCreature.Power;
                     if (playerCreature.Health <= 0)
                     {
+                        LogToFile($"[ResolveOpponentCombat] Player creature died! Removing from slot {i + 6}");
                         FieldSlots[i + 6] = null;
                         RefreshCreatureSlotCaches();
                         PlayerHealth -= opponentCreature.Power;
+                        StatusMessage = $"Your {playerCreature.Name} was destroyed by {opponentCreature.Name}!";
+                    }
+                    else
+                    {
+                        StatusMessage = $"{opponentCreature.Name} attacks your {playerCreature.Name} for {opponentCreature.Power} damage!";
                     }
                 }
                 else
                 {
                     PlayerHealth -= opponentCreature.Power;
+                    StatusMessage = $"{opponentCreature.Name} deals {opponentCreature.Power} damage to you!";
                 }
                 OnPropertyChanged(nameof(FieldSlots));
             }
         }
+        
+        LogToFile("[ResolveOpponentCombat] END - FieldSlots after:");
+        for (int i = 6; i < 12; i++)
+            LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
     }
 
     /// <summary>
@@ -869,6 +942,7 @@ public class MainViewModel : ViewModelBase
             // Direct damage to player
             int damage = weapon.Power;
             PlayerHealth -= damage;
+            StatusMessage = $"Opponent's {weapon.Name} deals {damage} damage to you!";
             LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} deals {damage} direct damage to player");
         }
         else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
@@ -894,6 +968,11 @@ public class MainViewModel : ViewModelBase
                         FieldSlots[slotIndex] = null;
                     }
                     RefreshCreatureSlotCaches();
+                    StatusMessage = $"Your {target.Name} was destroyed by {weapon.Name}!";
+                }
+                else
+                {
+                    StatusMessage = $"Opponent's {weapon.Name} attacks your {target.Name} for {damage} damage!";
                 }
 
                 LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} attacks {target.Name} for {damage} damage, remaining HP: {target.Health}");
@@ -1355,30 +1434,38 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     public void PlayArtifactToSlot(CardViewModel card, int slotIndex)
     {
+        LogToFile($"[PlayArtifactToSlot] Enter: card={card?.Name}, Type={card?.Card?.Type}, slotIndex={slotIndex}");
+        
         if (card == null || card.Card.Type != CardType.Artifact)
         {
+            LogToFile($"[PlayArtifactToSlot] FAIL: card null={card == null}, Type={card?.Card?.Type}");
             StatusMessage = "Only artifact cards can be played to artifact slots!";
             return;
         }
         
         if (slotIndex < 0 || slotIndex >= 3)
         {
+            LogToFile($"[PlayArtifactToSlot] FAIL: invalid slot index {slotIndex}");
             StatusMessage = "Invalid artifact slot!";
             return;
         }
         
         if (card.Card.ManaCost > PlayerMana)
         {
+            LogToFile($"[PlayArtifactToSlot] FAIL: not enough mana. Cost={card.Card.ManaCost}, Available={PlayerMana}");
             StatusMessage = "Not enough mana!";
             return;
         }
         
         if (PlayerArtifactSlots[slotIndex] != null)
         {
+            LogToFile($"[PlayArtifactToSlot] FAIL: slot {slotIndex} occupied");
             StatusMessage = "Artifact slot is already occupied!";
             return;
         }
 
+        LogToFile($"[PlayArtifactToSlot] All checks passed, playing card");
+        
         PlayerMana -= card.Card.ManaCost;
         
         // Remove from hand
@@ -1386,6 +1473,11 @@ public class MainViewModel : ViewModelBase
         if (cardInHand != null)
         {
             PlayerHand.Remove(cardInHand);
+            LogToFile($"[PlayArtifactToSlot] Removed from hand: {card.Name}");
+        }
+        else
+        {
+            LogToFile($"[PlayArtifactToSlot] WARNING: Card not found in hand!");
         }
 
         PlayerArtifactSlots[slotIndex] = card;
@@ -1405,6 +1497,7 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(PlayerArtifactSlotsObs));
         OnPropertyChanged(nameof(PlayerHand));
         StatusMessage = $"Played {card.Name} to artifact slot!";
+        LogToFile($"[PlayArtifactToSlot] SUCCESS");
     }
 
     /// <summary>

@@ -282,7 +282,7 @@
                             <DataTemplate>
                                 <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8C864}" 
                                         BorderBrush="#D4D474" BorderThickness="2" Margin="3" CornerRadius="5" Width="80" Height="70"
-                                        Tag="{Binding}" AllowDrop="True" Drop="OnArtifactSlotDrop" DragEnter="OnArtifactSlotDragEnter" DragLeave="OnArtifactSlotDragLeave" MouseMove="OnArtifactSlotMouseMove"
+                                        Tag="{Binding}" AllowDrop="True" Drop="OnArtifactSlotDrop" DragEnter="OnArtifactSlotDragEnter" DragOver="OnArtifactSlotDragOver" DragLeave="OnArtifactSlotDragLeave" MouseMove="OnArtifactSlotMouseMove"
                                         MouseRightButtonDown="OnFieldCardRightClick">
                                     <Grid>
                                         <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">

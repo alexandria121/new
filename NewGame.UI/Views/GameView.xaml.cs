@@ -588,17 +588,63 @@ public partial class GameView : UserControl
     // ========== Artifact Slot Handlers ==========
     private void OnArtifactSlotDragEnter(object sender, DragEventArgs e)
     {
-        if (sender is Border slot)
+        if (sender is Border slot && e.Data.GetDataPresent("CardViewModel"))
         {
-            var index = GetArtifactSlotIndex(slot);
-            LogToFile($"[DRAGENTER] Artifact Slot: index={index}");
+            var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            int index = GetArtifactSlotIndex(slot);
             
+            // Update cached index
             _lastHoveredArtifactSlotIndex = index;
             
-            if (index >= 0 && ViewModel?.PlayerArtifactSlots[index] == null)
+            LogToFile($"[DRAGENTER] Artifact Slot: index={index}, card={card?.Name}, type={card?.Card?.Type}");
+            
+            // Only allow Artifact cards to be dropped
+            if (card?.Card?.Type == CardType.Artifact && index >= 0 && index < 3)
             {
-                slot.Background = new SolidColorBrush(Color.FromRgb(180, 180, 80));
-                e.Effects = DragDropEffects.Move;
+                // Check if slot is empty
+                var slots = ViewModel?.PlayerArtifactSlots;
+                if (slots != null && index < slots.Length && slots[index] == null)
+                {
+                    slot.Background = new SolidColorBrush(Color.FromRgb(180, 180, 80));
+                    e.Effects = DragDropEffects.Move;
+                    LogToFile("[DRAGENTER] ACCEPTED");
+                }
+                else
+                {
+                    LogToFile($"[DRAGENTER] REJECTED: slot occupied or null array, index={index}");
+                    e.Effects = DragDropEffects.None;
+                }
+            }
+            else
+            {
+                LogToFile($"[DRAGENTER] REJECTED: card type={card?.Card?.Type}, index={index}");
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+    }
+    
+    private void OnArtifactSlotDragOver(object sender, DragEventArgs e)
+    {
+        // DragOver is called repeatedly during drag - ensure Effects is set
+        if (sender is Border slot && e.Data.GetDataPresent("CardViewModel"))
+        {
+            var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            int index = GetArtifactSlotIndex(slot);
+            _lastHoveredArtifactSlotIndex = index;
+            
+            // Only allow Artifact cards
+            if (card?.Card?.Type == CardType.Artifact && index >= 0 && index < 3)
+            {
+                var slots = ViewModel?.PlayerArtifactSlots;
+                if (slots != null && index < slots.Length && slots[index] == null)
+                {
+                    e.Effects = DragDropEffects.Move;
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                }
             }
             else
             {
@@ -614,20 +660,16 @@ public partial class GameView : UserControl
         if (_lastHoveredArtifactSlotIndex >= 0)
             return _lastHoveredArtifactSlotIndex;
         
-        // Try Panel.Children.IndexOf
-        if (slot.Parent is Panel panel)
-        {
-            int idx = panel.Children.IndexOf(slot);
-            LogToFile($"[GetArtifactSlotIndex] Raw index: {idx}");
-            
-            // Subtract creature slot count (6) since artifacts come after creatures in the same panel
-            idx = idx - 6;
-            LogToFile($"[GetArtifactSlotIndex] Adjusted index: {idx}");
-            return idx;
-        }
+        // Use visual position - artifact slots follow player creature slots (6 slots)
+        // so we need to subtract the offset
+        var slotPos = slot.TranslatePoint(new Point(40, 35), this);
+        int slotWidth = 86;
+        int offset = 6 * slotWidth; // Offset for 6 player creature slots
+        int index = (int)((slotPos.X - offset) / slotWidth);
+        index = Math.Clamp(index, 0, 2);
         
-        LogToFile("[GetArtifactSlotIndex] Failed to find index");
-        return -1;
+        LogToFile($"[GetArtifactSlotIndex] slotPos.X={slotPos.X}, offset={offset}, index={index}");
+        return index;
     }
 
     private void OnArtifactSlotDragLeave(object sender, DragEventArgs e)
@@ -642,14 +684,19 @@ public partial class GameView : UserControl
 
     private void OnArtifactSlotDrop(object sender, DragEventArgs e)
     {
+        LogToFile($"[ARTIFACT DROP] Enter: sender={sender?.GetType().Name}, hasCardData={e.Data.GetDataPresent("CardViewModel")}");
+        
         if (sender is Border slot && e.Data.GetDataPresent("CardViewModel"))
         {
             var card = e.Data.GetData("CardViewModel") as CardViewModel;
+            LogToFile($"[ARTIFACT DROP] card={card?.Name}, Type={card?.Card?.Type}");
+            
             slot.Background = new SolidColorBrush(Color.FromRgb(200, 200, 100));
 
             // Check if this is a spell card - spells can destroy artifacts
             if (card?.Card?.Type == CardType.Spell)
             {
+                LogToFile("[ARTIFACT DROP] Spell card detected - casting");
                 LogToFile($"[SPELL] Dropped on artifact slot - casting {card.Name}");
                 // For now, cast as global spell
                 ViewModel?.CastSpell(card);
@@ -660,22 +707,36 @@ public partial class GameView : UserControl
 
             // Use cached index from DragEnter
             int slotIndex = _lastHoveredArtifactSlotIndex;
+            LogToFile($"[ARTIFACT DROP] slotIndex from cached={slotIndex}");
             
             // Fallback: calculate from Tag if not available
             if (slotIndex < 0)
             {
+                LogToFile("[ARTIFACT DROP] Trying Tag fallback");
                 if (slot.Tag is string tagStr && int.TryParse(tagStr, out int parsed))
                     slotIndex = parsed - 20;
                 else if (slot.Tag is int tagInt)
                     slotIndex = tagInt - 20;
+                LogToFile($"[ARTIFACT DROP] slotIndex from Tag={slotIndex}");
             }
 
+            LogToFile($"[ARTIFACT DROP] Final slotIndex={slotIndex}, card={card?.Name}, card.Type={card?.Card?.Type}");
+            
             if (card != null && slotIndex >= 0 && slotIndex < 3)
             {
+                LogToFile("[ARTIFACT DROP] Calling PlayArtifactToSlot");
                 ViewModel?.PlayArtifactToSlot(card, slotIndex);
+            }
+            else
+            {
+                LogToFile($"[ARTIFACT DROP] FAILED: card={card != null}, slotIndex={slotIndex}");
             }
             
             _lastHoveredArtifactSlotIndex = -1;
+        }
+        else
+        {
+            LogToFile($"[ARTIFACT DROP] FAILED: sender is Border={sender is Border}, hasCardData={e.Data.GetDataPresent("CardViewModel")}");
         }
         e.Handled = true;
     }
