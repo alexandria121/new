@@ -81,9 +81,19 @@ public class OpponentAI
             }
         }
 
+        // Return proper decision type for equipment
+        var decisionType = randomCard.Type switch
+        {
+            CardType.Weapon => AIDecisionType.PlayWeapon,
+            CardType.Armor => AIDecisionType.PlayArtifact,
+            CardType.Artifact => AIDecisionType.PlayArtifact,
+            CardType.Event => AIDecisionType.PlaySpell,
+            _ => AIDecisionType.PlaySpell
+        };
+        
         return new AIDecision
         {
-            Type = AIDecisionType.PlaySpell,
+            Type = decisionType,
             CardId = randomCard.Id
         };
     }
@@ -126,9 +136,19 @@ public class OpponentAI
             };
         }
 
+        // Return proper decision type for equipment
+        var journeymanDecisionType = bestCard.Type switch
+        {
+            CardType.Weapon => AIDecisionType.PlayWeapon,
+            CardType.Armor => AIDecisionType.PlayArtifact,
+            CardType.Artifact => AIDecisionType.PlayArtifact,
+            CardType.Event => AIDecisionType.PlaySpell,
+            _ => AIDecisionType.PlaySpell
+        };
+        
         return new AIDecision
         {
-            Type = AIDecisionType.PlaySpell,
+            Type = journeymanDecisionType,
             CardId = bestCard.Id
         };
     }
@@ -171,9 +191,18 @@ public class OpponentAI
             };
         }
 
+        var decisionType = bestCard.Type switch
+        {
+            CardType.Weapon => AIDecisionType.PlayWeapon,
+            CardType.Armor => AIDecisionType.PlayArtifact,
+            CardType.Artifact => AIDecisionType.PlayArtifact,
+            CardType.Event => AIDecisionType.PlaySpell,
+            _ => AIDecisionType.PlaySpell
+        };
+        
         return new AIDecision
         {
-            Type = bestCard.Type == CardType.Weapon ? AIDecisionType.PlayWeapon : AIDecisionType.PlaySpell,
+            Type = decisionType,
             CardId = bestCard.Id
         };
     }

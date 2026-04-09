@@ -303,6 +303,55 @@ public class MainViewModel : ViewModelBase
     public System.Collections.ObjectModel.ObservableCollection<CardViewModel?> PlayerArtifactSlotsObs { get; } = new();
     public System.Collections.ObjectModel.ObservableCollection<CardViewModel?> OpponentArtifactSlotsObs { get; } = new();
     
+    // Battle log for game events
+    public ObservableCollection<BattleLogEntry> BattleLog { get; } = new();
+    
+    /// <summary>
+    /// Represents a single entry in the battle log
+    /// </summary>
+    public class BattleLogEntry
+    {
+        public int Turn { get; set; }
+        public string Message { get; set; } = "";
+        public BattleLogEntryType Type { get; set; }
+        public DateTime Timestamp { get; set; }
+        
+        public string FormattedEntry => $"[Turn {Turn}] {Message}";
+    }
+    
+    public enum BattleLogEntryType
+    {
+        Info,
+        PlayerAction,
+        OpponentAction,
+        Damage,
+        CreatureDeath,
+        Spell,
+        Combat
+    }
+    
+    private void AddBattleLog(string message, BattleLogEntryType type = BattleLogEntryType.Info)
+    {
+        var entry = new BattleLogEntry
+        {
+            Turn = TurnCount,
+            Message = message,
+            Type = type,
+            Timestamp = DateTime.Now
+        };
+        BattleLog.Add(entry);
+        LogToFile($"[BattleLog] Turn {TurnCount}: {message}");
+    }
+    
+    /// <summary>
+    /// Clear the battle log at the start of a new game
+    /// </summary>
+    public void ClearBattleLog()
+    {
+        BattleLog.Clear();
+        AddBattleLog("Game started!", BattleLogEntryType.Info);
+    }
+    
     // Debug file logging
     private static readonly string DebugLogPath = System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.Desktop), 
@@ -563,6 +612,38 @@ public class MainViewModel : ViewModelBase
                 FieldSlots[i] = null;
             }
             
+            // Clear artifact slots
+            for (int i = 0; i < _opponentArtifactSlots.Length; i++)
+            {
+                _opponentArtifactSlots[i] = null;
+            }
+            for (int i = 0; i < _playerArtifactSlots.Length; i++)
+            {
+                _playerArtifactSlots[i] = null;
+            }
+            OpponentArtifactSlotsObs.Clear();
+            PlayerArtifactSlotsObs.Clear();
+            
+            // Clear equipment slots
+            OpponentWeapon = null;
+            OpponentArmor = null;
+            OpponentEventSlot = null;
+            PlayerWeapon = null;
+            PlayerArmor = null;
+            PlayerEventSlot = null;
+            
+            // Notify UI of artifact slot changes
+            OnPropertyChanged(nameof(OpponentArtifactSlots));
+            OnPropertyChanged(nameof(PlayerArtifactSlots));
+            OnPropertyChanged(nameof(OpponentArtifactSlotsObs));
+            OnPropertyChanged(nameof(PlayerArtifactSlotsObs));
+            OnPropertyChanged(nameof(OpponentWeapon));
+            OnPropertyChanged(nameof(OpponentArmor));
+            OnPropertyChanged(nameof(OpponentEventSlot));
+            OnPropertyChanged(nameof(PlayerWeapon));
+            OnPropertyChanged(nameof(PlayerArmor));
+            OnPropertyChanged(nameof(PlayerEventSlot));
+            
             // Refresh cached slot arrays
             RefreshCreatureSlotCaches();
             LogToFile("[InitializeGame] Calling OnPropertyChanged for slots");
@@ -620,6 +701,9 @@ public class MainViewModel : ViewModelBase
             TurnCount = 1;
             IsPlayerTurn = true;
             StatusMessage = "";
+            
+            // Clear and initialize battle log
+            ClearBattleLog();
 
             // Refresh UI bindings
             RefreshHand();
@@ -755,6 +839,10 @@ public class MainViewModel : ViewModelBase
                             // Update status message
                             StatusMessage = $"Opponent summons {card.Name}!";
                             
+                            // Add to battle log
+                            int displaySlot = decision.SlotIndex.Value + 1;
+                            AddBattleLog($"Opponent summons {card.Name} to slot {displaySlot}", BattleLogEntryType.OpponentAction);
+                            
                             RefreshCreatureSlotCaches();
                             OnPropertyChanged(nameof(FieldSlots));
                             OnPropertyChanged(nameof(OpponentCreatureSlots));
@@ -773,22 +861,136 @@ public class MainViewModel : ViewModelBase
                     break;
 
                 case OpponentAI.AIDecisionType.PlaySpell:
+                    if (decision.CardId != null)
+                    {
+                        var card = OpponentDeck.Hand.FirstOrDefault(c => c.Id == decision.CardId);
+                        if (card != null && card.ManaCost <= opponentMana)
+                        {
+                            // Check if this is an Event card that should go to the event slot
+                            if (card.Type == CardType.Event)
+                            {
+                                var cardVm = new CardViewModel(card);
+                                OpponentDeck.PlayCard(card.Id);
+                                opponentMana -= cardVm.ManaCost;
+                                OpponentEventSlot = cardVm;
+                                LogToFile($"[ExecuteOpponentTurn] Plays event: {cardVm.Name}");
+                                StatusMessage = $"Opponent plays {cardVm.Name}!";
+                                AddBattleLog($"Opponent plays {cardVm.Name}", BattleLogEntryType.Spell);
+                                OnPropertyChanged(nameof(OpponentEventSlot));
+                            }
+                            else
+                            {
+                                // Regular spell/enchantment - apply effects
+                                OpponentDeck.PlayCard(card.Id);
+                                opponentMana -= card.ManaCost;
+                                LogToFile($"[ExecuteOpponentTurn] Playing {card.Name} (type={card.Type})");
+                                
+                                // Update status message to show opponent action
+                                string cardTypeStr = card.Type.ToString();
+                                StatusMessage = $"Opponent plays {card.Name}!";
+                                
+                                // Add to battle log
+                                AddBattleLog($"Opponent plays {card.Name} ({cardTypeStr})", BattleLogEntryType.Spell);
+                                
+                                ApplyOpponentCardEffects(card);
+                            }
+                        }
+                        else
+                        {
+                            keepPlaying = false;
+                        }
+                    }
+                    else
+                    {
+                        keepPlaying = false;
+                    }
+                    break;
+
                 case OpponentAI.AIDecisionType.PlayWeapon:
+                    if (decision.CardId != null)
+                    {
+                        var card = OpponentDeck.Hand.FirstOrDefault(c => c.Id == decision.CardId);
+                        if (card != null && card.ManaCost <= opponentMana)
+                        {
+                            var cardVm = new CardViewModel(card);
+                            OpponentDeck.PlayCard(cardVm.Id);
+                            opponentMana -= cardVm.ManaCost;
+                            OpponentWeapon = cardVm;
+                            LogToFile($"[ExecuteOpponentTurn] Equipped weapon: {cardVm.Name}");
+
+                            StatusMessage = $"Opponent equips {cardVm.Name}!";
+                            AddBattleLog($"Opponent equips {cardVm.Name}", BattleLogEntryType.OpponentAction);
+                            OnPropertyChanged(nameof(OpponentWeapon));
+                        }
+                        else
+                        {
+                            keepPlaying = false;
+                        }
+                    }
+                    else
+                    {
+                        keepPlaying = false;
+                    }
+                    break;
+
                 case OpponentAI.AIDecisionType.PlayArtifact:
                     if (decision.CardId != null)
                     {
                         var card = OpponentDeck.Hand.FirstOrDefault(c => c.Id == decision.CardId);
                         if (card != null && card.ManaCost <= opponentMana)
                         {
-                            OpponentDeck.PlayCard(card.Id);
-                            opponentMana -= card.ManaCost;
-                            LogToFile($"[ExecuteOpponentTurn] Playing {card.Name} (type={card.Type})");
+                            var cardVm = new CardViewModel(card);
+                            OpponentDeck.PlayCard(cardVm.Id);
+                            opponentMana -= cardVm.ManaCost;
                             
-                            // Update status message to show opponent action
-                            string cardTypeStr = card.Type.ToString();
-                            StatusMessage = $"Opponent plays {card.Name}!";
-                            
-                            ApplyOpponentCardEffects(card);
+                            // Handle based on card type
+                            if (cardVm.Type == CardType.Weapon)
+                            {
+                                OpponentWeapon = cardVm;
+                                LogToFile($"[ExecuteOpponentTurn] Equipped weapon: {cardVm.Name}");
+                                StatusMessage = $"Opponent equips {cardVm.Name}!";
+                                AddBattleLog($"Opponent equips {cardVm.Name}", BattleLogEntryType.OpponentAction);
+                                OnPropertyChanged(nameof(OpponentWeapon));
+                            }
+                            else if (cardVm.Type == CardType.Armor)
+                            {
+                                OpponentArmor = cardVm;
+                                LogToFile($"[ExecuteOpponentTurn] Equipped armor: {cardVm.Name}");
+                                StatusMessage = $"Opponent equips {cardVm.Name}!";
+                                AddBattleLog($"Opponent equips {cardVm.Name}", BattleLogEntryType.OpponentAction);
+                                OnPropertyChanged(nameof(OpponentArmor));
+                            }
+                            else if (cardVm.Type == CardType.Event)
+                            {
+                                OpponentEventSlot = cardVm;
+                                LogToFile($"[ExecuteOpponentTurn] Plays event: {cardVm.Name}");
+                                StatusMessage = $"Opponent plays {cardVm.Name}!";
+                                AddBattleLog($"Opponent plays {cardVm.Name}", BattleLogEntryType.Spell);
+                                OnPropertyChanged(nameof(OpponentEventSlot));
+                            }
+                            else if (cardVm.Type == CardType.Artifact)
+                            {
+                                // Place artifact in first available artifact slot
+                                for (int i = 0; i < _opponentArtifactSlots.Length; i++)
+                                {
+                                    if (_opponentArtifactSlots[i] == null)
+                                    {
+                                        _opponentArtifactSlots[i] = cardVm;
+                                        LogToFile($"[ExecuteOpponentTurn] Plays artifact: {cardVm.Name} to slot {i}");
+                                        StatusMessage = $"Opponent plays {cardVm.Name}!";
+                                        AddBattleLog($"Opponent plays {cardVm.Name}", BattleLogEntryType.Spell);
+                                        break;
+                                    }
+                                }
+                                // Update observable collection
+                                OpponentArtifactSlotsObs.Clear();
+                                for (int i = 0; i < _opponentArtifactSlots.Length; i++)
+                                {
+                                    OpponentArtifactSlotsObs.Add(_opponentArtifactSlots[i]);
+                                }
+                                OnPropertyChanged(nameof(OpponentArtifactSlots));
+                                OnPropertyChanged(nameof(OpponentArtifactSlotsObs));
+                            }
                         }
                         else
                         {
@@ -907,16 +1109,19 @@ public class MainViewModel : ViewModelBase
                         RefreshCreatureSlotCaches();
                         PlayerHealth -= opponentCreature.Power;
                         StatusMessage = $"Your {playerCreature.Name} was destroyed by {opponentCreature.Name}!";
+                        AddBattleLog($"Your {playerCreature.Name} was destroyed by {opponentCreature.Name}!", BattleLogEntryType.CreatureDeath);
                     }
                     else
                     {
                         StatusMessage = $"{opponentCreature.Name} attacks your {playerCreature.Name} for {opponentCreature.Power} damage!";
+                        AddBattleLog($"{opponentCreature.Name} attacks your {playerCreature.Name} for {opponentCreature.Power} damage", BattleLogEntryType.Damage);
                     }
                 }
                 else
                 {
                     PlayerHealth -= opponentCreature.Power;
                     StatusMessage = $"{opponentCreature.Name} deals {opponentCreature.Power} damage to you!";
+                    AddBattleLog($"{opponentCreature.Name} deals {opponentCreature.Power} damage to you", BattleLogEntryType.Damage);
                 }
                 OnPropertyChanged(nameof(FieldSlots));
             }
@@ -943,6 +1148,7 @@ public class MainViewModel : ViewModelBase
             int damage = weapon.Power;
             PlayerHealth -= damage;
             StatusMessage = $"Opponent's {weapon.Name} deals {damage} damage to you!";
+            AddBattleLog($"Opponent's {weapon.Name} deals {damage} damage to you", BattleLogEntryType.Damage);
             LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} deals {damage} direct damage to player");
         }
         else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
@@ -969,10 +1175,12 @@ public class MainViewModel : ViewModelBase
                     }
                     RefreshCreatureSlotCaches();
                     StatusMessage = $"Your {target.Name} was destroyed by {weapon.Name}!";
+                    AddBattleLog($"Your {target.Name} was destroyed by {weapon.Name}!", BattleLogEntryType.CreatureDeath);
                 }
                 else
                 {
                     StatusMessage = $"Opponent's {weapon.Name} attacks your {target.Name} for {damage} damage!";
+                    AddBattleLog($"Opponent's {weapon.Name} attacks your {target.Name} for {damage} damage", BattleLogEntryType.Damage);
                 }
 
                 LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} attacks {target.Name} for {damage} damage, remaining HP: {target.Health}");
@@ -1240,6 +1448,10 @@ public class MainViewModel : ViewModelBase
         RefreshCreatureSlotCaches();
 
         LogToFile($"[PlayCardToSlot] SUCCESS: FieldSlots[{slotIndex}]={card.Name}");
+        
+        // Add to battle log
+        int displaySlot = slotIndex - 5; // Convert 6-11 to 1-6
+        AddBattleLog($"You summon {card.Name} to slot {displaySlot}", BattleLogEntryType.PlayerAction);
         
         // Force refresh by creating new array instances to trigger UI update
         OnPropertyChanged(nameof(FieldSlots));

@@ -10,6 +10,7 @@
     <Color x:Key="AccentColor">#FF6B35</Color>
     <Color x:Key="TextPrimaryColor">#FFFFFF</Color>
     <Color x:Key="TextSecondaryColor">#B0B0B0</Color>
+    <Color x:Key="TextTertiaryColor">#707070</Color>
     <Color x:Key="SuccessColor">#4CAF50</Color>
     <Color x:Key="WarningColor">#FF9800</Color>
     <Color x:Key="DangerColor">#F44336</Color>
@@ -24,6 +25,7 @@
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>

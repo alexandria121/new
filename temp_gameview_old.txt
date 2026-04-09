@@ -37,7 +37,7 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="160"/>
+            <RowDefinition Height="200"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -181,18 +181,14 @@
         <!-- MIDDLE ROW: Playing Field (Row 2) -->
         <Border Grid.Row="2" Background="#2A3232" CornerRadius="6" Padding="12" Margin="0,5">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Opponent Creatures and Artifacts at top -->
-                <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Opponent Creatures and Artifacts -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <ItemsControl ItemsSource="{Binding OpponentCreatureSlotsObs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -219,7 +215,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <ItemsControl ItemsSource="{Binding OpponentArtifactSlotsObs}">
+                    <ItemsControl ItemsSource="{Binding OpponentArtifactSlots}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal"/>
@@ -245,10 +241,10 @@
                 </StackPanel>
 
                 <!-- Divider -->
-                <Border Grid.Column="0" Grid.Row="1" Height="3" Background="#3A4040" Margin="30,5"/>
+                <Border Grid.Row="1" Height="3" Background="#3A4040" Margin="30,5"/>
 
-                <!-- Player Creatures and Artifacts at bottom -->
-                <StackPanel Grid.Column="0" Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Player Creatures and Artifacts -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <ItemsControl ItemsSource="{Binding PlayerCreatureSlotsObs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -276,7 +272,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <ItemsControl ItemsSource="{Binding PlayerArtifactSlotsObs}">
+                    <ItemsControl ItemsSource="{Binding PlayerArtifactSlots}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal"/>
@@ -301,26 +297,6 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
-
-                <!-- Battle Log (right side) -->
-                <Border Grid.Column="1" Grid.RowSpan="3" Background="{StaticResource SurfaceLightBrush}" CornerRadius="4" Padding="6" Margin="8,0,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="Battle Log" Foreground="{StaticResource TextSecondaryBrush}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding BattleLog}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding FormattedEntry}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="9" TextWrapping="Wrap" Margin="0,1"/>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Grid>
-                </Border>
             </Grid>
         </Border>
 
@@ -328,13 +304,13 @@
         <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" CornerRadius="6" Padding="12" Margin="0,5,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="200"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- Player Hand (90%) -->
+                <!-- Player Hand (50%) -->
                 <StackPanel Grid.Column="0">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <TextBlock Text="HP: " Foreground="{StaticResource HealthBrush}" FontSize="12" FontWeight="Bold"/>
@@ -371,7 +347,7 @@
                                         <Border Grid.Row="1" Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}" Margin="2,4" CornerRadius="2">
                                             <TextBlock Text="{Binding Type}" Foreground="#80FFFFFF" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
-                                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
                                             <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold"/>
                                             <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,8,0"/>
                                             <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"/>
@@ -385,71 +361,59 @@
                 </StackPanel>
 
                 <!-- Player Equipment (25%) -->
-                <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Weapon Slot (top left) -->
-                    <Border Grid.Row="0" Grid.Column="0" 
-                            Background="{Binding PlayerWeapon.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
-                            BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Width="55" Height="45"
-                            Tag="{Binding PlayerWeapon}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
-                            Drop="OnWeaponSlotDrop" DragEnter="OnWeaponSlotDragEnter" DragLeave="OnWeaponSlotDragLeave">
-                        <Grid>
-                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding PlayerWeapon.Name, FallbackValue=Weapon}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerWeapon.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    <!-- Armor Slot (top right) -->
-                    <Border Grid.Row="0" Grid.Column="1" 
-                            Background="{Binding PlayerArmor.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
-                            BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Width="55" Height="45"
-                            Tag="{Binding PlayerArmor}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
-                            Drop="OnArmorSlotDrop" DragEnter="OnArmorSlotDragEnter" DragLeave="OnArmorSlotDragLeave">
-                        <Grid>
-                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding PlayerArmor.Name, FallbackValue=Armor}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerArmor.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    <!-- Event Slot (bottom, centered) -->
-                    <Border Grid.Row="1" Grid.ColumnSpan="2" 
-                            Background="{Binding PlayerEventSlot.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8A050}" 
-                            BorderBrush="#D4B060" BorderThickness="2" Margin="2,4,2,2" CornerRadius="5" Width="55" Height="40"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Player Event Slot -->
+                    <Border Background="{Binding PlayerEventSlot.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8A050}" 
+                            BorderBrush="#D4B060" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
                             Tag="{Binding PlayerEventSlot}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
                             Drop="OnEventSlotDrop" DragEnter="OnEventSlotDragEnter" DragLeave="OnEventSlotDragLeave">
                         <Grid>
-                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding PlayerEventSlot.Name, FallbackValue=Event}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                <TextBlock Text="{Binding PlayerEventSlot.Name, FallbackValue=Event}" Foreground="White" HorizontalAlignment="Center" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="54"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerEventSlot.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,3">
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding PlayerEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding PlayerEventSlot.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
                             </StackPanel>
                         </Grid>
                     </Border>
-                </Grid>
+                    <!-- Player Weapon Slot -->
+                    <Border Background="{Binding PlayerWeapon.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
+                            BorderBrush="#506050" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding PlayerWeapon}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            Drop="OnWeaponSlotDrop" DragEnter="OnWeaponSlotDragEnter" DragLeave="OnWeaponSlotDragLeave">
+                        <Grid>
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                <TextBlock Text="{Binding PlayerWeapon.Name, FallbackValue=Weapon}" Foreground="White" HorizontalAlignment="Center" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="54"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,3">
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding PlayerWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding PlayerWeapon.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <!-- Player Armor Slot -->
+                    <Border Background="{Binding PlayerArmor.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
+                            BorderBrush="#506050" BorderThickness="2" Margin="4" CornerRadius="5" Width="60" Height="50"
+                            Tag="{Binding PlayerArmor}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            Drop="OnArmorSlotDrop" DragEnter="OnArmorSlotDragEnter" DragLeave="OnArmorSlotDragLeave">
+                        <Grid>
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                <TextBlock Text="{Binding PlayerArmor.Name, FallbackValue=Armor}" Foreground="White" HorizontalAlignment="Center" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="54"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,3">
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding PlayerArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding PlayerArmor.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
 
                 <!-- Player Combo Area (25%) -->
                 <Border Grid.Column="2" Background="{StaticResource SurfaceLightBrush}" CornerRadius="5" Padding="8" Margin="8,0,0,0">
