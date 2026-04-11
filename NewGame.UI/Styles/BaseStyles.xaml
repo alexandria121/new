@@ -169,6 +169,13 @@
         <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
     </Style>
 
+    <!-- Warning Button Style (for Settings) - Yellow/Orange -->
+    <Style x:Key="WarningButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="#FFC107"/>
+        <Setter Property="Foreground" Value="#1A1A1A"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
     <!-- Card Container Style -->
     <Style x:Key="CardContainerStyle" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>

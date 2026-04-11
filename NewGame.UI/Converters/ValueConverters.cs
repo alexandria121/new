@@ -511,6 +511,33 @@ public class CountToVisibilityConverter : IValueConverter
 }
 
 /// <summary>
+/// Converts CardType to bool - true if card should display Power/Health stats (Creature only)
+/// </summary>
+public class CardTypeHasStatsConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        try
+        {
+            if (value is CardType cardType)
+            {
+                return cardType == CardType.Creature;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
 /// Converts count to Visibility - visible if count == 0 (for empty state)
 /// </summary>
 public class CountToVisibilityInverseConverter : IValueConverter
@@ -522,6 +549,43 @@ public class CountToVisibilityInverseConverter : IValueConverter
             return count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
         return Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts CardType to Visibility - visible if card should display Power/Health stats
+/// </summary>
+public class CardTypeToStatsVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        try
+        {
+            if (value is CardType cardType)
+            {
+                // Only Creatures, Weapons, Armor, and Events have Power/Health stats
+                return cardType switch
+                {
+                    CardType.Creature => Visibility.Visible,
+                    CardType.Weapon => Visibility.Visible,
+                    CardType.Armor => Visibility.Visible,
+                    CardType.Event => Visibility.Visible,
+                    _ => Visibility.Collapsed
+                };
+            }
+            // Handle null or unexpected types - default to collapsed
+            return Visibility.Collapsed;
+        }
+        catch
+        {
+            // If anything goes wrong, hide the stats to be safe
+            return Visibility.Collapsed;
+        }
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

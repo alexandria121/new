@@ -29,6 +29,11 @@ public class CardViewModel : ViewModelBase
     public int ManaCost => _card.ManaCost;
     
     /// <summary>
+    /// Returns true if this card is a creature (has Power/Health stats)
+    /// </summary>
+    public bool IsCreature => _card.Type == CardType.Creature;
+    
+    /// <summary>
     /// Base power from the card data
     /// </summary>
     public int BasePower => _card.Power;

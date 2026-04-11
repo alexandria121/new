@@ -48,3 +48,5 @@ C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\Un
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckSelectionView.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckNameDialog.baml
 C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\DeckNameDialog.g.cs
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\SettingsView.baml
+C:\Users\atw61\OneDrive\Desktop\new\NewGame.UI\obj\Debug\net9.0-windows\Views\SettingsView.g.cs

@@ -21,6 +21,7 @@
         <Converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+        <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
     </UserControl.Resources>
 
     <!-- Semi-transparent overlay background -->
@@ -165,7 +166,7 @@
                                         CornerRadius="8"
                                         Padding="10,4"
                                         Margin="5,0"
-                                        Visibility="{Binding Power, Converter={StaticResource NullToVisibilityConverter}}">
+                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="{Binding Power}" Foreground="White" FontSize="13" FontWeight="Bold"/>
@@ -183,7 +184,7 @@
                                         CornerRadius="8"
                                         Padding="10,4"
                                         Margin="5,0"
-                                        Visibility="{Binding Health, Converter={StaticResource NullToVisibilityConverter}}">
+                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="♥" Foreground="{StaticResource HealthBrush}" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="{Binding Health}" Foreground="White" FontSize="13" FontWeight="Bold"/>

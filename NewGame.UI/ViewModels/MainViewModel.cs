@@ -2072,6 +2072,18 @@ public class MainViewModel : ViewModelBase
         }
 
         CurrentView = view;
+        
+        // Handle special actions
+        if (view == "Quit")
+        {
+            QuitGame();
+        }
+    }
+
+    private void QuitGame()
+    {
+        // Save any pending data, then exit
+        System.Windows.Application.Current.Shutdown();
     }
     
     /// <summary>

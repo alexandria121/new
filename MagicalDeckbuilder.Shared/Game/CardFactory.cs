@@ -469,7 +469,7 @@ public static class CardFactory
         
         // Anthropomorphized Meat - CREATURE, MC:1, H:8, P:0, COMMON
         deck.Add(CreateCreature("Anthropomorphized Meat", "\"There, right there! Did you see it move?\"\n[ABILITY: Attention Hog - 1 MC, Shield]", 
-            ElementType.Food, 1, 8, 0, 1, false,
+            ElementType.Food, 1, 0, 8, 1, false,
             new List<CardAbility>
             {
                 new CardAbility

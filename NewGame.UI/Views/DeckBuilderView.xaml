@@ -11,6 +11,7 @@
     <UserControl.Resources>
         <Converters:TypeToColorConverter x:Key="TypeToColorConverter"/>
         <Converters:ElementToColorConverter x:Key="ElementToColorConverter"/>
+        <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -146,12 +147,14 @@
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
                                                     
-                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center"
+                                                    Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
                                                         <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,0,4,0"/>
                                                         <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="14" FontWeight="Bold"/>
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
                                                         <TextBlock Text="❤" Foreground="{StaticResource HealthBrush}" FontSize="12" Margin="0,0,4,0"/>
                                                         <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="14" FontWeight="Bold"/>
                                                     </StackPanel>

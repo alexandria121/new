@@ -27,124 +27,117 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <!-- Outer wrapper for element glow effect -->
-                        <Border Effect="{Binding Element, Converter={StaticResource ElementToGlowConverter}}"
-                                Margin="8"
-                                MouseRightButtonDown="OnCardRightClick"
-                                Cursor="Hand">
-                            <!-- Inner wrapper for rarity glow -->
-                            <Border Effect="{Binding Rarity, Converter={StaticResource RarityToGlowConverter}}">
-                                <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
-                                        BorderBrush="{Binding Element, Converter={StaticResource ElementToGradientConverter}}"
-                                        BorderThickness="4"
-                                        CornerRadius="10"
-                                        Padding="12"
-                                        Width="160"
-                                        Height="220">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                        <Border Margin="8"
+                                Background="#404040"
+                                CornerRadius="10"
+                                Padding="12"
+                                Width="160"
+                                Height="220"
+                                BorderBrush="{Binding Element, Converter={StaticResource ElementToGradientConverter}, FallbackValue=#505050}"
+                                BorderThickness="3">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                                        <!-- Card header with element color and rarity indicator -->
-                                        <Grid Grid.Row="0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding ElementEmoji}"
-                                                           FontSize="16"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,6,0"/>
-                                                <TextBlock Text="{Binding Name}"
-                                                           Foreground="White"
-                                                           FontSize="11"
-                                                           FontWeight="Bold"
-                                                           TextWrapping="Wrap"
-                                                           MaxWidth="80"/>
-                                            </StackPanel>
-                                            <Border HorizontalAlignment="Right"
-                                                    Background="{StaticResource ManaBrush}"
-                                                    CornerRadius="10"
-                                                    Padding="6,2">
+                                <!-- Card header with name and mana -->
+                                <Grid Grid.Row="0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding ElementEmoji}"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding Name}"
+                                                   Foreground="White"
+                                                   FontSize="10"
+                                                   FontWeight="Bold"
+                                                   TextWrapping="Wrap"
+                                                   MaxWidth="85"/>
+                                    </StackPanel>
+                                    <Border HorizontalAlignment="Right"
+                                            Background="#303060"
+                                            CornerRadius="8"
+                                            Padding="4,2"
+                                            Visibility="{Binding ManaCost, Converter={StaticResource IntToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="◆" Foreground="#80FFFFFF" FontSize="8" Margin="0,0,2,0"/>
+                                            <TextBlock Text="{Binding ManaCost}"
+                                                       Foreground="White"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Card image placeholder -->
+                                <Border Grid.Row="1"
+                                        Background="#303030"
+                                        Margin="0,8"
+                                        CornerRadius="4">
+                                    <TextBlock Text="{Binding TypeBadgeSymbol}"
+                                               FontSize="36"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="{Binding Element, Converter={StaticResource ElementToColorConverter}}"/>
+                                </Border>
+
+                                <!-- Description -->
+                                <TextBlock Grid.Row="2"
+                                           Text="{Binding Description}"
+                                           Foreground="#A0A0A0"
+                                           FontSize="8"
+                                           TextWrapping="Wrap"
+                                           MaxHeight="35"
+                                           TextTrimming="CharacterEllipsis"
+                                           Visibility="{Binding HasEffects, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                                <!-- Type, Rarity and Power/Health -->
+                                <Grid Grid.Row="3" Margin="0,4,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding TypeBadgeSymbol}"
+                                                   Foreground="{Binding Type, Converter={StaticResource TypeToColorConverter}}"
+                                                   FontSize="10"/>
+                                        <TextBlock Text="{Binding Type}"
+                                                   Foreground="#808080"
+                                                   FontSize="8"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <!-- Power/Health (creatures only - use IsCreature property) -->
+                                        <StackPanel Orientation="Horizontal"
+                                            Visibility="{Binding IsCreature, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Border Background="#303030" CornerRadius="4" Padding="4,1" Margin="0,0,4,0">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="◆" Foreground="#80FFFFFF" FontSize="10" Margin="0,0,2,0"/>
-                                                    <TextBlock Text="{Binding ManaCost}"
-                                                               Foreground="White"
-                                                               FontSize="11"
-                                                               FontWeight="Bold"/>
+                                                    <TextBlock Text="⚔" Foreground="#FF6464" FontSize="8"/>
+                                                    <TextBlock Text="{Binding Power}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="2,0,0,0"/>
                                                 </StackPanel>
                                             </Border>
-                                        </Grid>
-
-                                        <!-- Card description area -->
-                                        <Border Grid.Row="1"
-                                                Background="#40000000"
-                                                Margin="0,10,0,10"
-                                                CornerRadius="4">
-                                            <StackPanel VerticalAlignment="Center" Margin="5">
-                                                <TextBlock Text="{Binding Description}"
-                                                           Foreground="#C0FFFFFF"
-                                                           FontSize="9"
-                                                           TextWrapping="Wrap"
-                                                           TextAlignment="Center"/>
-                                                <!-- Effects indicator -->
-                                                <TextBlock Text="{Binding EffectsText}"
-                                                           Foreground="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
-                                                           FontSize="8"
-                                                           TextAlignment="Center"
-                                                           Margin="0,5,0,0"
-                                                           Visibility="{Binding HasEffects, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                            </StackPanel>
-                                        </Border>
-
-                                        <!-- Type and rarity info -->
-                                        <Grid Grid.Row="2">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                                <TextBlock Text="{Binding TypeBadgeSymbol}"
-                                                           Foreground="{Binding Type, Converter={StaticResource TypeToColorConverter}}"
-                                                           FontSize="12"/>
-                                                <TextBlock Text="{Binding Type}"
-                                                           Foreground="#B0B0B0"
-                                                           FontSize="9"
-                                                           Margin="4,0,0,0"
-                                                           VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                                <TextBlock Text="{Binding RarityGem}"
-                                                           Foreground="{Binding Rarity, Converter={StaticResource RarityToColorConverter}}"
-                                                           FontSize="12"
-                                                           FontWeight="Bold"/>
-                                                <TextBlock Text="{Binding RarityText}"
-                                                           Foreground="{Binding Rarity, Converter={StaticResource RarityToColorConverter}}"
-                                                           FontSize="9"
-                                                           Margin="2,0,0,0"
-                                                           VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- Power and Health stats -->
-                                        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                                            <Border Background="#404040" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <Border Background="#303030" CornerRadius="4" Padding="4,1">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="10"/>
-                                                    <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="10" FontWeight="Bold"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#404040" CornerRadius="4" Padding="6,2">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="♥" Foreground="{StaticResource HealthBrush}" FontSize="10"/>
-                                                    <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="10" FontWeight="Bold"/>
+                                                    <TextBlock Text="♥" Foreground="#64FF64" FontSize="8"/>
+                                                    <TextBlock Text="{Binding Health}" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Margin="2,0,0,0"/>
                                                 </StackPanel>
                                             </Border>
                                         </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </Border>
+                                        <!-- Rarity (shown when not creature) -->
+                                        <StackPanel Orientation="Horizontal"
+                                            Visibility="{Binding IsCreature, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding RarityGem}"
+                                                       Foreground="{Binding Rarity, Converter={StaticResource RarityToColorConverter}}"
+                                                       FontSize="10"/>
+                                            <TextBlock Text="{Binding RarityName}"
+                                                       Foreground="{Binding Rarity, Converter={StaticResource RarityToColorConverter}}"
+                                                       FontSize="8"
+                                                       Margin="2,0,0,0"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -161,6 +154,8 @@
         <Converters:RarityToGradientConverter x:Key="RarityToGradientConverter"/>
         <Converters:RarityToGlowConverter x:Key="RarityToGlowConverter"/>
         <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
+        <Converters:CardTypeHasStatsConverter x:Key="CardTypeHasStatsConverter"/>
     </UserControl.Resources>
 
 </UserControl>
