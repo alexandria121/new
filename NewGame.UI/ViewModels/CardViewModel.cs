@@ -198,6 +198,8 @@ public class CardViewModel : ViewModelBase
     public bool ShowsModifiedStats => HasDamage || HasStatusEffects;
     public bool IsLegendary => _card.IsLegendary;
     public int Rarity => _card.Rarity;
+    public bool IsCombinable => _card.IsCombinable;
+    public bool IsComboOnly => _card.IsComboOnly;
     public IReadOnlyList<CardEffect> Effects => _card.Effects;
     public IReadOnlyList<CardAbility> Abilities => _card.Abilities;
 

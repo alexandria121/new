@@ -49,7 +49,7 @@ public static class CardFactory
         var deck = new List<Card>();
         
         // Irradiated Blob - CREATURE, MC:1, H:6, P:1, COMMON
-        deck.Add(CreateCreature("Irradiated Blob", "This was once a person... you think.\n[ABILITY: Mutation - 2 MC, BTS +2P, DBTS -2H]", 
+        var irradiatedBlob = CreateCreature("Irradiated Blob", "This was once a person... you think.\n[ABILITY: Mutation - 2 MC, BTS +2P, DBTS -2H]", 
             ElementType.Radioactivity, 1, 6, 1, 1, false,
             new List<CardAbility>
             {
@@ -62,7 +62,9 @@ public static class CardFactory
                     EffectValue = 2,
                     RequiresTarget = false
                 }
-            }));
+            });
+        irradiatedBlob.IsCombinable = true;
+        deck.Add(irradiatedBlob);
         
         // Confused Predator - CREATURE, MC:1, H:3, P:3, COMMON
         deck.Add(CreateCreature("Confused Predator", "They're relatively easy to capture, but much more difficult to designate targets to.\n[ABILITY: Brain Fog - passive, 25% chance to deal damage to owner, 75% chance to do damage to original target]", 
@@ -376,7 +378,7 @@ public static class CardFactory
         var deck = new List<Card>();
         
         // Heat Mote - CREATURE, MC:1, H:1, P:2, COMMON
-        deck.Add(CreateCreature("Heat Mote", "A single spark, ready to burst into existence.\n[ABILITY: Temperature Gradient(up) - passive, double the amount and length of +P buffs]", 
+        var heatMote = CreateCreature("Heat Mote", "A single spark, ready to burst into existence.\n[ABILITY: Temperature Gradient(up) - passive, double the amount and length of +P buffs]", 
             ElementType.Thermodynamics, 1, 1, 2, 1, false,
             new List<CardAbility>
             {
@@ -389,10 +391,12 @@ public static class CardFactory
                     EffectValue = 0,
                     IsPassive = true
                 }
-            }));
+            });
+        heatMote.IsCombinable = true;
+        deck.Add(heatMote);
         
         // Cold Mote - CREATURE, MC:1, H:2, P:1, COMMON
-        deck.Add(CreateCreature("Cold Mote", "A cold snap just waiting to happen.\n[ABILITY: Temperature Gradient(down) - passive, double the amount and length of +H buffs]", 
+        var coldMote = CreateCreature("Cold Mote", "A cold snap just waiting to happen.\n[ABILITY: Temperature Gradient(down) - passive, double the amount and length of +H buffs]", 
             ElementType.Thermodynamics, 1, 2, 1, 1, false,
             new List<CardAbility>
             {
@@ -405,7 +409,9 @@ public static class CardFactory
                     EffectValue = 0,
                     IsPassive = true
                 }
-            }));
+            });
+        coldMote.IsCombinable = true;
+        deck.Add(coldMote);
         
         // Thermal Shock - SPELL, MC:3, T:SC, COMMON
         deck.Add(CreateSpell("Thermal Shock", "You don't have to be an expert to know that going from 100 degrees to -100 in 2 seconds is bad.\n[ABILITY: Heat and Cool - 2 DTT, -2H DBTT for 2 turns]", 
@@ -468,7 +474,7 @@ public static class CardFactory
         var deck = new List<Card>();
         
         // Anthropomorphized Meat - CREATURE, MC:1, H:8, P:0, COMMON
-        deck.Add(CreateCreature("Anthropomorphized Meat", "\"There, right there! Did you see it move?\"\n[ABILITY: Attention Hog - 1 MC, Shield]", 
+        var anthropomorphizedMeat = CreateCreature("Anthropomorphized Meat", "\"There, right there! Did you see it move?\"\n[ABILITY: Attention Hog - 1 MC, Shield]", 
             ElementType.Food, 1, 0, 8, 1, false,
             new List<CardAbility>
             {
@@ -481,7 +487,9 @@ public static class CardFactory
                     EffectValue = 0,
                     RequiresTarget = false
                 }
-            }));
+            });
+        anthropomorphizedMeat.IsCombinable = true;
+        deck.Add(anthropomorphizedMeat);
         
         // Jubilee Jester - CREATURE, MC:5, H:6, P:6, RARE
         deck.Add(CreateCreature("Jubilee Jester", "\"Hee hee, you can eat me!\" -last words of the jester\n[ABILITY: Joviality - 3MC, +4H+4P BTAPC for one turn, 4 DTS]", 
@@ -734,7 +742,8 @@ public static class CardFactory
         
         // Slightly Glowing Sponge Cakes - CREATURE, MC:3, RADxFOO, H:7, P:1, COMMON
         // Combo of Anthropomorphized Meat + Irradiated Blob
-        deck.Add(CreateCreature("Slightly Glowing Sponge Cakes", "See? I knew the only things that would be left were sponge cakes and giant bugs. (combo anthropomorphized meat + irradiated blob)\n[ABILITY: Temptation - 1 MC, BTS +4P, DBTS -3H]", 
+        // NOTE: This is a combo-only card - cannot be added to decks
+        var spongeCakes = CreateCreature("Slightly Glowing Sponge Cakes", "See? I knew the only things that would be left were sponge cakes and giant bugs. (combo anthropomorphized meat + irradiated blob)\n[ABILITY: Temptation - 1 MC, BTS +4P, DBTS -3H]", 
             ElementType.Radioactivity, 3, 7, 1, 1, false,
             new List<CardAbility>
             {
@@ -747,11 +756,15 @@ public static class CardFactory
                     EffectValue = 4,
                     RequiresTarget = false
                 }
-            }));
+            });
+        spongeCakes.IsCombinable = true;
+        spongeCakes.IsComboOnly = true;
+        deck.Add(spongeCakes);
         
         // Tempature Mote - CREATURE, MC:3, THExTHE, H:2, P:2, COMMON
         // Combo of Heat Mote + Cold Mote
-        deck.Add(CreateCreature("Tempature Mote", "A cold snap just waiting to happen.\n[ABILITY: Tempature Gradient(both) - passive, doubles +P&+H buff values and durations]", 
+        // NOTE: This is a combo-only card - cannot be added to decks
+        var tempMote = CreateCreature("Tempature Mote", "A cold snap just waiting to happen.\n[ABILITY: Tempature Gradient(both) - passive, doubles +P&+H buff values and durations]", 
             ElementType.Thermodynamics, 3, 2, 2, 1, false,
             new List<CardAbility>
             {
@@ -764,7 +777,10 @@ public static class CardFactory
                     EffectValue = 0,
                     IsPassive = true
                 }
-            }));
+            });
+        tempMote.IsCombinable = true;
+        tempMote.IsComboOnly = true;
+        deck.Add(tempMote);
         
         return deck;
     }

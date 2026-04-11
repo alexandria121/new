@@ -136,6 +136,8 @@ public class Card
     
     public bool IsLegendary { get; set; }
     public int Rarity { get; set; } // 1 = common, 2 = uncommon, 3 = rare, 4 = legendary
+    public bool IsCombinable { get; set; } // true if this card can be used in the combine system
+    public bool IsComboOnly { get; set; } // true if this card can only be obtained via combining, not added to decks
 
     public virtual Card Clone()
     {
@@ -172,7 +174,9 @@ public class Card
                 RequiresTarget = a.RequiresTarget
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            IsCombinable = this.IsCombinable,
+            IsComboOnly = this.IsComboOnly
         };
     }
 
@@ -275,7 +279,9 @@ public class SpellCard : Card
                 IsTemporary = e.IsTemporary
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            IsCombinable = this.IsCombinable,
+            IsComboOnly = this.IsComboOnly
         };
     }
 }
@@ -312,7 +318,9 @@ public class ArtifactCard : Card
                 IsTemporary = e.IsTemporary
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            IsCombinable = this.IsCombinable,
+            IsComboOnly = this.IsComboOnly
         };
         return clone;
     }
@@ -350,7 +358,9 @@ public class EventCard : Card
                 IsTemporary = e.IsTemporary
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            IsCombinable = this.IsCombinable,
+            IsComboOnly = this.IsComboOnly
         };
     }
 }
@@ -387,7 +397,9 @@ public class BlankCard : Card
                 IsTemporary = e.IsTemporary
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            IsCombinable = this.IsCombinable,
+            IsComboOnly = this.IsComboOnly
         };
     }
 }
@@ -464,7 +476,9 @@ public class ArmorCard : Card
                 IsTemporary = e.IsTemporary
             }).ToList(),
             IsLegendary = this.IsLegendary,
-            Rarity = this.Rarity
+            Rarity = this.Rarity,
+            IsCombinable = this.IsCombinable,
+            IsComboOnly = this.IsComboOnly
         };
     }
 }

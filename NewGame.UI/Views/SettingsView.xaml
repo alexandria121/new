@@ -14,10 +14,17 @@
         </Grid.RowDefinitions>
 
         <!-- Title -->
-        <TextBlock Grid.Row="0" 
-                   Text="Settings" 
-                   Style="{StaticResource TitleStyle}"
-                   Margin="0,0,0,30"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <TextBlock Text="Settings" 
+                       Style="{StaticResource TitleStyle}"
+                       Margin="0,0,15,30"/>
+            <TextBlock Text="Functionality coming soon!" 
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontSize="14"
+                       FontStyle="Italic"
+                       VerticalAlignment="Center"
+                       Margin="0,0,0,30"/>
+        </StackPanel>
 
         <!-- Settings Options -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

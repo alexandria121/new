@@ -98,8 +98,12 @@ public class MainViewModel : ViewModelBase
 
         var allCards = CardFactory.CreateStarterDeck();
         var cardViewModels = allCards.Select(c => new CardViewModel(c)).ToList();
-        _allAvailableCards.AddRange(cardViewModels);
-        AvailableCards = new ObservableCollection<CardViewModel>(cardViewModels);
+        
+        // Filter out combo-only cards from deck builder (they can only be obtained via combining)
+        var deckBuilderCards = cardViewModels.Where(c => !c.IsComboOnly).ToList();
+        
+        _allAvailableCards.AddRange(deckBuilderCards);
+        AvailableCards = new ObservableCollection<CardViewModel>(deckBuilderCards);
         SortCards(); // Apply initial sort
 
         // Add quest table cards to MenuCards (for galleries/menus) but NOT AvailableCards (deck builder)
@@ -1165,16 +1169,26 @@ public class MainViewModel : ViewModelBase
                 }
                 else
                 {
-                    // Fallback to random deck if saved deck not found
-                    playerCards = CardFactory.GenerateRandomDeck();
-                    ErrorLogger.Instance.Warning("MainViewModel", "[InitializeGame] Saved deck not found, using random deck");
+                    // Must have a saved deck selected - show error
+                    System.Windows.MessageBox.Show(
+                        "Please create a deck and select it first!",
+                        "No Deck Selected",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
+                    ErrorLogger.Instance.Warning("MainViewModel", "[InitializeGame] Saved deck not found");
+                    return;
                 }
             }
             else
             {
-                // No deck selected - use random deck as fallback
-                playerCards = CardFactory.GenerateRandomDeck();
-                ErrorLogger.Instance.Warning("MainViewModel", "[InitializeGame] No deck selected, using random deck");
+                // Must have a deck selected - show error
+                System.Windows.MessageBox.Show(
+                    "Please create a deck and select it first!",
+                    "No Deck Selected",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                ErrorLogger.Instance.Warning("MainViewModel", "[InitializeGame] No deck selected");
+                return;
             }
             
             PlayerDeck.InitializeDeck(playerCards);
@@ -1284,6 +1298,15 @@ public class MainViewModel : ViewModelBase
 
         if (OpponentHealth <= 0 || PlayerHealth <= 0)
         {
+            // Show game end window
+            bool playerWon = OpponentHealth <= 0;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var endWindow = new Views.GameEndWindow(playerWon);
+                endWindow.ShowDialog();
+                // Return to menu after game ends
+                CurrentView = "Menu";
+            });
             return;
         }
 
@@ -1292,6 +1315,14 @@ public class MainViewModel : ViewModelBase
 
         if (OpponentHealth <= 0 || PlayerHealth <= 0)
         {
+            // Show game end window
+            bool playerWon = OpponentHealth <= 0;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var endWindow = new Views.GameEndWindow(playerWon);
+                endWindow.ShowDialog();
+                CurrentView = "Menu";
+            });
             return;
         }
 
@@ -1300,6 +1331,14 @@ public class MainViewModel : ViewModelBase
 
         if (OpponentHealth <= 0 || PlayerHealth <= 0)
         {
+            // Show game end window
+            bool playerWon = OpponentHealth <= 0;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var endWindow = new Views.GameEndWindow(playerWon);
+                endWindow.ShowDialog();
+                CurrentView = "Menu";
+            });
             return;
         }
 

@@ -42,18 +42,6 @@
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Menu"
                             Padding="15,6"/>
-                    <Button Content="Game" 
-                            Style="{StaticResource BaseButtonStyle}"
-                            Command="{Binding NavigateCommand}"
-                            CommandParameter="Game"
-                            Margin="10,0,0,0"
-                            Padding="15,6"/>
-                    <Button Content="Cards" 
-                            Style="{StaticResource BaseButtonStyle}"
-                            Command="{Binding NavigateCommand}"
-                            CommandParameter="Browser"
-                            Margin="10,0,0,0"
-                            Padding="15,6"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
