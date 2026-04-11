@@ -16,6 +16,23 @@ public enum CardType
 }
 
 /// <summary>
+/// Represents an ability that can be triggered by paying mana
+/// </summary>
+public class CardAbility
+{
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public int ManaCost { get; set; } // MC: X
+    public EffectType EffectType { get; set; }
+    public int EffectValue { get; set; } // The value (damage, buff amount, etc.)
+    public TargetType Target { get; set; } = TargetType.Any;
+    public bool IsTemporary { get; set; }
+    public int Duration { get; set; } // D: X turns (0 if permanent)
+    public bool IsPassive { get; set; } // passive abilities
+    public bool RequiresTarget { get; set; } // true if needs a target (DTT, DBTT, etc.)
+}
+
+/// <summary>
 /// Represents an effect that a card can have
 /// </summary>
 public class CardEffect
@@ -42,7 +59,21 @@ public enum EffectType
     ManaGain,
     Destroy,
     Duplicate,
-    Transform
+    Transform,
+    Search,           // Adds quest/search token
+    BuffPower,        // Buff to power (BTS +P)
+    BuffHealth,       // Buff to health (BTS +H)
+    DebuffPower,     // Debuff to power (DBTT -P)
+    DebuffHealth,    // Debuff to health (DBTT -H)
+    DamageToAll,     // Damage to all (DTA)
+    DamageToAllCreatures, // DTAC
+    DamageToAllEnemyCreatures, // DTAEC
+    HealSelf,        // HTS - heal to self
+    ManaRegen,       // MRPT - mana regen per turn
+    ShieldSelf,      // Shield self
+    Biteback,        // Counterattack when attacked
+    Infect,          // Add infection tokens
+    DisableAttack    // Disable creature from attacking (Astral Eviction)
 }
 
 /// <summary>
@@ -96,6 +127,13 @@ public class Card
     public int Power { get; set; }
     public int Health { get; set; }
     public List<CardEffect> Effects { get; set; } = new();
+    
+    /// <summary>
+    /// Active abilities that can be triggered (stored as effects for simplicity)
+    /// Format: each ability is a CardEffect with mana cost in a special field
+    /// </summary>
+    public List<CardAbility> Abilities { get; set; } = new();
+    
     public bool IsLegendary { get; set; }
     public int Rarity { get; set; } // 1 = common, 2 = uncommon, 3 = rare, 4 = legendary
 
@@ -119,6 +157,19 @@ public class Card
                 Value = e.Value,
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
+            }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                Target = a.Target,
+                IsTemporary = a.IsTemporary,
+                Duration = a.Duration,
+                IsPassive = a.IsPassive,
+                RequiresTarget = a.RequiresTarget
             }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity
@@ -165,12 +216,30 @@ public class CreatureCard : Card
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
             }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                Target = a.Target,
+                IsTemporary = a.IsTemporary,
+                Duration = a.Duration,
+                IsPassive = a.IsPassive,
+                RequiresTarget = a.RequiresTarget
+            }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity,
             CanAttack = this.CanAttack,
             HasAttacked = this.HasAttacked
         };
         return clone;
+    }
+    
+    public void Reset() 
+    {
+        CanAttack = false;
     }
 }
 

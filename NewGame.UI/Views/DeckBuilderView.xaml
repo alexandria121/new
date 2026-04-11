@@ -57,12 +57,20 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0"
-                               Text="Available Cards"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               FontSize="14"
-                               FontWeight="Bold"
-                               Margin="0,0,0,10"/>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Available Cards"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="14"
+                           FontWeight="Bold"/>
+                <TextBlock Text="Sort by:" 
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="12"
+                           Margin="20,2,0,0"/>
+                <ComboBox ItemsSource="{Binding SortOptions}"
+                         SelectedItem="{Binding SelectedSortOption}"
+                         Width="100"
+                         Margin="5,0,0,0"/>
+            </StackPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding AvailableCards}">
@@ -77,41 +85,49 @@
                                             BorderBrush="{Binding Type, Converter={StaticResource TypeToColorConverter}}"
                                             BorderThickness="2"
                                             CornerRadius="6"
-                                            Padding="6"
+                                            Padding="8"
                                             Margin="4"
-                                            Width="130"
-                                            Height="170"
+                                            Width="150"
+                                            Height="210"
                                             Cursor="Hand"
                                             MouseLeftButtonDown="Card_MouseLeftButtonDown"
                                             MouseMove="Card_MouseMove">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="35"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="30"/>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
+                                            <!-- Name and Mana Cost -->
                                             <Grid Grid.Row="0">
                                                 <TextBlock Text="{Binding Name}"
                                                            Foreground="White"
-                                                           FontSize="10"
+                                                           FontSize="11"
                                                            FontWeight="Bold"
                                                            TextTrimming="CharacterEllipsis"/>
                                                 <Border HorizontalAlignment="Right"
                                                         Background="{StaticResource ManaBrush}"
                                                         CornerRadius="6"
-                                                        Padding="4,1">
-                                                    <TextBlock Text="{Binding ManaCost}"
-                                                               Foreground="White"
-                                                               FontSize="9"/>
+                                                        Padding="5,2">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="☀" Foreground="White" FontSize="8" Margin="0,0,2,0"/>
+                                                        <TextBlock Text="{Binding ManaCost}"
+                                                                   Foreground="White"
+                                                                   FontSize="10"
+                                                                   FontWeight="Bold"/>
+                                                    </StackPanel>
                                                 </Border>
                                             </Grid>
 
+                                            <!-- Type Badge -->
                                             <Border Grid.Row="1"
                                                     Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
                                                     Margin="0,4"
-                                                    CornerRadius="3">
+                                                    CornerRadius="3"
+                                                    Padding="4,2">
                                                 <TextBlock Text="{Binding Type}"
                                                            Foreground="#80FFFFFF"
                                                            FontSize="9"
@@ -119,42 +135,49 @@
                                                            VerticalAlignment="Center"/>
                                             </Border>
 
-                                            <Grid Grid.Row="2" Margin="0,2,0,0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
+                                            <!-- Power and Health -->
+                                            <Border Grid.Row="2"
+                                                    Background="{StaticResource SurfaceBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="6,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="14" FontWeight="Bold"/>
+                                                    </StackPanel>
 
-                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                                    <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9"/>
-                                                    <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold"/>
-                                                </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <TextBlock Text="❤" Foreground="{StaticResource HealthBrush}" FontSize="12" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="14" FontWeight="Bold"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
 
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9"/>
-                                                    <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"/>
-                                                </StackPanel>
+                                            <!-- Abilities/Effects -->
+                                            <Border Grid.Row="3"
+                                                    Margin="0,4,0,0"
+                                                    Visibility="{Binding HasEffects, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <TextBlock Text="{Binding EffectsText}"
+                                                           Foreground="{StaticResource AccentBrush}"
+                                                           FontSize="8"
+                                                           TextWrapping="Wrap"
+                                                           MaxHeight="30"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </Border>
 
-                                                <Border Grid.Column="2"
-                                                        Background="{StaticResource SurfaceBrush}"
-                                                        CornerRadius="2"
-                                                        Padding="2,1"
-                                                        HorizontalAlignment="Right"
-                                                        Visibility="{Binding HasEffects, Converter={StaticResource NullToVisibilityConverter}}">
-                                                    <TextBlock Text="{Binding EffectsText}"
-                                                               Foreground="{StaticResource AccentBrush}"
-                                                               FontSize="7"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               MaxWidth="40"/>
-                                                </Border>
-                                            </Grid>
-
-                                            <TextBlock Grid.Row="3"
-                                                       Text="{Binding Element}"
-                                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                                       FontSize="8"
-                                                       Margin="0,2,0,0"/>
+                                            <!-- Element -->
+                                            <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,4,0,0" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding ElementIcon}" FontSize="10" Margin="0,0,4,0"/>
+                                                <TextBlock Text="{Binding Element}"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           FontSize="9"
+                                                           FontWeight="SemiBold"/>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

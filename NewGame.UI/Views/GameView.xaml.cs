@@ -238,6 +238,29 @@ public partial class GameView : UserControl
         e.Handled = true;
     }
 
+    private void OnComboSlotMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        // Combo slots don't support drag out currently
+    }
+
+    private void OnComboResultDragEnter(object sender, DragEventArgs e)
+    {
+        if (sender is Border comboSlot && ViewModel?.IsComboLocked == true)
+        {
+            comboSlot.Background = new SolidColorBrush(Color.FromRgb(70, 70, 90));
+        }
+        e.Handled = true;
+    }
+
+    private void OnComboResultDragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border comboSlot)
+        {
+            comboSlot.Background = new SolidColorBrush(Color.FromRgb(58, 58, 58));
+        }
+        e.Handled = true;
+    }
+
     private void OnHandCardRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
@@ -252,6 +275,15 @@ public partial class GameView : UserControl
     {
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
         {
+            // If we're in ability targeting mode, execute ability on this target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
+                return;
+            }
+
+            // Otherwise, zoom the card
             ViewModel?.ZoomCard(card);
             ShowCardZoom();
             e.Handled = true;
@@ -483,6 +515,54 @@ public partial class GameView : UserControl
             if (slotBorder.Tag is CardViewModel card)
             {
                 DragDrop.DoDragDrop(slotBorder, card, DragDropEffects.Move);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handle left-click on field card to activate ability
+    /// </summary>
+    private void OnPlayerSlotLeftClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            // If we're in ability targeting mode, this card is the target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
+                return;
+            }
+
+            // If card has abilities, activate the first one (or show ability menu)
+            if (card.Abilities.Count > 0)
+            {
+                // For now, activate the first ability if it's not passive
+                var ability = card.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, card);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Handle left-click on opponent field card to activate ability or select target
+    /// </summary>
+    private void OnOpponentSlotLeftClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            // If we're in ability targeting mode, this card is the target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
             }
         }
     }

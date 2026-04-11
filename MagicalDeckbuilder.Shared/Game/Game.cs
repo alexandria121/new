@@ -87,7 +87,7 @@ public class Game
 {
     private Character _player;
     private Character _opponent;
-    private CardCombiner _combiner;
+    private CombinationLookup _combinationLookup;
     private bool _gameRunning;
     private List<string> _gameLog = new();
     private Random _random = new();
@@ -96,7 +96,11 @@ public class Game
     {
         _player = new Character { Name = "Player", IsPlayer = true };
         _opponent = new Character { Name = "Enemy", IsPlayer = false };
-        _combiner = new CardCombiner();
+        
+        // Initialize combination lookup with pre-made cards
+        _combinationLookup = new CombinationLookup();
+        var customCards = CardFactory.GetCustomCombinationCards();
+        _combinationLookup.LoadCombinationCards(customCards);
     }
     
     /// <summary>
@@ -472,28 +476,29 @@ public class Game
         
         Console.WriteLine($"\nCombining {card1.Name} with {card2.Name}...");
         
-        var result = _combiner.Combine(card1, card2);
+        // Look up pre-made combination card
+        var resultCard = _combinationLookup.FindCombination(card1, card2);
         
-        if (result.Success && result.ResultCard != null)
+        if (resultCard != null)
         {
             // Remove original cards
             _player.Deck.DiscardFromHand(card1.Id);
             _player.Deck.DiscardFromHand(card2.Id);
             
-            // Add new card to hand (as a free card)
-            var newCard = result.ResultCard;
+            // Create a copy with new ID
+            var newCard = CloneCard(resultCard);
             _player.Deck.Hand.Add(newCard);
             
             // Also save to custom cards collection
             _player.CustomCreatedCards.Add(newCard);
             
-            Console.WriteLine($"✓ {result.Message}");
+            Console.WriteLine($"✓ Created {newCard.Name}!");
             Console.WriteLine($"  New Card: {newCard.Name} ({newCard.Type}) | {newCard.ManaCost} Mana | PWR:{newCard.Power} HP:{newCard.Health}");
             _gameLog.Add($"Created {newCard.Name} via combination");
         }
         else
         {
-            Console.WriteLine($"✗ {result.Message}");
+            Console.WriteLine("✗ No pre-made combination available for these cards.");
         }
     }
     
@@ -921,5 +926,19 @@ public class Game
         }
         
         Console.WriteLine("════════════════");
+    }
+    
+    /// <summary>
+    /// Create a deep copy of a card with a new ID
+    /// </summary>
+    private Card CloneCard(Card source)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(source);
+        var copy = System.Text.Json.JsonSerializer.Deserialize<Card>(json);
+        if (copy != null)
+        {
+            copy.Id = Guid.NewGuid().ToString();
+        }
+        return copy ?? source;
     }
 }

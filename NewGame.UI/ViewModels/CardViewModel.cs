@@ -3,6 +3,7 @@ using CardType = MagicalDeckbuilder.Cards.CardType;
 using ElementType = MagicalDeckbuilder.Cards.ElementType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
+using CardAbility = MagicalDeckbuilder.Cards.CardAbility;
 
 namespace NewGame.UI.ViewModels;
 
@@ -193,12 +194,13 @@ public class CardViewModel : ViewModelBase
     public bool IsLegendary => _card.IsLegendary;
     public int Rarity => _card.Rarity;
     public IReadOnlyList<CardEffect> Effects => _card.Effects;
+    public IReadOnlyList<CardAbility> Abilities => _card.Abilities;
 
-    public string EffectsText => Effects.Count > 0
-        ? string.Join(", ", Effects.Select(e => e.Name))
+    public string EffectsText => Effects.Count > 0 || Abilities.Count > 0
+        ? string.Join(", ", Effects.Select(e => e.Name).Concat(Abilities.Select(a => a.Name)))
         : "";
 
-    public bool HasEffects => Effects.Count > 0;
+    public bool HasEffects => Effects.Count > 0 || Abilities.Count > 0;
 
     /// <summary>
     /// Detailed effects text showing effect name, value, and target

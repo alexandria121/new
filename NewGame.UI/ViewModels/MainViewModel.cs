@@ -22,7 +22,7 @@ namespace NewGame.UI.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
-    private readonly CardCombiner _cardCombiner = new();
+    private readonly CombinationLookup _combinationLookup = new();
     private OpponentAI? _opponentAI;
     private DifficultyLevel _difficulty = DifficultyLevel.Journeyman;
     private bool _hasUnsavedDeckChanges;
@@ -52,6 +52,21 @@ public class MainViewModel : ViewModelBase
     private int _opponentWeaponBonus = 0;
     private int _opponentArmorBonus = 0;
 
+    // Quest/Search token tracking
+    private int _questTokens = 0;
+    private readonly List<Card> _questTableCards = new();
+
+    // Ability targeting state
+    private CardAbility? _activeAbility;
+    private CardViewModel? _abilitySourceCard;
+    private CardViewModel? _buddingFirstTarget; // For two-stage targeting (Budding)
+    private bool _waitingForSecondTarget; // For two-stage targeting
+
+    // Card sorting options
+    private string _selectedSortOption = "Element";
+    private readonly List<string> _sortOptions = new() { "Element", "Type" };
+    private readonly List<CardViewModel> _allAvailableCards = new();
+
     public MainViewModel()
     {
         PlayerDeck = new DeckManager();
@@ -79,15 +94,28 @@ public class MainViewModel : ViewModelBase
         DeleteDeckCommand = new RelayCommand<SavedDeckViewModel>(DeleteDeck);
         NewDeckCommand = new RelayCommand(NewDeck);
         SaveDeckCommand = new RelayCommand(SaveDeck, () => _hasUnsavedDeckChanges);
+        SortCardsCommand = new RelayCommand(SortCards);
 
         var allCards = CardFactory.CreateStarterDeck();
-        AvailableCards = new ObservableCollection<CardViewModel>(
-            allCards.Select(c => new CardViewModel(c)));
+        var cardViewModels = allCards.Select(c => new CardViewModel(c)).ToList();
+        _allAvailableCards.AddRange(cardViewModels);
+        AvailableCards = new ObservableCollection<CardViewModel>(cardViewModels);
+        SortCards(); // Apply initial sort
 
-        MenuCards = new ObservableCollection<CardViewModel>(
-            CardFactory.CreateStarterDeck().Select(c => new CardViewModel(c)));
+        // Add quest table cards to MenuCards (for galleries/menus) but NOT AvailableCards (deck builder)
+        var questTableCardsList = CardFactory.GetQuestTableCards();
+        _questTableCards.AddRange(questTableCardsList);
+        var questTableCardVMs = questTableCardsList
+            .Select(c => new CardViewModel(c))
+            .ToList();
         
-        // Load saved decks
+        MenuCards = new ObservableCollection<CardViewModel>(
+            cardViewModels.Select(c => c.Clone()).Concat(questTableCardVMs));
+        
+        // Load pre-made combination cards into lookup
+        // Cards with names starting with "combine_" will be used for combinations
+        var customCards = CardFactory.GetCustomCombinationCards();
+        _combinationLookup.LoadCombinationCards(customCards);
         LoadSavedDecks();
     }
     
@@ -272,6 +300,446 @@ public class MainViewModel : ViewModelBase
 
     public int PlayerDeckCardCount => PlayerDeckCards.Count;
 
+    /// <summary>
+    /// Quest/Search token count - when 3 tokens accumulated, draw a random quest table card
+    /// </summary>
+    public int QuestTokens
+    {
+        get => _questTokens;
+        set
+        {
+            var oldTokens = _questTokens;
+            SetProperty(ref _questTokens, value);
+            
+            // Check if 3 tokens reached - draw random quest table card
+            if (oldTokens < 3 && value >= 3)
+            {
+                DrawQuestTableCard();
+                _questTokens = 0; // Reset after drawing
+                OnPropertyChanged(nameof(QuestTokens));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Currently active ability awaiting target selection (e.g., after clicking a card to use its ability)
+    /// </summary>
+    public bool IsSelectingTarget => _activeAbility != null;
+
+    /// <summary>
+    /// Start targeting for an ability - player clicked a card's ability button
+    /// </summary>
+    public void StartAbilityTargeting(CardAbility ability, CardViewModel sourceCard)
+    {
+        // For Budding, cost is the spell cost (stored separately)
+        int cost = ability.ManaCost > 0 ? ability.ManaCost : sourceCard.ManaCost;
+        
+        if (PlayerMana < cost)
+        {
+            AddBattleLog($"Not enough mana for {ability.Name}!", BattleLogEntryType.Info);
+            return;
+        }
+
+        _activeAbility = ability;
+        _abilitySourceCard = sourceCard;
+        PlayerMana -= cost;
+        
+        // Handle two-stage targeting (Budding)
+        if (ability.EffectType == EffectType.Duplicate && ability.Name == "Budding")
+        {
+            _buddingFirstTarget = null;
+            _waitingForSecondTarget = false;
+            AddBattleLog("Select PLAYER owned creature to duplicate...", BattleLogEntryType.Info);
+            OnPropertyChanged(nameof(IsSelectingTarget));
+        }
+        // Determine targeting mode based on ability
+        else if (ability.RequiresTarget)
+        {
+            AddBattleLog($"Select target for {ability.Name}...", BattleLogEntryType.Info);
+            OnPropertyChanged(nameof(IsSelectingTarget));
+        }
+        else
+        {
+            // Execute immediately for non-targeted abilities (like Search)
+            ExecuteAbility(ability, sourceCard, null);
+            _activeAbility = null;
+            _abilitySourceCard = null;
+            OnPropertyChanged(nameof(IsSelectingTarget));
+        }
+    }
+
+    /// <summary>
+    /// Execute the active ability on a target
+    /// </summary>
+    public void ExecuteAbilityOnTarget(CardViewModel target)
+    {
+        if (_activeAbility == null || _abilitySourceCard == null) return;
+
+        // Handle two-stage targeting (Budding)
+        if (_activeAbility.EffectType == EffectType.Duplicate && _activeAbility.Name == "Budding")
+        {
+            if (!_waitingForSecondTarget)
+            {
+                // First target selected (player creature)
+                _buddingFirstTarget = target;
+                _waitingForSecondTarget = true;
+                AddBattleLog("Now, select OPPONENT owned creature to duplicate...", BattleLogEntryType.Info);
+                return; // Wait for second target
+            }
+            else
+            {
+                // Second target selected - execute with both
+                ExecuteBudding(_buddingFirstTarget!, target);
+                _activeAbility = null;
+                _abilitySourceCard = null;
+                _buddingFirstTarget = null;
+                _waitingForSecondTarget = false;
+                OnPropertyChanged(nameof(IsSelectingTarget));
+                return;
+            }
+        }
+
+        ExecuteAbility(_activeAbility, _abilitySourceCard, target);
+        
+        _activeAbility = null;
+        _abilitySourceCard = null;
+        OnPropertyChanged(nameof(IsSelectingTarget));
+    }
+
+    /// <summary>
+    /// Execute Budding ability (duplicate two creatures)
+    /// </summary>
+    private void ExecuteBudding(CardViewModel playerCreature, CardViewModel opponentCreature)
+    {
+        // Find empty slots and duplicate both creatures
+        int emptyPlayerSlot = FindEmptyPlayerSlot();
+        int emptyOppSlot = FindEmptyOpponentSlot();
+        
+        if (emptyPlayerSlot >= 0)
+        {
+            var clone = playerCreature.Clone();
+            // Add to player's field (simplified - would need actual game state update)
+            AddBattleLog($"Duplicated {playerCreature.Name} to player slot!", BattleLogEntryType.PlayerAction);
+        }
+        
+        if (emptyOppSlot >= 0)
+        {
+            var clone = opponentCreature.Clone();
+            // Add to opponent's field (simplified)
+            AddBattleLog($"Duplicated {opponentCreature.Name} to opponent slot!", BattleLogEntryType.OpponentAction);
+        }
+    }
+
+    private int FindEmptyPlayerSlot()
+    {
+        for (int i = 6; i < 12; i++)
+        {
+            if (FieldSlots[i] == null) return i;
+        }
+        return -1;
+    }
+
+    private int FindEmptyOpponentSlot()
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            if (FieldSlots[i] == null) return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Execute an ability
+    /// </summary>
+    private void ExecuteAbility(CardAbility ability, CardViewModel source, CardViewModel? target)
+    {
+        switch (ability.EffectType)
+        {
+            case EffectType.Search:
+                // Add quest token
+                QuestTokens += ability.EffectValue;
+                AddBattleLog($"{source.Name} searches and gains {ability.EffectValue} quest token(s)!", BattleLogEntryType.Info);
+                break;
+
+            case EffectType.Damage:
+            case EffectType.Debuff:
+                if (target != null)
+                {
+                    ApplyDamageToTarget(ability, source, target);
+                }
+                break;
+
+            case EffectType.Buff:
+            case EffectType.BuffPower:
+            case EffectType.BuffHealth:
+                if (target != null)
+                {
+                    ApplyBuffToTarget(ability, source, target);
+                }
+                break;
+
+            case EffectType.DebuffPower:
+            case EffectType.DebuffHealth:
+                if (target != null)
+                {
+                    ApplyDebuffToTarget(ability, source, target);
+                }
+                break;
+
+            case EffectType.DamageToAll:
+            case EffectType.DamageToAllCreatures:
+            case EffectType.DamageToAllEnemyCreatures:
+                ApplyDamageToAll(ability, source);
+                break;
+
+            case EffectType.ManaRegen:
+                PlayerMaxMana += ability.EffectValue;
+                PlayerMana = Math.Min(PlayerMana + ability.EffectValue, PlayerMaxMana);
+                AddBattleLog($"{source.Name} grants +{ability.EffectValue} max mana!", BattleLogEntryType.Info);
+                break;
+
+            case EffectType.DisableAttack:
+                if (target != null)
+                {
+                    ApplyDisableAttack(ability, source, target);
+                }
+                break;
+
+            case EffectType.Infect:
+                // Infection tokens - track separately for now, just add status effect
+                if (target != null)
+                {
+                    target.AddStatusEffect("Infected");
+                    AddBattleLog($"{source.Name} adds {ability.EffectValue} infection counter(s) to {target.Name}!", BattleLogEntryType.Debuff);
+                }
+                break;
+
+            default:
+                AddBattleLog($"{ability.Name} effect not implemented yet!", BattleLogEntryType.Info);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Apply disable attack effect (Astral Eviction)
+    /// </summary>
+    private void ApplyDisableAttack(CardAbility ability, CardViewModel source, CardViewModel target)
+    {
+        target.AddStatusEffect("CannotAttack");
+        AddBattleLog($"{source.Name} disables {target.Name}'s attacks!", BattleLogEntryType.Debuff);
+        
+        // If it's temporary, schedule removal
+        if (ability.IsTemporary && ability.Duration > 0)
+        {
+            // Would need turn-based tracking to remove after duration
+            AddBattleLog($"(Effect lasts {ability.Duration} turns)", BattleLogEntryType.Info);
+        }
+    }
+
+    /// <summary>
+    /// Apply damage to all (handles Whiteout with element check)
+    /// </summary>
+    private void ApplyDamageToAll(CardAbility ability, CardViewModel source)
+    {
+        int damage = ability.EffectValue;
+        
+        // Handle Whiteout - check if it's this ability
+        if (ability.Name == "Whiteout")
+        {
+            // Add turn-based effect tracking
+            AddBattleLog($"Whiteout begins! {damage} damage to all creatures for {ability.Duration} turns.", BattleLogEntryType.Info);
+            
+            // Apply first tick immediately
+            ApplyWhiteoutTick(source, damage);
+            return;
+        }
+        
+        if (ability.EffectType == EffectType.DamageToAllEnemyCreatures)
+        {
+            // Damage all opponent creatures
+            for (int i = 0; i < 6; i++)
+            {
+                if (OpponentCreatureSlots[i] != null)
+                {
+                    OpponentCreatureSlots[i].ApplyDamage(damage);
+                }
+            }
+            AddBattleLog($"{source.Name} deals {damage} damage to all enemy creatures!", BattleLogEntryType.Damage);
+        }
+    }
+
+    /// <summary>
+    /// Apply Whiteout damage tick with element check
+    /// </summary>
+    private void ApplyWhiteoutTick(CardViewModel source, int baseDamage)
+    {
+        int damage = baseDamage;
+        
+        // Check each creature's element - reduce damage for RAD, TOX, THE
+        for (int i = 0; i < 6; i++)
+        {
+            var oppCreature = OpponentCreatureSlots[i];
+            if (oppCreature != null)
+            {
+                var element = oppCreature.Element;
+                // Damage halved (rounded down) for RAD, TOX, THE - minimum 1
+                if (element == ElementType.Radioactivity || 
+                    element == ElementType.Toxin || 
+                    element == ElementType.Thermodynamics)
+                {
+                    damage = Math.Max(1, baseDamage / 2);
+                }
+                else
+                {
+                    damage = baseDamage;
+                }
+                
+                oppCreature.ApplyDamage(damage);
+            }
+            
+            var playerCreature = PlayerCreatureSlotsObs[i];
+            if (playerCreature != null)
+            {
+                var element = playerCreature.Element;
+                if (element == ElementType.Radioactivity || 
+                    element == ElementType.Toxin || 
+                    element == ElementType.Thermodynamics)
+                {
+                    damage = Math.Max(1, baseDamage / 2);
+                }
+                else
+                {
+                    damage = baseDamage;
+                }
+                
+                playerCreature.ApplyDamage(damage);
+            }
+        }
+        
+        AddBattleLog($"Whiteout deals {damage} damage (reduced for RAD/TOX/THE)!", BattleLogEntryType.Damage);
+    }
+
+    private void ApplyDamageToTarget(CardAbility ability, CardViewModel source, CardViewModel target)
+    {
+        int damage = ability.EffectValue;
+        
+        // Find target in field slots and apply damage
+        bool foundTarget = false;
+        for (int i = 0; i < FieldSlots.Length; i++)
+        {
+            if (FieldSlots[i]?.Id == target.Id)
+            {
+                target.ApplyDamage(damage);
+                foundTarget = true;
+                AddBattleLog($"{source.Name} deals {damage} damage to {target.Name}!", BattleLogEntryType.Damage);
+                break;
+            }
+        }
+
+        // Also check opponent creatures
+        if (!foundTarget)
+        {
+            // For now, apply to opponent directly or their creatures
+            OpponentHealth -= damage;
+            AddBattleLog($"{source.Name} deals {damage} damage to opponent!", BattleLogEntryType.Damage);
+        }
+    }
+
+    private void ApplyBuffToTarget(CardAbility ability, CardViewModel source, CardViewModel target)
+    {
+        int value = ability.EffectValue;
+        
+        // Find target in field slots and apply buff
+        for (int i = 0; i < FieldSlots.Length; i++)
+        {
+            if (FieldSlots[i]?.Id == target.Id)
+            {
+                if (ability.EffectType == EffectType.Buff || ability.EffectType == EffectType.BuffPower)
+                {
+                    target.AddStatusEffect("Buffed");
+                    target.HealDamage(-value); // Negative damage = buff
+                }
+                if (ability.EffectType == EffectType.Buff || ability.EffectType == EffectType.BuffHealth)
+                {
+                    target.HealDamage(-value);
+                }
+                AddBattleLog($"{source.Name} buffs {target.Name} by +{value}!", BattleLogEntryType.PlayerAction);
+                break;
+            }
+        }
+    }
+
+    private void ApplyDebuffToTarget(CardAbility ability, CardViewModel source, CardViewModel target)
+    {
+        int value = ability.EffectValue;
+        
+        // Find target in field slots and apply debuff
+        for (int i = 0; i < FieldSlots.Length; i++)
+        {
+            if (FieldSlots[i]?.Id == target.Id)
+            {
+                if (ability.EffectType == EffectType.Debuff || ability.EffectType == EffectType.DebuffPower)
+                {
+                    target.AddStatusEffect("Weakened");
+                }
+                AddBattleLog($"{source.Name} debuffs {target.Name} by -{value}!", BattleLogEntryType.OpponentAction);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Cancel ability targeting
+    /// </summary>
+    public void CancelAbilityTargeting()
+    {
+        if (_activeAbility != null)
+        {
+            // Refund mana
+            PlayerMana += _activeAbility.ManaCost;
+            _activeAbility = null;
+            _abilitySourceCard = null;
+            OnPropertyChanged(nameof(IsSelectingTarget));
+            AddBattleLog("Ability cancelled.", BattleLogEntryType.Info);
+        }
+    }
+
+    /// <summary>
+    /// Draw a random card from the quest table when 3 tokens accumulated
+    /// </summary>
+    private void DrawQuestTableCard()
+    {
+        if (_questTableCards.Count == 0) return;
+        
+        // Use weighted random based on card rarity percentages
+        // C: percentages: 26%, 25%, 20%, 17%, 10%, 2% = 100%
+        var roll = _random.Next(100);
+        Card selectedCard;
+        
+        if (roll < 26) selectedCard = _questTableCards[0]; // Dwarf Star Spawn (0-25)
+        else if (roll < 51) selectedCard = _questTableCards[1]; // Malformed Summon (26-50)
+        else if (roll < 71) selectedCard = _questTableCards[2]; // Eater of Hope (51-70)
+        else if (roll < 88) selectedCard = _questTableCards[3]; // Greater Star Spawn (71-87)
+        else if (roll < 98) selectedCard = _questTableCards[4]; // Herald of Jaa'aird'thuun (88-97)
+        else selectedCard = _questTableCards[5]; // Jaa'aird'thuun (98-99)
+        
+        var questCardVm = new CardViewModel(selectedCard.Clone());
+        PlayerHand.Add(questCardVm);
+        
+        AddBattleLog($"Quest complete! Summoned: {questCardVm.Name}", BattleLogEntryType.Spell);
+    }
+
+    /// <summary>
+    /// Add a quest token - called when Search ability is activated
+    /// </summary>
+    public void AddQuestToken()
+    {
+        QuestTokens++;
+        AddBattleLog($"Quest token added! ({QuestTokens}/3)", BattleLogEntryType.Info);
+    }
+
+    private readonly Random _random = new();
+
     public CardViewModel?[] FieldSlots { get; } = new CardViewModel?[12];
 
     public CardViewModel? PlayerWeapon { get; private set; }
@@ -327,7 +795,8 @@ public class MainViewModel : ViewModelBase
         Damage,
         CreatureDeath,
         Spell,
-        Combat
+        Combat,
+        Debuff
     }
     
     private void AddBattleLog(string message, BattleLogEntryType type = BattleLogEntryType.Info)
@@ -590,6 +1059,21 @@ public class MainViewModel : ViewModelBase
     public ICommand NewDeckCommand { get; }
     public ICommand SaveDeckCommand { get; }
     public ICommand RefreshDecksCommand { get; private set; }
+    public ICommand SortCardsCommand { get; private set; }
+    
+    public string SelectedSortOption
+    {
+        get => _selectedSortOption;
+        set
+        {
+            if (SetProperty(ref _selectedSortOption, value))
+            {
+                SortCards();
+            }
+        }
+    }
+    
+    public List<string> SortOptions => _sortOptions;
     
     public ObservableCollection<SavedDeckViewModel> PlayerDecks { get; } = new();
 
@@ -623,6 +1107,13 @@ public class MainViewModel : ViewModelBase
             }
             OpponentArtifactSlotsObs.Clear();
             PlayerArtifactSlotsObs.Clear();
+            
+            // Populate artifact slots with null placeholders (3 slots each)
+            for (int i = 0; i < 3; i++)
+            {
+                OpponentArtifactSlotsObs.Add(null);
+                PlayerArtifactSlotsObs.Add(null);
+            }
             
             // Clear equipment slots
             OpponentWeapon = null;
@@ -748,6 +1239,25 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(PlayerDeckCardCount));
         OnPropertyChanged(nameof(DeckCountText));
         MarkDeckAsChanged();
+    }
+
+    /// <summary>
+    /// Sorts the available cards based on the selected sort option
+    /// </summary>
+    private void SortCards()
+    {
+        var sorted = _selectedSortOption switch
+        {
+            "Element" => _allAvailableCards.OrderBy(c => c.Element.ToString()).ThenBy(c => c.Name).ToList(),
+            "Type" => _allAvailableCards.OrderBy(c => c.Type.ToString()).ThenBy(c => c.Element.ToString()).ThenBy(c => c.Name).ToList(),
+            _ => _allAvailableCards.ToList()
+        };
+        
+        AvailableCards.Clear();
+        foreach (var card in sorted)
+        {
+            AvailableCards.Add(card);
+        }
     }
 
     public string DeckCountText => $"{PlayerDeckCards.Count} cards";
@@ -1324,13 +1834,18 @@ public class MainViewModel : ViewModelBase
     {
         if (ComboCard1 == null || ComboCard2 == null) return;
 
-        var result = _cardCombiner.Combine(ComboCard1.Card, ComboCard2.Card);
-        if (!result.Success || result.ResultCard == null)
+        // Look up pre-made combination card
+        var resultCard = _combinationLookup.FindCombination(ComboCard1.Card, ComboCard2.Card);
+        
+        if (resultCard == null)
         {
-            StatusMessage = result.Message;
+            StatusMessage = "No pre-made combination available for these cards.";
             return;
         }
 
+        // Create a new instance to avoid reference issues
+        var newCard = CreateCardCopy(resultCard);
+        
         PlayerDeck.DiscardFromHand(ComboCard1.Id);
         PlayerDeck.DiscardFromHand(ComboCard2.Id);
 
@@ -1339,13 +1854,27 @@ public class MainViewModel : ViewModelBase
         if (card1ToRemove != null) PlayerHand.Remove(card1ToRemove);
         if (card2ToRemove != null) PlayerHand.Remove(card2ToRemove);
 
-        ComboResult = new CardViewModel(result.ResultCard);
+        ComboResult = new CardViewModel(newCard);
         CustomCards.Add(ComboResult);
         IsComboLocked = true;
         CanCombine = false;
 
-        StatusMessage = $"Created {result.ResultCard.Name}!";
+        StatusMessage = $"Created {newCard.Name}!";
         OnPropertyChanged(nameof(PlayerHand));
+    }
+
+    /// <summary>
+    /// Create a deep copy of a card with a new ID
+    /// </summary>
+    private Card CreateCardCopy(Card source)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(source);
+        var copy = System.Text.Json.JsonSerializer.Deserialize<Card>(json);
+        if (copy != null)
+        {
+            copy.Id = Guid.NewGuid().ToString();
+        }
+        return copy ?? source;
     }
 
     private void ClearCombo()
@@ -1388,10 +1917,12 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        var result = _cardCombiner.Combine(ComboCard1.Card, ComboCard2.Card);
-        if (result.Success && result.ResultCard != null)
+        // Look up pre-made combination card
+        var resultCard = _combinationLookup.FindCombination(ComboCard1.Card, ComboCard2.Card);
+        
+        if (resultCard != null)
         {
-            ComboResult = new CardViewModel(result.ResultCard);
+            ComboResult = new CardViewModel(resultCard);
             CanCombine = true;
         }
         else
