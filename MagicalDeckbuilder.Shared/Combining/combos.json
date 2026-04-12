@@ -3,9 +3,35 @@
   "lastUpdated": "2025-01-13",
   "notes": "TemplateId is auto-calculated using formula: 10000 + (minId * 1000) + maxId",
   "combos": [
-    { "card1Id": 1, "card2Id": 11, "resultName": "Radioactive Heat", "element": "Radioactivity" },
-    { "card1Id": 1, "card2Id": 12, "resultName": "Frozen Blob", "element": "Radioactivity" },
-    { "card1Id": 1, "card2Id": 13, "resultName": "Radioactive Meat", "element": "Radioactivity" },
+    { 
+      "card1Id": 1, 
+      "card2Id": 11, 
+      "resultName": "Radioactive Heat", 
+      "element": "Radioactivity",
+      "abilities": [
+        { "name": "Heat Burst", "effect": "Damage", "value": 2, "manaCost": 1, "target": "Enemy" },
+        { "name": "Radiation Shield", "effect": "Shield", "value": 2, "manaCost": 2, "target": "Self" }
+      ]
+    },
+    { 
+      "card1Id": 1, 
+      "card2Id": 12, 
+      "resultName": "Frozen Blob", 
+      "element": "Radioactivity",
+      "abilities": [
+        { "name": "Cold Touch", "effect": "Debuff", "value": 1, "manaCost": 1, "target": "Enemy", "description": "Slows enemy creature" }
+      ]
+    },
+    { 
+      "card1Id": 1, 
+      "card2Id": 13, 
+      "resultName": "Radioactive Meat", 
+      "element": "Radioactivity",
+      "abilities": [
+        { "name": "Toxic Bite", "effect": "Damage", "value": 3, "manaCost": 2, "target": "Enemy" },
+        { "name": "Contamination", "effect": "Buff", "value": 1, "manaCost": 1, "target": "Self", "description": "Weakens enemy on attack" }
+      ]
+    },
     { "card1Id": 1, "card2Id": 10, "resultName": "Flesh Blob", "element": "Flesh" },
     { "card1Id": 1, "card2Id": 6, "resultName": "Toxic Radiation", "element": "Toxin" },
     { "card1Id": 1, "card2Id": 4, "resultName": "Radioactive Fungus", "element": "Fungus" },

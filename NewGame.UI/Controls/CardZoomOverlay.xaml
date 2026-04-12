@@ -24,6 +24,7 @@
         <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
         <Converters:CardTypeToPowerVisibilityConverter x:Key="CardTypeToPowerVisibilityConverter"/>
         <Converters:CardTypeToHealthVisibilityConverter x:Key="CardTypeToHealthVisibilityConverter"/>
+        <Converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
     </UserControl.Resources>
 
     <!-- Semi-transparent overlay background -->
@@ -318,6 +319,115 @@
                                            Foreground="{StaticResource TextSecondaryBrush}"
                                            Visibility="{Binding HasEffects, Converter={StaticResource InverseBoolToVisibilityConverter}}"
                                            Margin="0,5,0,0"/>
+
+                                <!-- Abilities Section -->
+                                <TextBlock Text="ABILITIES"
+                                           FontSize="11"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           Margin="0,15,0,8"
+                                           Visibility="{Binding Abilities.Count, Converter={StaticResource NullToVisibilityConverter}}"/>
+
+                                <!-- Abilities list with detailed info -->
+                                <ItemsControl ItemsSource="{Binding Abilities}"
+                                              Visibility="{Binding Abilities.Count, Converter={StaticResource NullToVisibilityConverter}}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#2A3A4A"
+                                                    CornerRadius="6"
+                                                    Padding="12,10"
+                                                    Margin="0,0,0,6"
+                                                    BorderBrush="#4A5A6A"
+                                                    BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <!-- Ability Icon -->
+                                                    <Border Grid.Column="0" Grid.RowSpan="4"
+                                                            Background="#3A5A7A"
+                                                            CornerRadius="6"
+                                                            Width="40" Height="40"
+                                                            Margin="0,0,12,0">
+                                                        <TextBlock Text="✦"
+                                                                   FontSize="20"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="#A0D0FF"/>
+                                                    </Border>
+
+                                                    <!-- Ability Name -->
+                                                    <TextBlock Grid.Column="1" Grid.Row="0"
+                                                               Text="{Binding Name}"
+                                                               FontSize="14"
+                                                               FontWeight="Bold"
+                                                               Foreground="#A0D0FF"/>
+
+                                                    <!-- Mana Cost and Effect -->
+                                                    <StackPanel Grid.Column="1" Grid.Row="1" 
+                                                                Orientation="Horizontal" 
+                                                                Margin="0,4,0,0">
+                                                        <Border Background="#1A3A5A"
+                                                                CornerRadius="4"
+                                                                Padding="6,2"
+                                                                Margin="0,0,10,0">
+                                                            <TextBlock FontSize="11"
+                                                                       Foreground="#80C0FF">
+                                                                <Run Text="MC: "/>
+                                                                <Run Text="{Binding ManaCost}" FontWeight="Bold"/>
+                                                            </TextBlock>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding EffectType}" 
+                                                                   FontSize="12"
+                                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text=" " FontSize="12"/>
+                                                        <TextBlock Text="{Binding EffectValue}" 
+                                                                   FontSize="12"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="{StaticResource AccentBrush}"/>
+                                                        <TextBlock Text=" → " 
+                                                                   FontSize="12"
+                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                        <TextBlock Text="{Binding Target}" 
+                                                                   FontSize="12"
+                                                                   Foreground="{StaticResource PrimaryBrush}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Description -->
+                                                    <TextBlock Grid.Column="1" Grid.Row="2"
+                                                               Text="{Binding Description}"
+                                                               FontSize="11"
+                                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,4,0,0"
+                                                               Visibility="{Binding Description, Converter={StaticResource NullToVisibilityConverter}}"/>
+
+                                                    <!-- Passive indicator -->
+                                                    <Border Grid.Column="1" Grid.Row="3"
+                                                            Background="#4A3A6A"
+                                                            CornerRadius="4"
+                                                            Padding="6,2"
+                                                            Margin="0,4,0,0"
+                                                            HorizontalAlignment="Left"
+                                                            Visibility="{Binding IsPassive, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                        <TextBlock Text="PASSIVE" 
+                                                                   FontSize="10" 
+                                                                   FontWeight="Bold" 
+                                                                   Foreground="#C8A0FF"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                                 
                                 <!-- Status Effects Section (shown when card has damage or effects) -->
                                 <TextBlock Text="STATUS EFFECTS"
