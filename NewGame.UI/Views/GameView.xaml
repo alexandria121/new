@@ -594,6 +594,10 @@
                                             <TextBlock Text="{Binding ComboCard1.Name, TargetNullValue=---}" Foreground="White" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="40" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
+                                    <Button Content="X" FontSize="8" FontWeight="Bold" Foreground="White" Background="#CC0000" BorderThickness="0" 
+                                            Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,-4,0" Padding="0"
+                                            Cursor="Hand" Click="OnComboSlot1RemoveClick"
+                                            Visibility="{Binding ComboCard1, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}"/>
                                 </Grid>
                             </Border>
                             
@@ -608,6 +612,10 @@
                                             <TextBlock Text="{Binding ComboCard2.Name, TargetNullValue=---}" Foreground="White" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="40" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
+                                    <Button Content="X" FontSize="8" FontWeight="Bold" Foreground="White" Background="#CC0000" BorderThickness="0" 
+                                            Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,-4,0" Padding="0"
+                                            Cursor="Hand" Click="OnComboSlot2RemoveClick"
+                                            Visibility="{Binding ComboCard2, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}"/>
                                 </Grid>
                             </Border>
                         </StackPanel>

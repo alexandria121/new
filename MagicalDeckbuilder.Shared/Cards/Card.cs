@@ -129,6 +129,12 @@ public enum WeaponTargetType
 public class Card
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    
+    /// <summary>
+    /// Template ID for lookups: 1-200 for base cards, 1000-2000 for combo cards
+    /// </summary>
+    public int TemplateId { get; set; }
+    
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public CardType Type { get; set; }
@@ -146,7 +152,7 @@ public class Card
     
     public bool IsLegendary { get; set; }
     public int Rarity { get; set; } // 1 = common, 2 = uncommon, 3 = rare, 4 = legendary
-    public bool IsCombinable { get; set; } // true if this card can be used in the combine system
+    public bool IsCombinable { get; set; } = true; // true if this card can be used in the combine system
     public bool IsComboOnly { get; set; } // true if this card can only be obtained via combining, not added to decks
     
     /// <summary>
@@ -159,6 +165,7 @@ public class Card
         return new Card
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -219,6 +226,7 @@ public class CreatureCard : Card
         var clone = new CreatureCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -277,6 +285,7 @@ public class SpellCard : Card
         return new SpellCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -328,6 +337,7 @@ public class ArtifactCard : Card
         var clone = new ArtifactCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -380,6 +390,7 @@ public class EventCard : Card
         return new EventCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -431,6 +442,7 @@ public class BlankCard : Card
         return new BlankCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -482,6 +494,7 @@ public class WeaponCard : Card
         return new WeaponCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,
@@ -604,6 +617,7 @@ public class ArmorCard : Card
         return new ArmorCard
         {
             Id = Guid.NewGuid().ToString(),
+            TemplateId = this.TemplateId,
             Name = this.Name,
             Description = this.Description,
             Type = this.Type,

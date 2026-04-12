@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Input;
 using MagicalDeckbuilder.Cards;
 using NewGame.UI.Views;
 using MagicalDeckbuilder.Combining;
@@ -176,8 +177,8 @@ public class MainViewModel : ViewModelBase
             _hasUnsavedDeckChanges = false;
         }
         
-        // Navigate to deck builder
-        CurrentView = "DeckBuilder";
+        // Navigate to battle select to choose a battle
+        CurrentView = "BattleSelect";
     }
     
     private void LoadDeckIntoBuilder(SavedDeck deck)
@@ -1383,7 +1384,14 @@ public class MainViewModel : ViewModelBase
     public bool CanCombine
     {
         get => _canCombine;
-        set => SetProperty(ref _canCombine, value);
+        set
+        {
+            if (SetProperty(ref _canCombine, value))
+            {
+                // Force WPF to re-evaluate all commands (fixes button not enabling)
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
     }
 
     public bool IsComboLocked
@@ -1654,12 +1662,14 @@ public class MainViewModel : ViewModelBase
             OpponentDeck.DrawCards(4);
             RefreshOpponentHand();
 
-            // Reset game state
-            PlayerHealth = 30;
-            PlayerMaxHealth = 30;
+            // Reset game state with player-configured starting health
+            var startingHealth = AppSettings.Instance.StartingHealth;
+            PlayerHealth = startingHealth;
+            PlayerMaxHealth = startingHealth;
             PlayerMana = 2;
             PlayerMaxMana = 10;
-            OpponentHealth = 30;
+            OpponentHealth = startingHealth;
+            OpponentMaxHealth = startingHealth;
             OpponentMana = 2;
             OpponentMaxMana = 10;
             TurnCount = 1;
@@ -3005,13 +3015,16 @@ public class MainViewModel : ViewModelBase
         if (card1ToRemove != null) PlayerHand.Remove(card1ToRemove);
         if (card2ToRemove != null) PlayerHand.Remove(card2ToRemove);
 
-        ComboResult = new CardViewModel(newCard);
-        CustomCards.Add(ComboResult);
-        IsComboLocked = true;
-        CanCombine = false;
+        // Create a ViewModel for the new card and add to hand
+        var newCardVM = new CardViewModel(newCard);
+        PlayerHand.Add(newCardVM);
+        PlayerDeck.Hand.Add(newCard);
 
         StatusMessage = $"Created {newCard.Name}!";
         OnPropertyChanged(nameof(PlayerHand));
+        
+        // Clear the combo slots after successfully combining
+        ClearCombo();
     }
 
     /// <summary>
@@ -3061,6 +3074,18 @@ public class MainViewModel : ViewModelBase
             ComboCard1 = card;
         else
             ComboCard2 = card;
+
+        UpdateComboPreview();
+    }
+
+    public void RemoveFromComboSlot(int slot)
+    {
+        if (IsComboLocked) return;
+
+        if (slot == 1)
+            ComboCard1 = null;
+        else if (slot == 2)
+            ComboCard2 = null;
 
         UpdateComboPreview();
     }

@@ -18,12 +18,6 @@
             <TextBlock Text="Settings" 
                        Style="{StaticResource TitleStyle}"
                        Margin="0,0,15,30"/>
-            <TextBlock Text="Functionality coming soon!" 
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       FontSize="14"
-                       FontStyle="Italic"
-                       VerticalAlignment="Center"
-                       Margin="0,0,0,30"/>
         </StackPanel>
 
         <!-- Settings Options -->
@@ -182,6 +176,26 @@
                             <CheckBox Grid.Column="1" 
                                      Content="Show Tutorial Hints"
                                      IsChecked="True"/>
+                        </Grid>
+
+                        <Grid Margin="0,15,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="StartingHealthLabel" 
+                                       Text="Starting Health" 
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+                            <ComboBox x:Name="StartingHealthCombo" 
+                                     Grid.Column="1"
+                                     Width="100"
+                                     HorizontalAlignment="Left"
+                                     SelectionChanged="StartingHealthCombo_SelectionChanged">
+                                <ComboBoxItem Content="30" Tag="30" IsSelected="True"/>
+                                <ComboBoxItem Content="50" Tag="50"/>
+                                <ComboBoxItem Content="70" Tag="70"/>
+                            </ComboBox>
                         </Grid>
                     </StackPanel>
                 </Border>

@@ -1,0 +1,54 @@
+{
+  "description": "Card Database - Documents all cards in the game with their Template IDs",
+  "notes": "IDs 1-200 are base/combinable creature cards, IDs 10000+ are combo/created cards",
+  "lastUpdated": "2025-01-13",
+  "idRanges": {
+    "baseCards": "1-200",
+    "comboCards": "10000+"
+  },
+  "combiningFormula": "comboTemplateId = 10000 + (minId * 1000) + maxId",
+  "combinableTypes": ["Creature", "Blank"],
+  "nonCombinableTypes": ["Spell", "Weapon", "Armor", "Artifact", "Event", "Enchantment"],
+  "baseCards": [
+    { "id": 1, "name": "Irradiated Blob", "element": "Radioactivity", "type": "Creature", "manaCost": 1, "health": 6, "power": 1, "rarity": "Common", "combinable": true },
+    { "id": 2, "name": "Confused Predator", "element": "Radioactivity", "type": "Creature", "manaCost": 1, "health": 3, "power": 3, "rarity": "Common", "combinable": true },
+    { "id": 3, "name": "Geiger Giant", "element": "Radioactivity", "type": "Creature", "manaCost": 5, "health": 10, "power": 4, "rarity": "Rare", "combinable": true },
+    { "id": 4, "name": "Fruiting Body", "element": "Fungus", "type": "Creature", "manaCost": 4, "health": 3, "power": 4, "rarity": "Common", "combinable": true },
+    { "id": 5, "name": "Mycelium Spore", "element": "Fungus", "type": "Creature", "manaCost": 2, "health": 1, "power": 1, "rarity": "Common", "combinable": true },
+    { "id": 6, "name": "Refuse Slinger", "element": "Toxin", "type": "Creature", "manaCost": 1, "health": 1, "power": 2, "rarity": "Common", "combinable": true },
+    { "id": 7, "name": "Pupae Patroller", "element": "Toxin", "type": "Creature", "manaCost": 3, "health": 2, "power": 3, "rarity": "Uncommon", "combinable": true },
+    { "id": 8, "name": "Brood Monarch", "element": "Toxin", "type": "Creature", "manaCost": 6, "health": 4, "power": 3, "rarity": "Rare", "combinable": true },
+    { "id": 9, "name": "Undead Stump", "element": "Fungus", "type": "Creature", "manaCost": 5, "health": 4, "power": 4, "rarity": "Uncommon", "combinable": true },
+    { "id": 10, "name": "Amalgamation", "element": "Flesh", "type": "Creature", "manaCost": 2, "health": 3, "power": 5, "rarity": "Common", "combinable": true },
+    { "id": 11, "name": "Heat Mote", "element": "Thermodynamics", "type": "Creature", "manaCost": 1, "health": 1, "power": 2, "rarity": "Common", "combinable": true },
+    { "id": 12, "name": "Cold Mote", "element": "Thermodynamics", "type": "Creature", "manaCost": 1, "health": 2, "power": 1, "rarity": "Common", "combinable": true },
+    { "id": 13, "name": "Anthropomorphized Meat", "element": "Food", "type": "Creature", "manaCost": 1, "health": 8, "power": 0, "rarity": "Common", "combinable": true },
+    { "id": 14, "name": "Jubilee Jester", "element": "Food", "type": "Creature", "manaCost": 5, "health": 6, "power": 6, "rarity": "Rare", "combinable": true },
+    { "id": 15, "name": "Questing Tendril", "element": "Eldritch", "type": "Creature", "manaCost": 1, "health": 2, "power": 1, "rarity": "Common", "combinable": true },
+    { "id": 16, "name": "Occult Dabbler", "element": "Eldritch", "type": "Creature", "manaCost": 2, "health": 2, "power": 2, "rarity": "Common", "combinable": true },
+    { "id": 17, "name": "Dwarf Star Spawn", "element": "Eldritch", "type": "Creature", "manaCost": 2, "health": 1, "power": 3, "rarity": "Common", "combinable": true },
+    { "id": 18, "name": "Malformed Summon", "element": "Eldritch", "type": "Creature", "manaCost": 3, "health": 2, "power": 3, "rarity": "Common", "combinable": true },
+    { "id": 19, "name": "Eater of Hope", "element": "Eldritch", "type": "Creature", "manaCost": 5, "health": 3, "power": 8, "rarity": "Uncommon", "combinable": true },
+    { "id": 20, "name": "Greater Star Spawn", "element": "Eldritch", "type": "Creature", "manaCost": 5, "health": 3, "power": 4, "rarity": "Uncommon", "combinable": true },
+    { "id": 21, "name": "Herald of Jaa'aird'thuun", "element": "Eldritch", "type": "Creature", "manaCost": 4, "health": 4, "power": 4, "rarity": "Rare", "combinable": true },
+    { "id": 22, "name": "Jaa'aird'thuun", "element": "Eldritch", "type": "Creature", "manaCost": 7, "health": 8, "power": 8, "rarity": "Legendary", "combinable": true }
+  ],
+  "comboCards": [
+    { "id": 11013, "name": "Slightly Glowing Sponge Cakes", "combo": "Irradiated Blob(1) + Anthropomorphized Meat(13)", "element": "Radioactivity", "type": "Creature", "combinable": true, "comboOnly": true, "formula": "10000 + (1*1000) + 13 = 11013" },
+    { "id": 12012, "name": "Tempature Mote", "combo": "Heat Mote(11) + Cold Mote(12)", "element": "Thermodynamics", "type": "Creature", "combinable": true, "comboOnly": true, "formula": "10000 + (11*1000) + 12 = 12012" }
+  ],
+  "comboExamples": [
+    { "cards": "Irradiated Blob + Heat Mote", "formula": "10000 + (1*1000) + 11", "resultId": 11011 },
+    { "cards": "Irradiated Blob + Cold Mote", "formula": "10000 + (1*1000) + 12", "resultId": 11012 },
+    { "cards": "Heat Mote + Cold Mote", "formula": "10000 + (11*1000) + 12", "resultId": 12012 },
+    { "cards": "Fruiting Body + Mycelium Spore", "formula": "10000 + (4*1000) + 5", "resultId": 5004 }
+  ],
+  "notes": [
+    "Base cards (1-200) are combinable creatures and blanks only",
+    "Combo cards use IDs 10000+ and are created via combining two base cards",
+    "Combo formula: 10000 + (minBaseId * 1000) + maxBaseId",
+    "Only Creature and Blank card types can be combined",
+    "Spells, Weapons, Armor, Artifacts, Events, and Enchantments cannot be combined",
+    "Quest table cards (Dwarf Star Spawn, Malformed Summon, etc.) are obtained via quest tokens, not combining"
+  ]
+}

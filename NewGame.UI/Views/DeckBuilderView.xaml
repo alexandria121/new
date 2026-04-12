@@ -35,9 +35,10 @@
                     Command="{Binding ClearDeckCommand}"
                     Margin="10,0,0,0"
                     Padding="15,6"/>
-            <Button Content="Start Game" 
+            <Button Content="Back to Menu" 
                     Style="{StaticResource PrimaryButtonStyle}"
-                    Command="{Binding InitializeGameCommand}"
+                    Command="{Binding NavigateCommand}"
+                    CommandParameter="Menu"
                     Margin="10,0,0,0"
                     Padding="15,6"/>
         </StackPanel>

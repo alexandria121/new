@@ -64,8 +64,7 @@ public static class CardFactory
                     EffectValue = 2,
                     RequiresTarget = false
                 }
-            });
-        irradiatedBlob.IsCombinable = true;
+            }, 1);
         deck.Add(irradiatedBlob);
         
         // Confused Predator - CREATURE, MC:1, H:3, P:3, COMMON
@@ -82,7 +81,7 @@ public static class CardFactory
                     EffectValue = 1,
                     IsPassive = true
                 }
-            }));
+            }, 2)); // TemplateId: 2
         
         // Geiger Giant - CREATURE, MC:5, H:10, P:4, RARE
         deck.Add(CreateCreature("Geiger Giant", "You're not quite positive who Geiger is, but he sure is tall.\n[ABILITY: Slam - 4 MC, 6 DTA]", 
@@ -98,7 +97,7 @@ public static class CardFactory
                     EffectValue = 6,
                     RequiresTarget = false
                 }
-            }));
+            }, 3));
         
         // Mutually Assured Duplication - SPELL, MC:5, T:SE&PC, RARE
         deck.Add(CreateSpell("Mutually Assured Duplication", "Wait, this is supposed to deter an attack??\n[ABILITY: Budding - Choose one enemy and friendly creature; duplicate these creatures to the closest unoccupied slot]", 
@@ -158,7 +157,7 @@ public static class CardFactory
                     IsTemporary = true,
                     Duration = 2
                 }
-            }));
+            }, 10));
         
         // Disembody - SPELL, MC:3, T:SEC, COMMON
         deck.Add(CreateSpell("Disembody", "Grummaz went from screaming and struggling to quiet and calm in about 2 seconds.\n[ABILITY: Astral Eviction - Creature may no longer attack, or use abilities]", 
@@ -240,12 +239,12 @@ public static class CardFactory
                     IsTemporary = true,
                     Duration = 3
                 }
-            }));
+            }, 6));
         
         // Pupae Patroller - CREATURE, MC:3, H:2, P:3, UNCOMMON
         // SKIP - requires larval creature card/tag (need to add larval creatures first)
         deck.Add(CreateCreature("Pupae Patroller", "You're not sure how this guy fits in the insect heirarchy, but he sure seems happy. (this is a literal human being)\n[ABILITY: Prowl - 1 MC, +1P&+1H for a random larval creature]", 
-            ElementType.Toxin, 3, 2, 3, 2));
+            ElementType.Toxin, 3, 2, 3, 2, false, null, 7));
         
         // Brood Monarch - CREATURE, MC:6, H:4, P:3, RARE
         deck.Add(CreateCreature("Brood Monarch", "Without a doubt, the biggest and grossest bug you've ever seen.\n[ABILITY: Larval Gestation - 4 MC, starts 3 turn timer, spawns 2 3H3P workers]", 
@@ -263,7 +262,7 @@ public static class CardFactory
                     IsTemporary = true,
                     Duration = 3
                 }
-            }));
+            }, 8));
         
         // Suspicious Mound - ARTIFACT, MC:4, UNCOMMON
         deck.Add(CreateArtifact("Suspicious Mound", "People have learned to give these a wide berth, and not just because of the smell.\n[ABILITY: Overrun - 1MC, spawns 1 2H1P larval naiad (max 2 per turn)]", 
@@ -303,7 +302,7 @@ public static class CardFactory
                     EffectValue = 1,
                     RequiresTarget = false
                 }
-            }));
+            }, 5));
         
         // Fruiting Body - CREATURE, MC:4, H:3, P:4, COMMON
         deck.Add(CreateCreature("Fruiting Body", "Some poor animal ate one too many mushrooms, and ended up becoming a mushroom.\n[ABILITY: Troop Thickening - 2 MCPT, +1H&+1P PT to all spores]", 
@@ -319,7 +318,7 @@ public static class CardFactory
                     EffectValue = 1,
                     IsPassive = true
                 }
-            }));
+            }, 4));
         
         // Undead Stump - CREATURE, MC:5, H:4, P:4, UNCOMMON
         deck.Add(CreateCreature("Undead Stump", "The tree that once made up this stump is now dead, but to say the stump is lifeless is entirely inaccurate.\n[ABILITY: Germinate - 2MC, spawn 1 spore in the closest unoccupied creature slot]", 
@@ -335,7 +334,7 @@ public static class CardFactory
                     EffectValue = 1,
                     RequiresTarget = false
                 }
-            }));
+            }, 9));
         
         // Creeping Infection - SPELL, MC:3, T:SC, UNCOMMON
         deck.Add(CreateSpell("Creeping Infection", "It enters through the skin and only gets worse with time.\n[ABILITY: It Begins - 2 DTT for 4 turns, DTT increases by 1 for each turn after the first]", 
@@ -393,8 +392,7 @@ public static class CardFactory
                     EffectValue = 0,
                     IsPassive = true
                 }
-            });
-        heatMote.IsCombinable = true;
+            }, 11);
         deck.Add(heatMote);
         
         // Cold Mote - CREATURE, MC:1, H:2, P:1, COMMON
@@ -411,8 +409,7 @@ public static class CardFactory
                     EffectValue = 0,
                     IsPassive = true
                 }
-            });
-        coldMote.IsCombinable = true;
+            }, 12);
         deck.Add(coldMote);
         
         // Thermal Shock - SPELL, MC:3, T:SC, COMMON
@@ -489,8 +486,7 @@ public static class CardFactory
                     EffectValue = 0,
                     RequiresTarget = false
                 }
-            });
-        anthropomorphizedMeat.IsCombinable = true;
+            }, 13);
         deck.Add(anthropomorphizedMeat);
         
         // Jubilee Jester - CREATURE, MC:5, H:6, P:6, RARE
@@ -507,7 +503,7 @@ public static class CardFactory
                     EffectValue = 4,
                     RequiresTarget = false
                 }
-            }));
+            }, 14));
         
         // Last Morsel - SPELL, MC:2, T:SC, UNCOMMON
         deck.Add(CreateSpell("Last Morsel", "Yum, crunchy!\n[ABILITY: Are you going to finish that? - 3 DTT] - If this spell kills a creature, regain 1.5 times that many health points (rounded down)", 
@@ -592,7 +588,7 @@ public static class CardFactory
                     EffectValue = 1,
                     RequiresTarget = false
                 }
-            }));
+            }, 15));
         
         // Occult Dabbler - CREATURE, MC:2, H:2, P:2, COMMON
         deck.Add(CreateCreature("Occult Dabbler", "\"You want me to do WHAT?\"\n[ABILITY: Fiddle With - 1 MC, double quest/search tokens generated this turn]", 
@@ -608,7 +604,7 @@ public static class CardFactory
                     EffectValue = 2, // Double tokens
                     RequiresTarget = false
                 }
-            }));
+            }, 16));
         
         // Call of the Deep - EVENT, MC:5, RARE, D:3T after effect
         deck.Add(CreateEvent("Call of the Deep", "They all laughed, until the ritual worked.\n[ABILITY: Elaborate Rite - 5 MC, +2 MRPT for 2 turns] - Summons SOMETHING on the third turn", 
@@ -652,7 +648,7 @@ public static class CardFactory
                     EffectValue = 4,
                     RequiresTarget = true
                 }
-            }));
+            }, 17));
         
         // Malformed Summon - CREATURE, MC:3, C:25%, H:2, P:3, COMMON
         tableCards.Add(CreateCreature("Malformed Summon", "Whatever this was before, the journey was clearly not kind.\n[ABILITY: Wheeze - 2MC, -2P DBTT]", 
@@ -668,7 +664,7 @@ public static class CardFactory
                     EffectValue = 2,
                     RequiresTarget = true
                 }
-            }));
+            }, 18));
         
         // Eater of Hope - CREATURE, MC:5, C:20%, H:3, P:8, UNCOMMON
         tableCards.Add(CreateCreature("Eater of Hope", "Geez, do they not feed you or something?\n[ABILITY: Otherworldly Hunger - 4MC, Consume]", 
@@ -684,7 +680,7 @@ public static class CardFactory
                     EffectValue = 0,
                     RequiresTarget = true
                 }
-            }));
+            }, 19));
         
         // Greater Star Spawn - CREATURE, MC:5, C:17%, H:3, P:4, UNCOMMON
         tableCards.Add(CreateCreature("Greater Star Spawn", "After growing large in an ear, they crawl forth to aid in bringing about their Lord.\n[ABILITY: Thrash - 3MC, 10DTT]", 
@@ -700,7 +696,7 @@ public static class CardFactory
                     EffectValue = 10,
                     RequiresTarget = true
                 }
-            }));
+            }, 20));
         
         // Herald of Jaa'aird'thuun - CREATURE, MC:4, C:10%, H:4, P:4, RARE
         tableCards.Add(CreateCreature("Herald of Jaa'aird'thuun", "\"Do you have a moment to talk about our Lord and destroyer?\"\n[ABILITY: Proselytize - 3MC, add 2 Infection token/counters]", 
@@ -716,7 +712,7 @@ public static class CardFactory
                     EffectValue = 2,
                     RequiresTarget = true
                 }
-            }));
+            }, 21));
         
         // Jaa'aird'thuun - CREATURE, MC:7, C:2%, H:8, P:8, LEGENDARY
         tableCards.Add(CreateCreature("Jaa'aird'thuun", "He's real!!! And really... hungry?\n[ABILITY: Gobble - 6 MC, 10 DTAEC]", 
@@ -732,7 +728,7 @@ public static class CardFactory
                     EffectValue = 10,
                     RequiresTarget = false
                 }
-            }));
+            }, 22));
         
         return tableCards;
     }
@@ -743,7 +739,8 @@ public static class CardFactory
         var deck = new List<Card>();
         
         // Slightly Glowing Sponge Cakes - CREATURE, MC:3, RADxFOO, H:7, P:1, COMMON
-        // Combo of Anthropomorphized Meat + Irradiated Blob
+        // Combo of Anthropomorphized Meat(13) + Irradiated Blob(1)
+        // Combo TemplateId: 10000 + (1 * 1000) + 13 = 11013
         // NOTE: This is a combo-only card - cannot be added to decks
         var spongeCakes = CreateCreature("Slightly Glowing Sponge Cakes", "See? I knew the only things that would be left were sponge cakes and giant bugs. (combo anthropomorphized meat + irradiated blob)\n[ABILITY: Temptation - 1 MC, BTS +4P, DBTS -3H]", 
             ElementType.Radioactivity, 3, 7, 1, 1, false,
@@ -761,10 +758,12 @@ public static class CardFactory
             });
         spongeCakes.IsCombinable = true;
         spongeCakes.IsComboOnly = true;
+        spongeCakes.TemplateId = 11013; // 10000 + (1*1000) + 13
         deck.Add(spongeCakes);
         
         // Tempature Mote - CREATURE, MC:3, THExTHE, H:2, P:2, COMMON
-        // Combo of Heat Mote + Cold Mote
+        // Combo of Heat Mote(11) + Cold Mote(12)
+        // Combo TemplateId: 10000 + (11 * 1000) + 12 = 12012
         // NOTE: This is a combo-only card - cannot be added to decks
         var tempMote = CreateCreature("Tempature Mote", "A cold snap just waiting to happen.\n[ABILITY: Tempature Gradient(both) - passive, doubles +P&+H buff values and durations]", 
             ElementType.Thermodynamics, 3, 2, 2, 1, false,
@@ -782,6 +781,7 @@ public static class CardFactory
             });
         tempMote.IsCombinable = true;
         tempMote.IsComboOnly = true;
+        tempMote.TemplateId = 12012; // 10000 + (11*1000) + 12
         deck.Add(tempMote);
         
         return deck;
@@ -971,7 +971,7 @@ public static class CardFactory
     
     private static Card CreateCreature(string name, string description, 
         ElementType element, int manaCost, int power, int health, int rarity = 1, bool isLegendary = false,
-        List<CardAbility>? abilities = null)
+        List<CardAbility>? abilities = null, int templateId = 0)
     {
         return new CreatureCard
         {
@@ -983,6 +983,8 @@ public static class CardFactory
             Health = health,
             Rarity = rarity,
             IsLegendary = isLegendary,
+            TemplateId = templateId,
+            IsCombinable = templateId > 0 && templateId < 1000,
             Abilities = abilities ?? new List<CardAbility>(),
             Effects = new List<CardEffect>
             {

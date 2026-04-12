@@ -243,6 +243,18 @@ public partial class GameView : UserControl
         // Combo slots don't support drag out currently
     }
 
+    private void OnComboSlot1RemoveClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ViewModel?.RemoveFromComboSlot(1);
+        e.Handled = true;
+    }
+
+    private void OnComboSlot2RemoveClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ViewModel?.RemoveFromComboSlot(2);
+        e.Handled = true;
+    }
+
     private void OnComboResultDragEnter(object sender, DragEventArgs e)
     {
         if (sender is Border comboSlot && ViewModel?.IsComboLocked == true)

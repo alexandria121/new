@@ -3,29 +3,32 @@ using Card = MagicalDeckbuilder.Cards.Card;
 namespace MagicalDeckbuilder.Combining;
 
 /// <summary>
-/// Looks up pre-made combination cards based on two input cards.
-/// Format: combine_{sorted_id1}_{sorted_id2}
+/// Looks up pre-made combination cards based on two input cards' TemplateIds.
+/// Base cards use IDs 1-200, combo cards use IDs 10000+.
+/// Formula: combo_template_id = 10000 + (min_id * 1000) + max_id
+/// This ensures unique, collision-free IDs for all combinations.
+/// Example: Card 1 + Card 2 = 10000 + 1000 + 2 = 11002
+/// Example: Card 10 + Card 20 = 10000 + 10000 + 20 = 20020
 /// </summary>
 public class CombinationLookup
 {
-    private readonly Dictionary<string, Card> _combinationCards = new();
-
+    private readonly Dictionary<int, Card> _comboCardsByTemplateId = new();
+    
     /// <summary>
     /// Initialize with a collection of pre-made combination cards
     /// </summary>
     public void LoadCombinationCards(IEnumerable<Card> cards)
     {
-        _combinationCards.Clear();
+        _comboCardsByTemplateId.Clear();
         
         foreach (var card in cards)
         {
             // Pre-made combo-only cards are stored in the deck
             // They have IsComboOnly = true and IsCombinable = true
-            if (card.IsComboOnly && card.IsCombinable)
+            // They should have TemplateId in range 1000-2000
+            if (card.IsComboOnly && card.IsCombinable && card.TemplateId >= 1000)
             {
-                // Create a key from the card name in lowercase with underscores
-                var key = card.Name.ToLowerInvariant().Replace(" ", "_").Replace("'", "");
-                _combinationCards[key] = card;
+                _comboCardsByTemplateId[card.TemplateId] = card;
             }
         }
     }
@@ -36,42 +39,72 @@ public class CombinationLookup
     /// </summary>
     public Card? FindCombination(Card card1, Card card2)
     {
-        // Sort IDs so order doesn't matter (combine_a_b == combine_b_a)
-        var ids = new[] { card1.Id, card2.Id }.OrderBy(x => x).ToArray();
-        var key = $"combine_{ids[0]}_{ids[1]}";
+        if (card1.TemplateId <= 0 || card2.TemplateId <= 0)
+        {
+            // Fallback to name-based lookup if template IDs not set
+            return FindCombinationByName(card1, card2);
+        }
         
-        if (_combinationCards.TryGetValue(key, out var result))
+        // Calculate combo template ID: 10000 + (minId * 1000) + maxId
+        // Example: Card 1 + Card 2 = 10000 + 1000 + 2 = 11002
+        // Example: Card 10 + Card 20 = 10000 + 10000 + 20 = 20020
+        var ids = new[] { card1.TemplateId, card2.TemplateId }.OrderBy(x => x).ToArray();
+        var comboTemplateId = 10000 + (ids[0] * 1000) + ids[1];
+        
+        if (_comboCardsByTemplateId.TryGetValue(comboTemplateId, out var result))
         {
             return result;
         }
-
-        // Try matching by checking combo card descriptions for the two base card names
-        // The combo card description contains "(combo X + Y)" format
+        
+        // Fallback to name-based lookup
+        return FindCombinationByName(card1, card2);
+    }
+    
+    /// <summary>
+    /// Fallback: find combination by matching card names in combo card names
+    /// </summary>
+    private Card? FindCombinationByName(Card card1, Card card2)
+    {
+        if (card1.Name == card2.Name)
+        {
+            var cardName = card1.Name.ToLowerInvariant();
+            foreach (var kvp in _comboCardsByTemplateId.Values)
+            {
+                var comboName = kvp.Name.ToLowerInvariant();
+                if (comboName.Contains(cardName) && comboName != cardName)
+                {
+                    return kvp;
+                }
+            }
+            return null;
+        }
+        
         var name1 = card1.Name.ToLowerInvariant();
         var name2 = card2.Name.ToLowerInvariant();
         
-        foreach (var kvp in _combinationCards)
+        foreach (var kvp in _comboCardsByTemplateId.Values)
         {
-            var desc = kvp.Value.Description.ToLowerInvariant();
-            // Check if description contains both card names (with "combo" keyword)
-            if (desc.Contains("combo") && 
-                (desc.Contains(name1) || desc.Contains(name1.Replace(" ", ""))) &&
-                (desc.Contains(name2) || desc.Contains(name2.Replace(" ", ""))))
+            var comboName = kvp.Name.ToLowerInvariant();
+            var desc = kvp.Description.ToLowerInvariant();
+            
+            if (comboName == name1 || comboName == name2)
+                continue;
+            
+            bool name1InCombo = comboName.Contains(name1);
+            bool name2InCombo = comboName.Contains(name2);
+            
+            if (name1InCombo && name2InCombo)
             {
-                return kvp.Value;
+                return kvp;
+            }
+            
+            if (desc.Contains("combo") && desc.Contains(name1) && desc.Contains(name2))
+            {
+                return kvp;
             }
         }
-
+        
         return null;
-    }
-
-    /// <summary>
-    /// Sanitize card name for use in lookup key
-    /// </summary>
-    private static string SanitizeName(string name)
-    {
-        // Remove spaces and special characters, keep only alphanumeric
-        return new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
     }
 
     /// <summary>
