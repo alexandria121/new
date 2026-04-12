@@ -369,6 +369,108 @@ public partial class GameView : UserControl
         e.Handled = true;
     }
 
+    /// <summary>
+    /// Handle left-click on player weapon slot card to activate ability
+    /// </summary>
+    private void OnWeaponSlotLeftClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            // If we're in ability targeting mode, this card is the target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
+                return;
+            }
+
+            // If card has abilities, activate the first one
+            if (card.Abilities.Count > 0)
+            {
+                var ability = card.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, card);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Handle ability button click on weapon slot
+    /// </summary>
+    private void OnWeaponAbilityClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn)
+        {
+            var weapon = ViewModel?.PlayerWeapon;
+            if (weapon != null && weapon.Abilities.Count > 0)
+            {
+                var ability = weapon.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, weapon);
+                }
+            }
+        }
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Handle left-click on player armor slot card to activate ability
+    /// </summary>
+    private void OnArmorSlotLeftClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            // If we're in ability targeting mode, this card is the target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
+                return;
+            }
+
+            // If card has abilities, activate the first one
+            if (card.Abilities.Count > 0)
+            {
+                var ability = card.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, card);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Handle ability button click on armor slot
+    /// </summary>
+    private void OnArmorAbilityClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn)
+        {
+            var armor = ViewModel?.PlayerArmor;
+            if (armor != null && armor.Abilities.Count > 0)
+            {
+                var ability = armor.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, armor);
+                }
+            }
+        }
+        e.Handled = true;
+    }
+
     private void OnEquipmentRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
@@ -660,6 +762,58 @@ public partial class GameView : UserControl
             {
                 // Find slot index (only 1 event slot, so just use 0)
                 ViewModel?.PlayEventToSlot(card);
+            }
+        }
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Handle left-click on player event slot card to activate ability
+    /// </summary>
+    private void OnEventSlotLeftClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder && cardBorder.Tag is CardViewModel card)
+        {
+            // If we're in ability targeting mode, this card is the target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
+                return;
+            }
+
+            // If card has abilities, activate the first one
+            if (card.Abilities.Count > 0)
+            {
+                var ability = card.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, card);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Handle ability button click on event slot
+    /// </summary>
+    private void OnEventSlotAbilityClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.DataContext is CardViewModel card)
+        {
+            // Get the event slot card (should be the same as DataContext)
+            var eventSlot = ViewModel?.PlayerEventSlot;
+            if (eventSlot != null && eventSlot.Abilities.Count > 0)
+            {
+                var ability = eventSlot.Abilities.FirstOrDefault(a => !a.IsPassive);
+                if (ability != null)
+                {
+                    ViewModel?.StartAbilityTargeting(ability, eventSlot);
+                }
             }
         }
         e.Handled = true;

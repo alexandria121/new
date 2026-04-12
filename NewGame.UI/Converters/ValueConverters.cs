@@ -5,6 +5,7 @@ using System.Windows.Media;
 using CardType = MagicalDeckbuilder.Cards.CardType;
 using ElementType = MagicalDeckbuilder.Cards.ElementType;
 using EffectType = MagicalDeckbuilder.Cards.EffectType;
+using CardViewModel = NewGame.UI.ViewModels.CardViewModel;
 
 namespace NewGame.UI.Converters;
 
@@ -645,6 +646,37 @@ public class CardTypeToHealthVisibilityConverter : IValueConverter
                     CardType.Armor => Visibility.Visible,
                     _ => Visibility.Collapsed
                 };
+            }
+            return Visibility.Collapsed;
+        }
+        catch
+        {
+            return Visibility.Collapsed;
+        }
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+/// <summary>
+/// Converts a CardViewModel to Visibility - visible if card has abilities not yet used this turn
+/// </summary>
+public class CanActivateAbilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        try
+        {
+            if (value is CardViewModel card)
+            {
+                // Show button if card has abilities and none were used this turn
+                if (card.Abilities.Count > 0 && !card.AbilityUsedThisTurn)
+                {
+                    return Visibility.Visible;
+                }
+                return Visibility.Collapsed;
             }
             return Visibility.Collapsed;
         }

@@ -60,6 +60,8 @@ public class MainViewModel : ViewModelBase
     private int _playerMaxMana = 10;
     private int _opponentHealth = 30;
     private int _opponentMaxHealth = 30;
+    private int _opponentMana = 2;
+    private int _opponentMaxMana = 10;
     private int _turnCount = 1;
     private bool _isPlayerTurn = true;
     private int _playerWeaponBonus = 0;
@@ -1431,6 +1433,18 @@ public class MainViewModel : ViewModelBase
         get => _opponentMaxHealth;
         set => SetProperty(ref _opponentMaxHealth, value);
     }
+
+    public int OpponentMana
+    {
+        get => _opponentMana;
+        set => SetProperty(ref _opponentMana, value);
+    }
+
+    public int OpponentMaxMana
+    {
+        get => _opponentMaxMana;
+        set => SetProperty(ref _opponentMaxMana, value);
+    }
     
     /// <summary>
     /// Whether opponent's hand is visible (from Jar of Eyes effect)
@@ -1646,6 +1660,8 @@ public class MainViewModel : ViewModelBase
             PlayerMana = 2;
             PlayerMaxMana = 10;
             OpponentHealth = 30;
+            OpponentMana = 2;
+            OpponentMaxMana = 10;
             TurnCount = 1;
             IsPlayerTurn = true;
             StatusMessage = "";
@@ -1798,7 +1814,7 @@ public class MainViewModel : ViewModelBase
         }
 
         TurnCount++;
-        PlayerMana = Math.Min(TurnCount, 10);
+        PlayerMana = Math.Min(PlayerMana + 2, 10);
         IsPlayerTurn = true;
         PlayerDeck.DrawCards(1);
         RefreshHand();
@@ -2333,7 +2349,9 @@ public class MainViewModel : ViewModelBase
             Creature = FieldSlots[i]?.Card
         }).ToList();
 
-        int opponentMana = Math.Min(TurnCount, 10);
+        // Regenerate 2 mana for opponent at start of their turn
+        _opponentMana = Math.Min(_opponentMana + 2, 10);
+        int opponentMana = _opponentMana;
         bool keepPlaying = true;
 
         while (keepPlaying && opponentMana > 0)
@@ -2607,6 +2625,9 @@ public class MainViewModel : ViewModelBase
         LogToFile("[ExecuteOpponentTurn] END - FieldSlots:");
         for (int i = 6; i < 12; i++)
             LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
+        
+        // Save remaining opponent mana for next turn
+        _opponentMana = opponentMana;
     }
 
     private void UpdateOpponentSlotDisplay(int slotIndex, Card card)

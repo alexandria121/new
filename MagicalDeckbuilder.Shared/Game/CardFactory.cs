@@ -32,6 +32,8 @@ public static class CardFactory
             deck.AddRange(CreateFoodDeck());
             deck.AddRange(CreateEldritchDeck());
             deck.AddRange(CreateComboDeck());
+            deck.AddRange(CreateWeaponDeck());
+            deck.AddRange(CreateArmorDeck());
             
             ErrorLogger.Instance.Info("CardFactory", $"[Operation: CreateStarterDeck] Created deck with {deck.Count} cards");
             return deck;
@@ -781,6 +783,186 @@ public static class CardFactory
         tempMote.IsCombinable = true;
         tempMote.IsComboOnly = true;
         deck.Add(tempMote);
+        
+        return deck;
+    }
+    
+    // ============ WEAPON CARDS (6 cards) ============
+    private static List<Card> CreateWeaponDeck()
+    {
+        var deck = new List<Card>();
+        
+        // Radiation Weapons
+        var radDagger = CreateWeapon("Radioactive Dagger", "A small blade that glows in the dark.\n[ABILITY: Irradiate - 2 MC, +1P to this weapon for each turn]",
+            ElementType.Radioactivity, 2, 2, WeaponTargetType.DamageToOpponent);
+        radDagger.Abilities.Add(new CardAbility
+        {
+            Name = "Irradiate",
+            Description = "+1P to this weapon for each turn",
+            ManaCost = 2,
+            EffectType = EffectType.BuffPower,
+            EffectValue = 1,
+            RequiresTarget = false
+        });
+        deck.Add(radDagger);
+        
+        var radAxe = CreateWeapon("Radioactive Battleaxe", "Heavy and hazardous.\n[ABILITY: Critical Mass - 4 MC, deal double damage]",
+            ElementType.Radioactivity, 4, 5, WeaponTargetType.DamageToOpponent);
+        radAxe.Abilities.Add(new CardAbility
+        {
+            Name = "Critical Mass",
+            Description = "Deal double damage",
+            ManaCost = 4,
+            EffectType = EffectType.Damage,
+            EffectValue = 10, // Double of base 5
+            RequiresTarget = false
+        });
+        deck.Add(radAxe);
+        
+        // Flesh Weapons
+        var fleshSword = CreateWeapon("Flesh Ripper", "Made from the remains of foes.\n[ABILITY: Vampiric Strike - 3 MC, heal for damage dealt]",
+            ElementType.Flesh, 3, 3, WeaponTargetType.DamageToOpponent);
+        fleshSword.Abilities.Add(new CardAbility
+        {
+            Name = "Vampiric Strike",
+            Description = "Heal for damage dealt",
+            ManaCost = 3,
+            EffectType = EffectType.Heal,
+            EffectValue = 3,
+            RequiresTarget = false
+        });
+        deck.Add(fleshSword);
+        
+        var fleshSpear = CreateWeapon("Bone Spear", "A crude but effective weapon.\n[ABILITY: Pierce - 2 MC, deal damage ignoring armor]",
+            ElementType.Flesh, 2, 2, WeaponTargetType.DamageToOpponent);
+        fleshSpear.Abilities.Add(new CardAbility
+        {
+            Name = "Pierce",
+            Description = "Deal damage ignoring armor",
+            ManaCost = 2,
+            EffectType = EffectType.Damage,
+            EffectValue = 2,
+            RequiresTarget = false
+        });
+        deck.Add(fleshSpear);
+        
+        // Toxin Weapons
+        var toxinWhip = CreateWeapon("Venomous Lash", "Leaves a nasty sting.\n[ABILITY: Poison Tip - 2 MC, apply poison]",
+            ElementType.Toxin, 2, 2, WeaponTargetType.DamageToOpponent);
+        toxinWhip.Abilities.Add(new CardAbility
+        {
+            Name = "Poison Tip",
+            Description = "Apply poison",
+            ManaCost = 2,
+            EffectType = EffectType.Debuff,
+            EffectValue = 1,
+            RequiresTarget = true
+        });
+        deck.Add(toxinWhip);
+        
+        // Fire Weapons
+        var fireSword = CreateWeapon("Flame Blade", " Burns with eternal fire.\n[ABILITY: Inferno - 4 MC, deal 6 damage]",
+            ElementType.Thermodynamics, 4, 4, WeaponTargetType.DamageToOpponent);
+        fireSword.Abilities.Add(new CardAbility
+        {
+            Name = "Inferno",
+            Description = "Deal 6 damage",
+            ManaCost = 4,
+            EffectType = EffectType.Damage,
+            EffectValue = 6,
+            RequiresTarget = false
+        });
+        deck.Add(fireSword);
+        
+        return deck;
+    }
+    
+    // ============ ARMOR CARDS (6 cards) ============
+    private static List<Card> CreateArmorDeck()
+    {
+        var deck = new List<Card>();
+        
+        // Radiation Armor
+        var radShield = CreateArmor("Lead Shield", "Thick protection against radiation.\n[ABILITY: Radiation Shield - 2 MC, +2 armor]",
+            ElementType.Radioactivity, 2, 3);
+        radShield.Abilities.Add(new CardAbility
+        {
+            Name = "Radiation Shield",
+            Description = "+2 armor",
+            ManaCost = 2,
+            EffectType = EffectType.Shield,
+            EffectValue = 2,
+            RequiresTarget = false
+        });
+        deck.Add(radShield);
+        
+        var radPlate = CreateArmor("Radioactive Plate", "Heavy but protective.\n[ABILITY: Contamination Zone - 3 MC, damage attackers]",
+            ElementType.Radioactivity, 3, 4);
+        radPlate.Abilities.Add(new CardAbility
+        {
+            Name = "Contamination Zone",
+            Description = "Damage attackers",
+            ManaCost = 3,
+            EffectType = EffectType.Damage,
+            EffectValue = 1,
+            RequiresTarget = false
+        });
+        deck.Add(radPlate);
+        
+        // Flesh Armor
+        var fleshArmor = CreateArmor("Carapace Guard", "Organic armor grown from flesh.\n[ABILITY: Regenerate - 2 MC, heal 2 HP]",
+            ElementType.Flesh, 2, 3);
+        fleshArmor.Abilities.Add(new CardAbility
+        {
+            Name = "Regenerate",
+            Description = "Heal 2 HP",
+            ManaCost = 2,
+            EffectType = EffectType.Heal,
+            EffectValue = 2,
+            RequiresTarget = false
+        });
+        deck.Add(fleshArmor);
+        
+        var fleshShield = CreateArmor("Bone Shell", "Protective covering.\n[ABILITY: Thorns - 2 MC, reflect damage]",
+            ElementType.Flesh, 2, 2);
+        fleshShield.Abilities.Add(new CardAbility
+        {
+            Name = "Thorns",
+            Description = "Reflect damage",
+            ManaCost = 2,
+            EffectType = EffectType.Damage,
+            EffectValue = 1,
+            RequiresTarget = false
+        });
+        deck.Add(fleshShield);
+        
+        // Toxin Armor
+        var toxinArmor = CreateArmor("Venom Scale", "Coated in deadly toxins.\n[ABILITY: Toxic Aura - 2 MC, poison attackers]",
+            ElementType.Toxin, 2, 3);
+        toxinArmor.Abilities.Add(new CardAbility
+        {
+            Name = "Toxic Aura",
+            Description = "Poison attackers",
+            ManaCost = 2,
+            EffectType = EffectType.Debuff,
+            EffectValue = 1,
+            RequiresTarget = false
+        });
+        deck.Add(toxinArmor);
+        
+        // Fire Armor
+        var fireArmor = CreateArmor("Heat Shield", "Warm to the touch.\n[ABILITY: Warmth - 2 MC, gain +2 health]",
+            ElementType.Thermodynamics, 2, 3);
+        fireArmor.Abilities.Add(new CardAbility
+        {
+            Name = "Warmth",
+            Description = "Gain +2 health",
+            ManaCost = 2,
+            EffectType = EffectType.Heal,
+            EffectValue = 2,
+            RequiresTarget = false
+        });
+        deck.Add(fireArmor);
         
         return deck;
     }

@@ -18,6 +18,7 @@
         <Converters:BoolToTurnTextConverter x:Key="BoolToTurnTextConverter"/>
         <Converters:BoolToTurnColorConverter x:Key="BoolToTurnColorConverter"/>
         <Converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <Converters:CanActivateAbilityConverter x:Key="CanActivateAbilityConverter"/>
         <Converters:CanAffordToOpacityConverter x:Key="CanAffordToOpacityConverter"/>
         <Converters:CanAffordToColorConverter x:Key="CanAffordToColorConverter"/>
         <Converters:ElementToColorConverter x:Key="ElementToColorConverter"/>
@@ -500,11 +501,17 @@
                             Background="{Binding PlayerWeapon.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
                             BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Width="55" Height="45"
                             Tag="{Binding PlayerWeapon}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            MouseLeftButtonDown="OnWeaponSlotLeftClick"
                             Drop="OnWeaponSlotDrop" DragEnter="OnWeaponSlotDragEnter" DragLeave="OnWeaponSlotDragLeave">
                         <Grid>
                             <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <TextBlock Text="{Binding PlayerWeapon.Name, FallbackValue=Weapon}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
                             </StackPanel>
+                            <Button Content="A" FontSize="8" FontWeight="Bold" Foreground="White"
+                                    Background="#6080C060" BorderThickness="0" Padding="2,0" Margin="0,0,2,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Visibility="{Binding PlayerWeapon, Converter={StaticResource CanActivateAbilityConverter}}"
+                                    Click="OnWeaponAbilityClick" ToolTip="Activate Ability"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
                                 <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerWeapon.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
                                 <TextBlock Text="{Binding PlayerWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0" Visibility="{Binding PlayerWeapon.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
@@ -518,11 +525,17 @@
                             Background="{Binding PlayerArmor.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#465046}" 
                             BorderBrush="#506050" BorderThickness="2" Margin="2" CornerRadius="5" Width="55" Height="45"
                             Tag="{Binding PlayerArmor}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            MouseLeftButtonDown="OnArmorSlotLeftClick"
                             Drop="OnArmorSlotDrop" DragEnter="OnArmorSlotDragEnter" DragLeave="OnArmorSlotDragLeave">
                         <Grid>
                             <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <TextBlock Text="{Binding PlayerArmor.Name, FallbackValue=Armor}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
                             </StackPanel>
+                            <Button Content="A" FontSize="8" FontWeight="Bold" Foreground="White"
+                                    Background="#6080C060" BorderThickness="0" Padding="2,0" Margin="0,0,2,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Visibility="{Binding PlayerArmor, Converter={StaticResource CanActivateAbilityConverter}}"
+                                    Click="OnArmorAbilityClick" ToolTip="Activate Ability"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
                                 <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerArmor.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
                                 <TextBlock Text="{Binding PlayerArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0" Visibility="{Binding PlayerArmor.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
@@ -536,11 +549,17 @@
                             Background="{Binding PlayerEventSlot.Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8A050}" 
                             BorderBrush="#D4B060" BorderThickness="2" Margin="2,4,2,2" CornerRadius="5" Width="55" Height="40"
                             Tag="{Binding PlayerEventSlot}" MouseRightButtonDown="OnEquipmentRightClick" AllowDrop="True"
+                            MouseLeftButtonDown="OnEventSlotLeftClick"
                             Drop="OnEventSlotDrop" DragEnter="OnEventSlotDragEnter" DragLeave="OnEventSlotDragLeave">
                         <Grid>
                             <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <TextBlock Text="{Binding PlayerEventSlot.Name, FallbackValue=Event}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
                             </StackPanel>
+                            <Button Content="A" FontSize="8" FontWeight="Bold" Foreground="White"
+                                    Background="#6080C060" BorderThickness="0" Padding="2,0" Margin="0,0,2,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Visibility="{Binding PlayerEventSlot, Converter={StaticResource CanActivateAbilityConverter}}"
+                                    Click="OnEventSlotAbilityClick" ToolTip="Activate Ability"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
                                 <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerEventSlot.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
                                 <TextBlock Text="{Binding PlayerEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0" Visibility="{Binding PlayerEventSlot.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
