@@ -144,6 +144,12 @@ public class MainViewModel : ViewModelBase
         // Cards with names starting with "combine_" will be used for combinations
         var customCards = CardFactory.GetCustomCombinationCards();
         _combinationLookup.LoadCombinationCards(customCards);
+        
+        // ALSO load combo cards from combos.json
+        var jsonCombos = ComboDataLoader.Instance.LoadCombos();
+        var allComboCards = jsonCombos.ToList();
+        _combinationLookup.LoadCombinationCards(allComboCards);
+        
         LoadSavedDecks();
     }
     

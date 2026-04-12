@@ -24,9 +24,11 @@ public class CombinationLookup
         foreach (var card in cards)
         {
             // Pre-made combo-only cards are stored in the deck
-            // They have IsComboOnly = true and IsCombinable = true
-            // They should have TemplateId in range 1000-2000
-            if (card.IsComboOnly && card.IsCombinable && card.TemplateId >= 1000)
+            // Combo cards from ComboDataLoader have:
+            // - IsComboOnly = true
+            // - IsCombinable = false (they are the RESULT, not ingredients)
+            // - TemplateId in range 10000+ (calculated as 10000 + minId * 1000 + maxId)
+            if (card.IsComboOnly && card.TemplateId >= 10000)
             {
                 _comboCardsByTemplateId[card.TemplateId] = card;
             }

@@ -5,6 +5,7 @@ using EffectType = MagicalDeckbuilder.Cards.EffectType;
 using TargetType = MagicalDeckbuilder.Cards.TargetType;
 using WeaponTargetType = MagicalDeckbuilder.Cards.WeaponTargetType;
 using MagicalDeckbuilder.Cards;
+using MagicalDeckbuilder.Combining;
 using MagicalDeckbuilder.Logging;
 
 namespace MagicalDeckbuilder.Game;
@@ -43,6 +44,44 @@ public static class CardFactory
             ErrorLogger.Instance.Error("CardFactory", "[Operation: CreateStarterDeck] Failed to create starter deck", ex);
             throw;
         }
+    }
+    
+    /// <summary>
+    /// Initialize the card combiner with all combo cards from combos.json
+    /// Call this once at game startup before using card combining
+    /// </summary>
+    public static void InitializeCardCombiner()
+    {
+        try
+        {
+            var combiner = new CardCombiner();
+            
+            // Load combo cards from JSON via the data loader
+            var comboCards = ComboDataLoader.Instance.LoadCombos();
+            
+            // Also load the hardcoded combo deck
+            var hardcodedCombos = CreateComboDeck();
+            
+            // Combine all combo cards
+            var allComboCards = comboCards.Concat(hardcodedCombos).ToList();
+            
+            // Load into the combiner
+            combiner.LoadCombinationCards(allComboCards);
+            
+            ErrorLogger.Instance.Info("CardFactory", $"[Operation: InitializeCardCombiner] Loaded {allComboCards.Count} combo cards");
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Instance.Error("CardFactory", "[Operation: InitializeCardCombiner] Failed to initialize card combiner", ex);
+        }
+    }
+    
+    /// <summary>
+    /// Get all combo cards from combos.json (for UI preview purposes)
+    /// </summary>
+    public static IReadOnlyList<Card> GetComboCards()
+    {
+        return ComboDataLoader.Instance.LoadCombos();
     }
     
     // ============ RADIATION (5 cards) ============
