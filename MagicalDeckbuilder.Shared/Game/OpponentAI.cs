@@ -31,6 +31,10 @@ public class OpponentAI
         public int? SlotIndex;
         public Card? TargetCard;
         public AIDecisionType Type;
+        
+        // For UseAbility decisions
+        public int? AbilityIndex; // Which ability to use (index in Abilities list)
+        public Card? AbilityTarget; // Target for the ability
     }
 
     public enum AIDecisionType
@@ -40,12 +44,18 @@ public class OpponentAI
         PlayArtifact,
         PlayWeapon,
         Attack,
+        UseAbility,
         EndTurn,
         Pass
     }
 
-    public AIDecision DecideAction(DeckManager deck, int currentMana, List<CreatureSlot> playerSlots)
+    public AIDecision DecideAction(DeckManager deck, int currentMana, List<CreatureSlot> playerSlots, List<CreatureSlot>? opponentSlots = null)
     {
+        // First check if any creature can use an ability
+        var abilityDecision = TryChooseAbilityDecision(deck, currentMana, playerSlots, opponentSlots);
+        if (abilityDecision.Type != AIDecisionType.Pass)
+            return abilityDecision;
+        
         return _difficulty switch
         {
             DifficultyLevel.Apprentice => ApprenticeLogic(deck, currentMana, playerSlots),
@@ -54,6 +64,58 @@ public class OpponentAI
             DifficultyLevel.Grandmaster => GrandmasterLogic(deck, currentMana, playerSlots),
             _ => ApprenticeLogic(deck, currentMana, playerSlots)
         };
+    }
+    
+    /// <summary>
+    /// Try to find a creature with an ability that can be used
+    /// </summary>
+    private AIDecision TryChooseAbilityDecision(DeckManager deck, int currentMana, List<CreatureSlot> playerSlots, List<CreatureSlot>? opponentSlots)
+    {
+        if (opponentSlots == null) return new AIDecision { Type = AIDecisionType.Pass };
+        
+        // Check opponent's creatures for usable abilities
+        for (int i = 0; i < opponentSlots.Count; i++)
+        {
+            var slot = opponentSlots[i];
+            if (slot?.Creature == null) continue;
+            
+            var card = slot.Creature;
+            
+            // Skip if already used ability this turn
+            if (card.Abilities == null || card.Abilities.Count == 0) continue;
+            
+            // Check each ability
+            for (int a = 0; a < card.Abilities.Count; a++)
+            {
+                var ability = card.Abilities[a];
+                if (ability.IsPassive) continue; // Skip passives
+                if (ability.ManaCost > currentMana) continue; // Not enough mana
+                
+                // Have ability - find target
+                Card? target = null;
+                
+                // Simple targeting: pick a random player creature as target if ability needs one
+                if (ability.RequiresTarget && playerSlots.Count > 0)
+                {
+                    var availableTargets = playerSlots.Where(s => s?.Creature != null).ToList();
+                    if (availableTargets.Count > 0)
+                    {
+                        target = availableTargets[_random.Next(availableTargets.Count)].Creature;
+                    }
+                }
+                
+                return new AIDecision
+                {
+                    Type = AIDecisionType.UseAbility,
+                    CardId = card.Id,
+                    SlotIndex = i,
+                    AbilityIndex = a,
+                    TargetCard = target
+                };
+            }
+        }
+        
+        return new AIDecision { Type = AIDecisionType.Pass };
     }
 
     private AIDecision ApprenticeLogic(DeckManager deck, int currentMana, List<CreatureSlot> playerSlots)

@@ -19,12 +19,12 @@ public class CombinationLookup
         
         foreach (var card in cards)
         {
-            // Pre-made combination cards should follow naming convention: 
-            // "combine_{id1}_{id2}" or use a prefix to identify them
-            if (card.Name.StartsWith("combine_", StringComparison.OrdinalIgnoreCase))
+            // Pre-made combo-only cards are stored in the deck
+            // They have IsComboOnly = true and IsCombinable = true
+            if (card.IsComboOnly && card.IsCombinable)
             {
-                // Extract the key from the name (e.g., "combine_abc123_def456")
-                var key = card.Name.ToLowerInvariant();
+                // Create a key from the card name in lowercase with underscores
+                var key = card.Name.ToLowerInvariant().Replace(" ", "_").Replace("'", "");
                 _combinationCards[key] = card;
             }
         }
@@ -45,14 +45,18 @@ public class CombinationLookup
             return result;
         }
 
-        // Try alternative naming patterns
-        // Pattern 2: combine_{name1}_{name2} (using sanitized card names)
-        var nameKey = $"combine_{SanitizeName(card1.Name)}_{SanitizeName(card2.Name)}".ToLowerInvariant();
+        // Try matching by checking combo card descriptions for the two base card names
+        // The combo card description contains "(combo X + Y)" format
+        var name1 = card1.Name.ToLowerInvariant();
+        var name2 = card2.Name.ToLowerInvariant();
         
-        // Check if we have any partial matches (names might not match exactly)
         foreach (var kvp in _combinationCards)
         {
-            if (kvp.Key.Contains(ids[0]) || kvp.Key.Contains(ids[1]))
+            var desc = kvp.Value.Description.ToLowerInvariant();
+            // Check if description contains both card names (with "combo" keyword)
+            if (desc.Contains("combo") && 
+                (desc.Contains(name1) || desc.Contains(name1.Replace(" ", ""))) &&
+                (desc.Contains(name2) || desc.Contains(name2.Replace(" ", ""))))
             {
                 return kvp.Value;
             }

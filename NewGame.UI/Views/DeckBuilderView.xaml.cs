@@ -18,6 +18,15 @@ public partial class DeckBuilderView : UserControl
     private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         _startPoint = e.GetPosition(null);
+        
+        // Set SelectedCard for preview
+        if (sender is Border border && border.DataContext is CardViewModel card)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                vm.SelectedCard = card;
+            }
+        }
     }
 
     private void Card_MouseMove(object sender, MouseEventArgs e)

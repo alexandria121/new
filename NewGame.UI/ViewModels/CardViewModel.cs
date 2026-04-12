@@ -202,6 +202,11 @@ public class CardViewModel : ViewModelBase
     public bool IsComboOnly => _card.IsComboOnly;
     public IReadOnlyList<CardEffect> Effects => _card.Effects;
     public IReadOnlyList<CardAbility> Abilities => _card.Abilities;
+    
+    /// <summary>
+    /// Track whether an ability has been used this turn
+    /// </summary>
+    public bool AbilityUsedThisTurn { get; set; }
 
     public string EffectsText => Effects.Count > 0 || Abilities.Count > 0
         ? string.Join(", ", Effects.Select(e => e.Name).Concat(Abilities.Select(a => a.Name)))

@@ -593,3 +593,69 @@ public class CardTypeToStatsVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts CardType to Visibility - visible if card should display Power value
+/// Weapons show Power, Creatures show Power, Armor/Armor/Event don't need P displayed, Blanks hide P
+/// </summary>
+public class CardTypeToPowerVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        try
+        {
+            if (value is CardType cardType)
+            {
+                return cardType switch
+                {
+                    CardType.Creature => Visibility.Visible,
+                    CardType.Weapon => Visibility.Visible,
+                    _ => Visibility.Collapsed
+                };
+            }
+            return Visibility.Collapsed;
+        }
+        catch
+        {
+            return Visibility.Collapsed;
+        }
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts CardType to Visibility - visible if card should display Health value
+/// Creatures and Armor show Health, Weapons don't need H, Blanks hide H/P
+/// </summary>
+public class CardTypeToHealthVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        try
+        {
+            if (value is CardType cardType)
+            {
+                return cardType switch
+                {
+                    CardType.Creature => Visibility.Visible,
+                    CardType.Armor => Visibility.Visible,
+                    _ => Visibility.Collapsed
+                };
+            }
+            return Visibility.Collapsed;
+        }
+        catch
+        {
+            return Visibility.Collapsed;
+        }
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

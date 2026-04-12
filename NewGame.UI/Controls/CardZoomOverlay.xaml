@@ -22,6 +22,8 @@
         <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
+        <Converters:CardTypeToPowerVisibilityConverter x:Key="CardTypeToPowerVisibilityConverter"/>
+        <Converters:CardTypeToHealthVisibilityConverter x:Key="CardTypeToHealthVisibilityConverter"/>
     </UserControl.Resources>
 
     <!-- Semi-transparent overlay background -->
@@ -160,13 +162,13 @@
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Power (for creatures/weapons) -->
+                                <!-- Power (for creatures) -->
                                 <Border Grid.Column="1" 
                                         Background="#503232"
                                         CornerRadius="8"
                                         Padding="10,4"
                                         Margin="5,0"
-                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
+                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="⚔" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="{Binding Power}" Foreground="White" FontSize="13" FontWeight="Bold"/>
@@ -184,7 +186,7 @@
                                         CornerRadius="8"
                                         Padding="10,4"
                                         Margin="5,0"
-                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
+                                        Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="♥" Foreground="{StaticResource HealthBrush}" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="{Binding Health}" Foreground="White" FontSize="13" FontWeight="Bold"/>

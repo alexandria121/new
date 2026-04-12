@@ -1,137 +1,141 @@
 {
   "metadata": {
-    "generated_at": "2026-04-06T19:09:01.072523+00:00",
+    "generated_at": "2026-04-12T02:16:19.750425+00:00",
     "commit_hash": "",
     "repo_name": "new",
     "depth_level": 1,
     "file_coverage_summary": {
-      "total_files": 41,
+      "total_files": 55,
       "analyzed": 0,
-      "not_analyzed": 41,
+      "not_analyzed": 55,
       "not_analyzed_by_reason": {
-        "other": 41
+        "other": 55
       }
     }
   },
-  "description": "Magical Deckbuilder is organized as a decoupled MVVM application where the WPF Presentation Layer communicates with an Application Controller (MVVM) that orchestrates interactions with core shared game logic. The primary flow is: user actions in the UI are handled via ViewModels in the Application Controller, which then update or query core systems — Game Mechanics Core for turn and character logic, Card & Deck System for creating/managing cards and decks, the Card Crafting Engine for combining cards, and the AI Strategy Module for opponent decisions — with updated state propagated back to the UI via data binding.",
+  "description": "This architecture represents a Digital Collectible Card Game (DCCG) built on the MVVM pattern. The main flow is driven by user interactions in the Presentation & Interaction Layer, which translates UI actions into commands that either affect the Game Simulation Engine for live matches or interact with the Asset & Deck Management system for deck customization. The Game Simulation Engine enforces rules and AI decision-making using Core Domain Models, while Persistence & Infrastructure handles serialization and storage of deck data separately from core logic.",
   "files": {},
   "methods_index": {},
   "components": [
     {
-      "name": "Presentation Layer",
-      "description": "Handles the visual rendering of the game and user interactions via WPF Views and custom Controls.",
+      "name": "Presentation & Interaction Layer",
+      "description": "The WPF-based MVVM layer that manages user input, screen navigation, and UI state. It coordinates between the user and the underlying game systems.",
       "key_entities": [],
-      "source_cluster_ids": [],
+      "source_cluster_ids": [
+        10,
+        11,
+        12,
+        13
+      ],
       "file_methods": [],
       "component_id": "1",
       "can_expand": false
     },
     {
-      "name": "Application Controller (MVVM)",
-      "description": "The central hub of the UI application, managing state, commands, and data flow between the UI and core logic.",
+      "name": "Game Simulation Engine",
+      "description": "The central logic hub responsible for enforcing game rules, processing turns, and executing AI opponent logic.",
       "key_entities": [],
-      "source_cluster_ids": [],
+      "source_cluster_ids": [
+        3,
+        4,
+        5,
+        9
+      ],
       "file_methods": [],
       "component_id": "2",
       "can_expand": false
     },
     {
-      "name": "Game Mechanics Core",
-      "description": "Defines the fundamental rules and entities of the game, including characters, health, and turn-based logic.",
+      "name": "Asset & Deck Management",
+      "description": "Handles the lifecycle of game assets, including the instantiation of cards from templates and the logical validation of player decks.",
       "key_entities": [],
-      "source_cluster_ids": [],
+      "source_cluster_ids": [
+        8,
+        14
+      ],
       "file_methods": [],
       "component_id": "3",
       "can_expand": false
     },
     {
-      "name": "Card & Deck System",
-      "description": "Manages the lifecycle of cards and decks, including creation, shuffling, and drawing mechanics.",
+      "name": "Core Domain Models",
+      "description": "Passive data structures representing the fundamental entities of the game, such as Cards and Decks.",
       "key_entities": [],
-      "source_cluster_ids": [],
+      "source_cluster_ids": [
+        0,
+        1,
+        2,
+        15
+      ],
       "file_methods": [],
       "component_id": "4",
       "can_expand": false
     },
     {
-      "name": "Card Crafting Engine",
-      "description": "Specialized logic for the card combination system, allowing players to merge cards into new variants.",
+      "name": "Persistence & Infrastructure",
+      "description": "Manages external system interactions, primarily file I/O for saving and loading player decks and global error logging.",
       "key_entities": [],
-      "source_cluster_ids": [],
+      "source_cluster_ids": [
+        6,
+        7,
+        16
+      ],
       "file_methods": [],
       "component_id": "5",
-      "can_expand": false
-    },
-    {
-      "name": "AI Strategy Module",
-      "description": "Provides automated decision-making for the opponent, including move selection and difficulty-based deck building.",
-      "key_entities": [],
-      "source_cluster_ids": [],
-      "file_methods": [],
-      "component_id": "6",
       "can_expand": false
     }
   ],
   "components_relations": [
     {
-      "relation": "Binds UI elements to ViewModel properties and executes user commands.",
-      "src_name": "Presentation Layer",
-      "dst_name": "Application Controller (MVVM)",
+      "relation": "Dispatches gameplay commands (e.g., PlayCard, EndTurn) to update game state",
+      "src_name": "Presentation & Interaction Layer",
+      "dst_name": "Game Simulation Engine",
       "src_id": "1",
       "dst_id": "2",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Updates character health/mana and manages turn transitions.",
-      "src_name": "Application Controller (MVVM)",
-      "dst_name": "Game Mechanics Core",
-      "src_id": "2",
+      "relation": "Requests card creation and deck validation during the deck-building process",
+      "src_name": "Presentation & Interaction Layer",
+      "dst_name": "Asset & Deck Management",
+      "src_id": "1",
       "dst_id": "3",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Manages player hand state and deck initialization via the CardFactory.",
-      "src_name": "Application Controller (MVVM)",
-      "dst_name": "Card & Deck System",
+      "relation": "Triggers save and load operations for user-created decks",
+      "src_name": "Presentation & Interaction Layer",
+      "dst_name": "Persistence & Infrastructure",
+      "src_id": "1",
+      "dst_id": "5",
+      "edge_count": 0,
+      "is_static": false
+    },
+    {
+      "relation": "Modifies and queries the state of card and deck entities during rule execution",
+      "src_name": "Game Simulation Engine",
+      "dst_name": "Core Domain Models",
       "src_id": "2",
       "dst_id": "4",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Triggers the combination of selected cards into new custom cards.",
-      "src_name": "Application Controller (MVVM)",
-      "dst_name": "Card Crafting Engine",
-      "src_id": "2",
-      "dst_id": "5",
-      "edge_count": 0,
-      "is_static": false
-    },
-    {
-      "relation": "Requests opponent move calculations and difficulty-based deck generation.",
-      "src_name": "Application Controller (MVVM)",
-      "dst_name": "AI Strategy Module",
-      "src_id": "2",
-      "dst_id": "6",
-      "edge_count": 0,
-      "is_static": false
-    },
-    {
-      "relation": "Utilizes DeckManagers to track character resources and in-play cards.",
-      "src_name": "Game Mechanics Core",
-      "dst_name": "Card & Deck System",
+      "relation": "Instantiates card objects and organizes them into deck structures",
+      "src_name": "Asset & Deck Management",
+      "dst_name": "Core Domain Models",
       "src_id": "3",
       "dst_id": "4",
       "edge_count": 0,
       "is_static": false
     },
     {
-      "relation": "Evaluates card values for move selection and populates opponent decks.",
-      "src_name": "AI Strategy Module",
-      "dst_name": "Card & Deck System",
-      "src_id": "6",
+      "relation": "Serializes and deserializes deck data for long-term storage",
+      "src_name": "Persistence & Infrastructure",
+      "dst_name": "Core Domain Models",
+      "src_id": "5",
       "dst_id": "4",
       "edge_count": 0,
       "is_static": false

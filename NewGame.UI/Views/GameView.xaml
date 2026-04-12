@@ -26,6 +26,8 @@
         <Converters:TypeToColorConverter x:Key="TypeToColorConverter"/>
         <Converters:EffectTypeToIconConverter x:Key="EffectTypeToIconConverter"/>
         <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
+        <Converters:CardTypeToPowerVisibilityConverter x:Key="CardTypeToPowerVisibilityConverter"/>
+        <Converters:CardTypeToHealthVisibilityConverter x:Key="CardTypeToHealthVisibilityConverter"/>
         <Converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
         <Converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Converters:RarityToGradientConverter x:Key="RarityToGradientConverter"/>
@@ -94,23 +96,61 @@
                         <TextBlock Text=" | Mana: " Foreground="{StaticResource ManaBrush}" FontSize="12" Margin="15,0,0,0"/>
                         <TextBlock Text="{Binding PlayerMana}" Foreground="{StaticResource ManaBrush}" FontSize="12" FontWeight="Bold"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Background="#2A1A1A" BorderBrush="#4A2A2A" BorderThickness="1" CornerRadius="3" Width="32" Height="44" Margin="2">
-                            <TextBlock Text="?" Foreground="#505050" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </Border>
-                        <Border Background="#2A1A1A" BorderBrush="#4A2A2A" BorderThickness="1" CornerRadius="3" Width="32" Height="44" Margin="2">
-                            <TextBlock Text="?" Foreground="#505050" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </Border>
-                        <Border Background="#2A1A1A" BorderBrush="#4A2A2A" BorderThickness="1" CornerRadius="3" Width="32" Height="44" Margin="2">
-                            <TextBlock Text="?" Foreground="#505050" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </Border>
-                        <Border Background="#2A1A1A" BorderBrush="#4A2A2A" BorderThickness="1" CornerRadius="3" Width="32" Height="44" Margin="2">
-                            <TextBlock Text="?" Foreground="#505050" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </Border>
-                        <Border Background="#2A1A1A" BorderBrush="#4A2A2A" BorderThickness="1" CornerRadius="3" Width="32" Height="44" Margin="2">
-                            <TextBlock Text="?" Foreground="#505050" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </Border>
-                    </StackPanel>
+                    <!-- Show opponent hand cards if visible (Jar of Eyes), otherwise show hidden cards -->
+                    <ItemsControl ItemsSource="{Binding OpponentHand}" Visibility="{Binding OpponentHandVisible, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="80" Height="110" Margin="2">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" Foreground="White" FontSize="9" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="60"/>
+                                            <Border Background="{StaticResource ManaBrush}" CornerRadius="3" Padding="3,1" Margin="4,0,0,0">
+                                                <TextBlock Text="{Binding ManaCost}" Foreground="White" FontSize="8" FontWeight="Bold"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <Border Grid.Row="1" Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}" Margin="2,4" CornerRadius="2">
+                                            <TextBlock Text="{Binding Type}" Foreground="#80FFFFFF" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold" 
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,8,0"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,0,0"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- Show hidden cards when opponent hand is not visible - dynamic count based on OpponentHand -->
+                    <ItemsControl ItemsSource="{Binding OpponentHand}" Visibility="{Binding OpponentHandVisible, Converter={StaticResource InverseBoolToVisibilityConverter}, FallbackValue=Visible}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#2A1A1A" BorderBrush="#4A2A2A" BorderThickness="1" CornerRadius="3" Width="80" Height="110" Margin="2">
+                                    <TextBlock Text="?" Foreground="#505050" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" FontWeight="Bold"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
 
                 <!-- Opponent Equipment (25%) -->
@@ -125,10 +165,10 @@
                                 <TextBlock Text="{Binding OpponentEventSlot.Name, FallbackValue=Event}" Foreground="White" HorizontalAlignment="Center" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="54"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,3">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OpponentEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OpponentEventSlot.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentEventSlot.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding OpponentEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0" Visibility="{Binding OpponentEventSlot.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentEventSlot.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding OpponentEventSlot.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentEventSlot.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -141,10 +181,10 @@
                                 <TextBlock Text="{Binding OpponentWeapon.Name, FallbackValue=Weapon}" Foreground="White" HorizontalAlignment="Center" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="54"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,3">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OpponentWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OpponentWeapon.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentWeapon.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding OpponentWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0" Visibility="{Binding OpponentWeapon.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentWeapon.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding OpponentWeapon.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentWeapon.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -157,10 +197,10 @@
                                 <TextBlock Text="{Binding OpponentArmor.Name, FallbackValue=Armor}" Foreground="White" HorizontalAlignment="Center" FontSize="7" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="54"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,3">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OpponentArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OpponentArmor.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentArmor.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding OpponentArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="8" FontWeight="Bold" Margin="1,0,3,0" Visibility="{Binding OpponentArmor.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentArmor.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding OpponentArmor.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="8" FontWeight="Bold" Visibility="{Binding OpponentArmor.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -247,12 +287,15 @@
                                                 Visibility="{Binding IsCombinable, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}">
                                             <TextBlock Text="C" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
                                         </Border>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4"
-                                            Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
-                                            <TextBlock Text="P:" Foreground="#FF6464" FontSize="9" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Power, FallbackValue=0}" Foreground="#FF6464" FontSize="9" FontWeight="Bold" Margin="2,0,5,0"/>
-                                            <TextBlock Text="H:" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Health, FallbackValue=0}" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                            <TextBlock Text="P:" Foreground="#FF6464" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Power, FallbackValue=0}" Foreground="#FF6464" FontSize="9" FontWeight="Bold" Margin="2,0,5,0"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="H:" Foreground="#64FF64" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Health, FallbackValue=0}" Foreground="#64FF64" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -310,12 +353,15 @@
                                                 Visibility="{Binding IsCombinable, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}">
                                             <TextBlock Text="C" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
                                         </Border>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4"
-                                            Visibility="{Binding Type, Converter={StaticResource CardTypeToStatsVisibilityConverter}, FallbackValue=Collapsed}">
-                                            <TextBlock Text="P:" Foreground="#FF6464" FontSize="9" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Power, FallbackValue=0}" Foreground="#FF6464" FontSize="9" FontWeight="Bold" Margin="2,0,5,0"/>
-                                            <TextBlock Text="H:" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Health, FallbackValue=0}" Foreground="#64FF64" FontSize="9" FontWeight="Bold"/>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                            <TextBlock Text="P:" Foreground="#FF6464" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Power, FallbackValue=0}" Foreground="#FF6464" FontSize="9" FontWeight="Bold" Margin="2,0,5,0"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="H:" Foreground="#64FF64" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Health, FallbackValue=0}" Foreground="#64FF64" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -333,7 +379,7 @@
                                 <Border Background="{Binding Element, Converter={StaticResource ElementToColorConverter}, FallbackValue=#C8C864}" 
                                         BorderBrush="#D4D474" BorderThickness="2" Margin="3" CornerRadius="5" Width="80" Height="70"
                                         Tag="{Binding}" AllowDrop="True" Drop="OnArtifactSlotDrop" DragEnter="OnArtifactSlotDragEnter" DragOver="OnArtifactSlotDragOver" DragLeave="OnArtifactSlotDragLeave" MouseMove="OnArtifactSlotMouseMove"
-                                        MouseRightButtonDown="OnFieldCardRightClick">
+                                        MouseRightButtonDown="OnFieldCardRightClick" MouseLeftButtonDown="OnArtifactSlotLeftClick">
                                     <Grid>
                                         <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,3,0,0">
                                             <TextBlock Text="{Binding Name, FallbackValue=Artifact}" Foreground="White" HorizontalAlignment="Center" FontSize="8" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="72"/>
@@ -422,10 +468,14 @@
                                             <TextBlock Text="Combinable" Foreground="#64FF64" FontSize="6" FontWeight="Bold"/>
                                         </Border>
                                         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,8,0"/>
-                                            <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,0,0"/>
+                                            <TextBlock Text="P:" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Power}" Foreground="{StaticResource DangerBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,8,0"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="H:" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                            <TextBlock Text="{Binding Health}" Foreground="{StaticResource HealthBrush}" FontSize="9" FontWeight="Bold" Margin="2,0,0,0"
+                                                       Visibility="{Binding Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -456,10 +506,10 @@
                                 <TextBlock Text="{Binding PlayerWeapon.Name, FallbackValue=Weapon}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerWeapon.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerWeapon.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding PlayerWeapon.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0" Visibility="{Binding PlayerWeapon.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerWeapon.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding PlayerWeapon.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerWeapon.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -474,10 +524,10 @@
                                 <TextBlock Text="{Binding PlayerArmor.Name, FallbackValue=Armor}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerArmor.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerArmor.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding PlayerArmor.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0" Visibility="{Binding PlayerArmor.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerArmor.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding PlayerArmor.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerArmor.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -492,10 +542,10 @@
                                 <TextBlock Text="{Binding PlayerEventSlot.Name, FallbackValue=Event}" Foreground="White" HorizontalAlignment="Center" FontSize="6" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="48"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,2">
-                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0"/>
-                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding PlayerEventSlot.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold"/>
+                                <TextBlock Text="P:" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerEventSlot.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding PlayerEventSlot.Power, FallbackValue=0}" Foreground="#FF6464" FontSize="7" FontWeight="Bold" Margin="1,0,2,0" Visibility="{Binding PlayerEventSlot.Type, Converter={StaticResource CardTypeToPowerVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="H:" Foreground="#64FF64" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerEventSlot.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
+                                <TextBlock Text="{Binding PlayerEventSlot.Health, FallbackValue=0}" Foreground="#64FF64" FontSize="7" FontWeight="Bold" Visibility="{Binding PlayerEventSlot.Type, Converter={StaticResource CardTypeToHealthVisibilityConverter}, FallbackValue=Collapsed}"/>
                             </StackPanel>
                         </Grid>
                     </Border>

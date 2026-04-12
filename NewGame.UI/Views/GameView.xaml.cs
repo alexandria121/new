@@ -832,6 +832,58 @@ public partial class GameView : UserControl
         }
     }
 
+    /// <summary>
+    /// Handle left-click on artifact to activate ability
+    /// </summary>
+    private void OnArtifactSlotLeftClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is Border cardBorder)
+        {
+            // Check if there's a card in the slot
+            if (!(cardBorder.Tag is CardViewModel card))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            LogToFile($"[OnArtifactSlotLeftClick] Card: {card.Name}, Abilities: {card.Abilities.Count}");
+
+            // If we're in ability targeting mode, this card is the target
+            if (ViewModel?.IsSelectingTarget == true)
+            {
+                ViewModel.ExecuteAbilityOnTarget(card);
+                e.Handled = true;
+                return;
+            }
+
+            // If card has abilities, activate the first one (for artifacts with abilities like Brain Altering Powder)
+            if (card.Abilities != null && card.Abilities.Count > 0)
+            {
+                // Log what abilities exist for debugging
+                foreach (var ab in card.Abilities)
+                {
+                    LogToFile($"[OnArtifactSlotLeftClick] Found ability: {ab.Name}, IsPassive: {ab.IsPassive}");
+                }
+                
+                // For artifacts, try to find a non-passive ability; if none exist, use first ability
+                var ability = card.Abilities.FirstOrDefault(a => !a.IsPassive) ?? card.Abilities.FirstOrDefault();
+                if (ability != null)
+                {
+                    LogToFile($"[OnArtifactSlotLeftClick] Starting ability: {ability.Name}, RequiresTarget: {ability.RequiresTarget}");
+                    ViewModel?.StartAbilityTargeting(ability, card);
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else
+            {
+                LogToFile($"[OnArtifactSlotLeftClick] No abilities found");
+            }
+
+            e.Handled = true;
+        }
+    }
+
     // ========== Manual Card Zoom Control ==========
     private void ShowCardZoom()
     {

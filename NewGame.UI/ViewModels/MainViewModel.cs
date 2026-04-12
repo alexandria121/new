@@ -20,6 +20,21 @@ using SavedDeckType = MagicalDeckbuilder.Storage.DeckType;
 
 namespace NewGame.UI.ViewModels;
 
+/// <summary>
+/// Tracks a temporary effect that expires after a certain number of turns
+/// </summary>
+public class TemporaryEffect
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string EffectName { get; set; } = "";
+    public string TargetCardId { get; set; } = ""; // Card being affected
+    public string TargetCardName { get; set; } = "";
+    public string StatusEffect { get; set; } = ""; // e.g., "CannotAttack", "Weakened", "Buffed"
+    public int RemainingTurns { get; set; } // How many turns remain (0 = expires)
+    public bool IsFromOpponent { get; set; } // true if effect came from opponent
+    public CardAbility? SourceAbility { get; set; } // The ability that created this effect
+}
+
 public class MainViewModel : ViewModelBase
 {
     private readonly CombinationLookup _combinationLookup = new();
@@ -61,7 +76,13 @@ public class MainViewModel : ViewModelBase
     private CardViewModel? _abilitySourceCard;
     private CardViewModel? _buddingFirstTarget; // For two-stage targeting (Budding)
     private bool _waitingForSecondTarget; // For two-stage targeting
+    
+    // Temporary effect tracking
+    private readonly List<TemporaryEffect> _temporaryEffects = new();
 
+    // Jar of Eyes effect - tracks if opponent's hand is visible
+    private bool _opponentHandVisible = false;
+    
     // Card sorting options
     private string _selectedSortOption = "Element";
     private readonly List<string> _sortOptions = new() { "Element", "Type" };
@@ -93,7 +114,7 @@ public class MainViewModel : ViewModelBase
         EditDeckCommand = new RelayCommand<SavedDeckViewModel>(EditDeck);
         DeleteDeckCommand = new RelayCommand<SavedDeckViewModel>(DeleteDeck);
         NewDeckCommand = new RelayCommand(NewDeck);
-        SaveDeckCommand = new RelayCommand(SaveDeck, () => _hasUnsavedDeckChanges);
+        SaveDeckCommand = new RelayCommand(SaveDeck, () => PlayerDeckCards.Count > 0);
         SortCardsCommand = new RelayCommand(SortCards);
 
         var allCards = CardFactory.CreateStarterDeck();
@@ -297,6 +318,7 @@ public class MainViewModel : ViewModelBase
     public ObservableCollection<CardViewModel> AvailableCards { get; }
     public ObservableCollection<CardViewModel> MenuCards { get; }
     public ObservableCollection<CardViewModel> PlayerHand { get; } = new();
+    public ObservableCollection<CardViewModel> OpponentHand { get; } = new();
     public ObservableCollection<CardViewModel> CustomCards { get; } = new();
     public ObservableCollection<CardViewModel> PlayerDeckCards { get; } = new();
     public DeckManager PlayerDeck { get; }
@@ -335,6 +357,13 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     public void StartAbilityTargeting(CardAbility ability, CardViewModel sourceCard)
     {
+        // Check if ability was already used this turn
+        if (sourceCard.AbilityUsedThisTurn)
+        {
+            AddBattleLog($"{ability.Name} was already used this turn!", BattleLogEntryType.Info);
+            return;
+        }
+        
         // For Budding, cost is the spell cost (stored separately)
         int cost = ability.ManaCost > 0 ? ability.ManaCost : sourceCard.ManaCost;
         
@@ -359,13 +388,24 @@ public class MainViewModel : ViewModelBase
         // Determine targeting mode based on ability
         else if (ability.RequiresTarget)
         {
-            AddBattleLog($"Select target for {ability.Name}...", BattleLogEntryType.Info);
+            // Custom targeting message based on effect type
+            string targetMessage = ability.EffectType switch
+            {
+                EffectType.Infect => $"Click on OPPONENT creature to infect with {ability.Name}!",
+                EffectType.Damage => $"Click on target creature for {ability.Name}...",
+                EffectType.Debuff => $"Click on target creature for {ability.Name}...",
+                EffectType.Heal => $"Click on target creature for {ability.Name}...",
+                EffectType.DisableAttack => $"Click on target creature for {ability.Name}...",
+                _ => $"Select target for {ability.Name}..."
+            };
+            AddBattleLog(targetMessage, BattleLogEntryType.Info);
             OnPropertyChanged(nameof(IsSelectingTarget));
         }
         else
         {
             // Execute immediately for non-targeted abilities (like Search)
             ExecuteAbility(ability, sourceCard, null);
+            sourceCard.AbilityUsedThisTurn = true;
             _activeAbility = null;
             _abilitySourceCard = null;
             OnPropertyChanged(nameof(IsSelectingTarget));
@@ -403,7 +443,30 @@ public class MainViewModel : ViewModelBase
             }
         }
 
+        // For Infect ability, require targeting an opponent creature
+        if (_activeAbility.EffectType == EffectType.Infect)
+        {
+            // Find target's slot index - FieldSlots[0-5] are opponent, [6-11] are player
+            int targetSlotIndex = -1;
+            for (int i = 0; i < FieldSlots.Length; i++)
+            {
+                if (FieldSlots[i]?.Id == target.Id)
+                {
+                    targetSlotIndex = i;
+                    break;
+                }
+            }
+            
+            // Must target opponent creature (slots 0-5)
+            if (targetSlotIndex < 0 || targetSlotIndex > 5)
+            {
+                AddBattleLog("Select an OPPONENT creature to infect!", BattleLogEntryType.Info);
+                return; // Don't execute, keep targeting mode
+            }
+        }
+
         ExecuteAbility(_activeAbility, _abilitySourceCard, target);
+        _abilitySourceCard.AbilityUsedThisTurn = true;
         
         _activeAbility = null;
         _abilitySourceCard = null;
@@ -501,7 +564,22 @@ public class MainViewModel : ViewModelBase
                 PlayerMana = Math.Min(PlayerMana + ability.EffectValue, PlayerMaxMana);
                 AddBattleLog($"{source.Name} grants +{ability.EffectValue} max mana!", BattleLogEntryType.Info);
                 break;
-
+            
+            case EffectType.EldritchSummon:
+                // Call of the Deep - track duration, summon on last turn
+                _temporaryEffects.Add(new TemporaryEffect
+                {
+                    EffectName = ability.Name,
+                    TargetCardId = source.Id,
+                    TargetCardName = source.Name,
+                    StatusEffect = "EldritchSummon",
+                    RemainingTurns = ability.Duration,
+                    IsFromOpponent = false,
+                    SourceAbility = ability
+                });
+                AddBattleLog($"{source.Name} begins the ritual! Eldritch creature will be summoned in {ability.Duration} turn(s).", BattleLogEntryType.Info);
+                break;
+            
             case EffectType.DisableAttack:
                 if (target != null)
                 {
@@ -516,6 +594,97 @@ public class MainViewModel : ViewModelBase
                     target.AddStatusEffect("Infected");
                     AddBattleLog($"{source.Name} adds {ability.EffectValue} infection counter(s) to {target.Name}!", BattleLogEntryType.Debuff);
                 }
+                break;
+            
+            case EffectType.RevealHand:
+                // Jar of Eyes - makes opponent's hand visible for one turn
+                OpponentHandVisible = true;
+                _temporaryEffects.Add(new TemporaryEffect
+                {
+                    EffectName = ability.Name,
+                    TargetCardId = "PLAYER",
+                    TargetCardName = "Opponent Hand",
+                    StatusEffect = "RevealHand",
+                    RemainingTurns = 1,
+                    IsFromOpponent = false,
+                    SourceAbility = ability
+                });
+                AddBattleLog($"{source.Name} reveals the opponent's hand!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Heal:
+            case EffectType.HealSelf:
+                // Heal target creature or self
+                if (target != null)
+                {
+                    target.HealDamage(-ability.EffectValue); // Negative = heal
+                    AddBattleLog($"{source.Name} heals {target.Name} for {ability.EffectValue} HP!", BattleLogEntryType.Info);
+                }
+                else if (ability.EffectType == EffectType.HealSelf)
+                {
+                    // Heal self (source creature)
+                    source.HealDamage(-ability.EffectValue);
+                    AddBattleLog($"{source.Name} heals itself for {ability.EffectValue} HP!", BattleLogEntryType.Info);
+                }
+                break;
+                
+            case EffectType.DrawCard:
+                // Draw extra cards to hand
+                PlayerDeck.DrawCards(ability.EffectValue);
+                RefreshHand();
+                AddBattleLog($"{source.Name} draws {ability.EffectValue} card(s)!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.ManaGain:
+                // Gain mana immediately
+                PlayerMana += ability.EffectValue;
+                AddBattleLog($"{source.Name} gains {ability.EffectValue} mana!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Shield:
+            case EffectType.ShieldSelf:
+                // Add shield status effect
+                if (target != null)
+                {
+                    target.AddStatusEffect("Shielded");
+                    AddBattleLog($"{source.Name} shields {target.Name}!", BattleLogEntryType.Info);
+                }
+                else if (ability.EffectType == EffectType.ShieldSelf)
+                {
+                    source.AddStatusEffect("Shielded");
+                    AddBattleLog($"{source.Name} shields itself!", BattleLogEntryType.Info);
+                }
+                break;
+                
+            case EffectType.Destroy:
+                // Destroy target (remove from field)
+                if (target != null)
+                {
+                    AddBattleLog($"{source.Name} destroys {target.Name}!", BattleLogEntryType.Damage);
+                    // Mark for removal - actual removal happens in game loop
+                    target.ApplyDamage(999); // High damage to ensure death
+                }
+                break;
+                
+            case EffectType.Transform:
+                // Transform target into something else (Dwarf Star Spawn -> Greater Star Spawn)
+                // For Dwarf Star Spawn: creates a delayed transformation after 2 turns
+                _temporaryEffects.Add(new TemporaryEffect
+                {
+                    EffectName = ability.Name,
+                    TargetCardId = source.Id,
+                    TargetCardName = source.Name,
+                    StatusEffect = "Transforming",
+                    RemainingTurns = 2, // Transformation happens after 2 turns
+                    IsFromOpponent = false,
+                    SourceAbility = ability
+                });
+                AddBattleLog($"{source.Name} begins to transform! Will become Greater Star Spawn in 2 turns.", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Biteback:
+                // Counterattack when attacked - handled in combat resolution
+                AddBattleLog($"{source.Name} has biteback ability!", BattleLogEntryType.Info);
                 break;
 
             default:
@@ -532,10 +701,19 @@ public class MainViewModel : ViewModelBase
         target.AddStatusEffect("CannotAttack");
         AddBattleLog($"{source.Name} disables {target.Name}'s attacks!", BattleLogEntryType.Debuff);
         
-        // If it's temporary, schedule removal
+        // If it's temporary, track for removal
         if (ability.IsTemporary && ability.Duration > 0)
         {
-            // Would need turn-based tracking to remove after duration
+            _temporaryEffects.Add(new TemporaryEffect
+            {
+                EffectName = ability.Name,
+                TargetCardId = target.Id,
+                TargetCardName = target.Name,
+                StatusEffect = "CannotAttack",
+                RemainingTurns = ability.Duration,
+                IsFromOpponent = false,
+                SourceAbility = ability
+            });
             AddBattleLog($"(Effect lasts {ability.Duration} turns)", BattleLogEntryType.Info);
         }
     }
@@ -553,12 +731,27 @@ public class MainViewModel : ViewModelBase
             // Add turn-based effect tracking
             AddBattleLog($"Whiteout begins! {damage} damage to all creatures for {ability.Duration} turns.", BattleLogEntryType.Info);
             
+            // Track this as a temporary effect (applied each turn)
+            if (ability.IsTemporary && ability.Duration > 0)
+            {
+                _temporaryEffects.Add(new TemporaryEffect
+                {
+                    EffectName = "Whiteout",
+                    TargetCardId = "ALL_CREATURES", // Special - affects all
+                    TargetCardName = "All Creatures",
+                    StatusEffect = "WhiteoutDamage",
+                    RemainingTurns = ability.Duration,
+                    IsFromOpponent = true,
+                    SourceAbility = ability
+                });
+            }
+            
             // Apply first tick immediately
             ApplyWhiteoutTick(source, damage);
             return;
         }
         
-        if (ability.EffectType == EffectType.DamageToAllEnemyCreatures)
+        if (ability.EffectType == EffectType.DamageToAllEnemyCreatures || ability.EffectType == EffectType.DamageToAllCreatures)
         {
             // Damage all opponent creatures
             for (int i = 0; i < 6; i++)
@@ -569,6 +762,22 @@ public class MainViewModel : ViewModelBase
                 }
             }
             AddBattleLog($"{source.Name} deals {damage} damage to all enemy creatures!", BattleLogEntryType.Damage);
+            
+            // Track as temporary effect if applicable
+            if (ability.IsTemporary && ability.Duration > 0)
+            {
+                _temporaryEffects.Add(new TemporaryEffect
+                {
+                    EffectName = ability.Name,
+                    TargetCardId = "OPPONENT_CREATURES",
+                    TargetCardName = "Opponent Creatures",
+                    StatusEffect = "DamageAura",
+                    RemainingTurns = ability.Duration,
+                    IsFromOpponent = false,
+                    SourceAbility = ability
+                });
+                AddBattleLog($"(Effect lasts {ability.Duration} turns)", BattleLogEntryType.Info);
+            }
         }
     }
 
@@ -577,11 +786,13 @@ public class MainViewModel : ViewModelBase
     /// </summary>
     private void ApplyWhiteoutTick(CardViewModel source, int baseDamage)
     {
-        int damage = baseDamage;
+        int totalDamageDealt = 0;
+        int damageThisCreature;
         
         // Check each creature's element - reduce damage for RAD, TOX, THE
         for (int i = 0; i < 6; i++)
         {
+            // Process opponent creature
             var oppCreature = OpponentCreatureSlots[i];
             if (oppCreature != null)
             {
@@ -591,16 +802,18 @@ public class MainViewModel : ViewModelBase
                     element == ElementType.Toxin || 
                     element == ElementType.Thermodynamics)
                 {
-                    damage = Math.Max(1, baseDamage / 2);
+                    damageThisCreature = Math.Max(1, baseDamage / 2);
                 }
                 else
                 {
-                    damage = baseDamage;
+                    damageThisCreature = baseDamage;
                 }
                 
-                oppCreature.ApplyDamage(damage);
+                oppCreature.ApplyDamage(damageThisCreature);
+                totalDamageDealt += damageThisCreature;
             }
             
+            // Process player creature at same index
             var playerCreature = PlayerCreatureSlotsObs[i];
             if (playerCreature != null)
             {
@@ -609,18 +822,20 @@ public class MainViewModel : ViewModelBase
                     element == ElementType.Toxin || 
                     element == ElementType.Thermodynamics)
                 {
-                    damage = Math.Max(1, baseDamage / 2);
+                    damageThisCreature = Math.Max(1, baseDamage / 2);
                 }
                 else
                 {
-                    damage = baseDamage;
+                    damageThisCreature = baseDamage;
                 }
                 
-                playerCreature.ApplyDamage(damage);
+                playerCreature.ApplyDamage(damageThisCreature);
+                totalDamageDealt += damageThisCreature;
             }
         }
         
-        AddBattleLog($"Whiteout deals {damage} damage (reduced for RAD/TOX/THE)!", BattleLogEntryType.Damage);
+        // Log the base damage and note about reduction
+        AddBattleLog($"Whiteout deals {baseDamage} damage to all creatures (RAD/TOX/THE: half)!", BattleLogEntryType.Damage);
     }
 
     private void ApplyDamageToTarget(CardAbility ability, CardViewModel source, CardViewModel target)
@@ -644,14 +859,23 @@ public class MainViewModel : ViewModelBase
         if (!foundTarget)
         {
             // For now, apply to opponent directly or their creatures
-            OpponentHealth -= damage;
-            AddBattleLog($"{source.Name} deals {damage} damage to opponent!", BattleLogEntryType.Damage);
+            ApplyDamageToOpponent(damage, source.Name);
         }
     }
 
     private void ApplyBuffToTarget(CardAbility ability, CardViewModel source, CardViewModel target)
     {
         int value = ability.EffectValue;
+        int duration = ability.Duration;
+        
+        // Check for Temperature Gradient - doubles buff amount and duration
+        // Check if any creature on the field has Temperature Gradient that matches the buff type
+        value = ApplyTemperatureGradientBonus(value, ability, source, out int bonusDuration);
+        if (bonusDuration > 0)
+        {
+            duration = bonusDuration;
+            value *= 2; // Double the buff amount
+        }
         
         // Find target in field slots and apply buff
         for (int i = 0; i < FieldSlots.Length; i++)
@@ -668,9 +892,71 @@ public class MainViewModel : ViewModelBase
                     target.HealDamage(-value);
                 }
                 AddBattleLog($"{source.Name} buffs {target.Name} by +{value}!", BattleLogEntryType.PlayerAction);
+                
+                // Track temporary buffs
+                if (ability.IsTemporary && duration > 0)
+                {
+                    _temporaryEffects.Add(new TemporaryEffect
+                    {
+                        EffectName = ability.Name,
+                        TargetCardId = target.Id,
+                        TargetCardName = target.Name,
+                        StatusEffect = "Buffed",
+                        RemainingTurns = duration,
+                        IsFromOpponent = false,
+                        SourceAbility = ability
+                    });
+                    AddBattleLog($"(Temporary buff lasts {duration} turns)", BattleLogEntryType.Info);
+                }
                 break;
             }
         }
+    }
+    
+    /// <summary>
+    /// Check if any creature has Temperature Gradient and apply bonus (doubling buff amount and duration)
+    /// </summary>
+    private int ApplyTemperatureGradientBonus(int baseValue, CardAbility ability, CardViewModel source, out int bonusDuration)
+    {
+        bonusDuration = ability.Duration;
+        
+        // Check all creatures on field for Temperature Gradient
+        for (int i = 0; i < FieldSlots.Length; i++)
+        {
+            var creature = FieldSlots[i];
+            if (creature?.Card == null) continue;
+            
+            string? gradient = creature.Card.TemperatureGradient;
+            if (string.IsNullOrEmpty(gradient)) continue;
+            
+            // Heat Mote ("up") doubles Power buffs
+            // Cold Mote ("down") doubles Health buffs
+            // TempMote ("both") doubles both
+            bool applyBonus = false;
+            
+            if (ability.EffectType == EffectType.BuffPower && (gradient == "up" || gradient == "both"))
+            {
+                applyBonus = true;
+            }
+            else if (ability.EffectType == EffectType.BuffHealth && (gradient == "down" || gradient == "both"))
+            {
+                applyBonus = true;
+            }
+            else if (ability.EffectType == EffectType.Buff && (gradient == "both" || gradient == "up" || gradient == "down"))
+            {
+                // Generic buff - apply if "both"
+                applyBonus = (gradient == "both");
+            }
+            
+            if (applyBonus)
+            {
+                LogToFile($"[ApplyTemperatureGradientBonus] {creature.Name} has {gradient}, doubling buff!");
+                AddBattleLog($"{creature.Name}'s Temperature Gradient doubles the buff!", BattleLogEntryType.Info);
+                return baseValue * 2;
+            }
+        }
+        
+        return baseValue;
     }
 
     private void ApplyDebuffToTarget(CardAbility ability, CardViewModel source, CardViewModel target)
@@ -686,7 +972,27 @@ public class MainViewModel : ViewModelBase
                 {
                     target.AddStatusEffect("Weakened");
                 }
+                if (ability.EffectType == EffectType.Debuff || ability.EffectType == EffectType.DebuffHealth)
+                {
+                    target.AddStatusEffect("Weakened");
+                }
                 AddBattleLog($"{source.Name} debuffs {target.Name} by -{value}!", BattleLogEntryType.OpponentAction);
+                
+                // Track temporary debuffs
+                if (ability.IsTemporary && ability.Duration > 0)
+                {
+                    _temporaryEffects.Add(new TemporaryEffect
+                    {
+                        EffectName = ability.Name,
+                        TargetCardId = target.Id,
+                        TargetCardName = target.Name,
+                        StatusEffect = "Weakened",
+                        RemainingTurns = ability.Duration,
+                        IsFromOpponent = true,
+                        SourceAbility = ability
+                    });
+                    AddBattleLog($"(Temporary debuff lasts {ability.Duration} turns)", BattleLogEntryType.Info);
+                }
                 break;
             }
         }
@@ -814,6 +1120,133 @@ public class MainViewModel : ViewModelBase
         };
         BattleLog.Add(entry);
         LogToFile($"[BattleLog] Turn {TurnCount}: {message}");
+    }
+    
+    /// <summary>
+    /// Apply damage to player, accounting for armor damage reduction and special effects
+    /// </summary>
+    private void ApplyDamageToPlayer(int damage, string sourceName)
+    {
+        var armorCard = PlayerArmor?.Card as ArmorCard;
+        
+        // Check for NegateDamage (Suspicious Suit, Aegis of Jaa'aird'thuun)
+        if (armorCard?.NegatesAllDamage == true)
+        {
+            AddBattleLog($"{sourceName}'s attack was negated by {PlayerArmor?.Name}!", BattleLogEntryType.Info);
+            LogToFile($"[ApplyDamageToPlayer] Damage negated by {PlayerArmor?.Name}");
+            return;
+        }
+        
+        int actualDamage = Math.Max(0, damage - PlayerArmorBonus);
+        PlayerHealth -= actualDamage;
+        
+        if (PlayerArmorBonus > 0)
+        {
+            AddBattleLog($"{sourceName} deals {damage} damage (reduced by {PlayerArmorBonus} to {actualDamage} by armor)!", BattleLogEntryType.Damage);
+        }
+        else
+        {
+            AddBattleLog($"{sourceName} deals {actualDamage} damage to you!", BattleLogEntryType.Damage);
+        }
+        
+        // Handle Biteback (Graphite Cladding)
+        if (armorCard?.HasBiteback == true && actualDamage > 0)
+        {
+            int bitebackDamage = armorCard.BitebackDamage;
+            OpponentHealth -= bitebackDamage;
+            AddBattleLog($"{PlayerArmor?.Name} deals {bitebackDamage} damage back to attacker!", BattleLogEntryType.Damage);
+            LogToFile($"[ApplyDamageToPlayer] Biteback deals {bitebackDamage} damage");
+        }
+        
+        // Handle OnHitDebuff (Virulent Vambrace)
+        if (armorCard?.HasOnHitDebuff == true && actualDamage > 0)
+        {
+            // Would need to apply debuff to attacking creature - simplified for now
+            AddBattleLog($"{PlayerArmor?.Name} inflicts a debuff on the attacker!", BattleLogEntryType.Info);
+            LogToFile($"[ApplyDamageToPlayer] OnHitDebuff applied");
+        }
+        
+        // Handle OnHitSpawn (Disintegrating Regalia - 50% chance)
+        if (armorCard?.HasOnHitSpawn == true && actualDamage > 0)
+        {
+            var random = new Random();
+            if (random.Next(100) < armorCard.SpawnChance)
+            {
+                // Spawn Mycelium Spore on player's field
+                var sporeCard = CardFactory.GetCardByTemplateId("Mycelium Spore_Creature_Fungus");
+                if (sporeCard != null)
+                {
+                    var sporeVm = new CardViewModel(sporeCard.Clone());
+                    
+                    // Find empty slot
+                    for (int i = 6; i < 12; i++)
+                    {
+                        if (FieldSlots[i] == null)
+                        {
+                            FieldSlots[i] = sporeVm;
+                            AddBattleLog($"{PlayerArmor?.Name} spawns a Mycelium Spore!", BattleLogEntryType.Info);
+                            LogToFile($"[ApplyDamageToPlayer] Spawned Mycelium Spore at slot {i}");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Handle Intimidation (Sinew Shield)
+        if (armorCard?.HasIntimidation == true && actualDamage > 0)
+        {
+            // Apply Intimidated status to all opponent creatures with power/health <= threshold
+            int powerThreshold = armorCard.IntimidationPowerThreshold;
+            int healthThreshold = armorCard.IntimidationHealthThreshold;
+            
+            for (int i = 0; i < 6; i++)
+            {
+                var oppCreature = FieldSlots[i];
+                if (oppCreature != null && oppCreature.Power <= powerThreshold && oppCreature.Health <= healthThreshold)
+                {
+                    oppCreature.AddStatusEffect("Intimidated");
+                    AddBattleLog($"{oppCreature.Name} is too intimidated to attack!", BattleLogEntryType.Info);
+                    LogToFile($"[ApplyDamageToPlayer] Intimidated {oppCreature.Name}");
+                }
+            }
+            
+            AddBattleLog($"{PlayerArmor?.Name} radiates intimidation!", BattleLogEntryType.Info);
+        }
+    }
+    
+    /// <summary>
+    /// Apply damage to opponent, accounting for armor damage reduction
+    /// </summary>
+    private void ApplyDamageToOpponent(int damage, string sourceName)
+    {
+        int actualDamage = Math.Max(0, damage - OpponentArmorBonus);
+        OpponentHealth -= actualDamage;
+        
+        if (OpponentArmorBonus > 0)
+        {
+            AddBattleLog($"{sourceName} deals {damage} damage (reduced by {OpponentArmorBonus} to {actualDamage} by armor)!", BattleLogEntryType.Damage);
+        }
+        else
+        {
+            AddBattleLog($"{sourceName} deals {actualDamage} damage to opponent!", BattleLogEntryType.Damage);
+        }
+    }
+    
+    /// <summary>
+    /// Update opponent armor bonus when they equip armor
+    /// </summary>
+    private void UpdateOpponentArmorBonus()
+    {
+        if (OpponentArmor?.Card is ArmorCard armorCard)
+        {
+            OpponentArmorBonus = armorCard.DamageReduction;
+        }
+        else
+        {
+            OpponentArmorBonus = 0;
+        }
+        OnPropertyChanged(nameof(OpponentArmorBonus));
     }
     
     /// <summary>
@@ -997,6 +1430,15 @@ public class MainViewModel : ViewModelBase
     {
         get => _opponentMaxHealth;
         set => SetProperty(ref _opponentMaxHealth, value);
+    }
+    
+    /// <summary>
+    /// Whether opponent's hand is visible (from Jar of Eyes effect)
+    /// </summary>
+    public bool OpponentHandVisible
+    {
+        get => _opponentHandVisible;
+        set => SetProperty(ref _opponentHandVisible, value);
     }
 
     public int PlayerWeaponBonus
@@ -1196,6 +1638,7 @@ public class MainViewModel : ViewModelBase
 
             // Draw cards for opponent
             OpponentDeck.DrawCards(4);
+            RefreshOpponentHand();
 
             // Reset game state
             PlayerHealth = 30;
@@ -1206,6 +1649,7 @@ public class MainViewModel : ViewModelBase
             TurnCount = 1;
             IsPlayerTurn = true;
             StatusMessage = "";
+            _temporaryEffects.Clear();
             
             // Clear and initialize battle log
             ClearBattleLog();
@@ -1289,6 +1733,16 @@ public class MainViewModel : ViewModelBase
             PlayerHand.Add(new CardViewModel(card));
         }
     }
+    
+    private void RefreshOpponentHand()
+    {
+        OpponentHand.Clear();
+        foreach (var card in OpponentDeck.Hand)
+        {
+            OpponentHand.Add(new CardViewModel(card));
+        }
+        OnPropertyChanged(nameof(OpponentHand));
+    }
 
     private void EndTurn()
     {
@@ -1327,6 +1781,7 @@ public class MainViewModel : ViewModelBase
         }
 
         IsPlayerTurn = false;
+        ResetOpponentAbilityUsageFlags();
         ExecuteOpponentTurn();
 
         if (OpponentHealth <= 0 || PlayerHealth <= 0)
@@ -1347,6 +1802,521 @@ public class MainViewModel : ViewModelBase
         IsPlayerTurn = true;
         PlayerDeck.DrawCards(1);
         RefreshHand();
+        
+        // Reset ability usage flags for all player cards in hand and field
+        ResetAbilityUsageFlags();
+        
+        // Process temporary effects (decrement durations)
+        ProcessTemporaryEffects();
+        
+        // Execute passive abilities at start of player's turn
+        ExecutePassiveAbilities();
+    }
+
+    /// <summary>
+    /// Reset ability usage flags at start of turn
+    /// </summary>
+    private void ResetAbilityUsageFlags()
+    {
+        // Reset for player hand
+        foreach (var card in PlayerHand)
+        {
+            card.AbilityUsedThisTurn = false;
+        }
+        
+        // Reset for player field creatures (slots 6-11)
+        for (int i = 6; i < 12; i++)
+        {
+            if (FieldSlots[i] != null)
+            {
+                FieldSlots[i].AbilityUsedThisTurn = false;
+            }
+        }
+        
+        LogToFile("Abilities refreshed for new turn!");
+    }
+
+    /// <summary>
+    /// Reset opponent ability usage flags at start of opponent's turn
+    /// </summary>
+    private void ResetOpponentAbilityUsageFlags()
+    {
+        // Reset for opponent field creatures (slots 0-5)
+        for (int i = 0; i < 6; i++)
+        {
+            if (FieldSlots[i] != null)
+            {
+                FieldSlots[i].AbilityUsedThisTurn = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Process temporary effects - decrement durations and apply turn-based effects
+    /// </summary>
+    private void ProcessTemporaryEffects()
+    {
+        // Decrement all durations and apply effects
+        for (int i = _temporaryEffects.Count - 1; i >= 0; i--)
+        {
+            var effect = _temporaryEffects[i];
+            
+            // Apply the effect for this turn if it's a damage aura
+            if (effect.StatusEffect == "WhiteoutDamage" || effect.StatusEffect == "DamageAura")
+            {
+                ApplyTemporaryEffectDamage(effect);
+            }
+            
+            effect.RemainingTurns--;
+            
+            if (effect.RemainingTurns <= 0)
+            {
+                // Handle EldritchSummon - when duration expires, summon from Eldritch table
+                if (effect.SourceAbility?.EffectType == EffectType.EldritchSummon)
+                {
+                    SummonFromEldritchTable();
+                }
+                
+                // Handle Transformation (Dwarf Star Spawn -> Greater Star Spawn)
+                if (effect.StatusEffect == "Transforming")
+                {
+                    TransformDwarfStarSpawn(effect.TargetCardId, effect.TargetCardName);
+                }
+                
+                // Handle RevealHand expiring (Jar of Eyes)
+                if (effect.StatusEffect == "RevealHand")
+                {
+                    OpponentHandVisible = false;
+                    AddBattleLog("The opponent's hand is no longer visible.", BattleLogEntryType.Info);
+                }
+                
+                // Find the target card and remove the status effect
+                if (effect.TargetCardId != "ALL_CREATURES" && effect.TargetCardId != "OPPONENT_CREATURES" && effect.TargetCardId != "PLAYER_CREATURES")
+                {
+                    var targetCard = FindCardById(effect.TargetCardId);
+                    if (targetCard != null)
+                    {
+                        targetCard.RemoveStatusEffect(effect.StatusEffect);
+                    }
+                }
+                
+                AddBattleLog($"{effect.EffectName} on {effect.TargetCardName} expires!", BattleLogEntryType.Info);
+                _temporaryEffects.RemoveAt(i);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Summon a random creature from the Eldritch table to player's hand
+    /// Similar to quest system but for Eldritch cards
+    /// </summary>
+    private void SummonFromEldritchTable()
+    {
+        var eldritchCards = CardFactory.GetQuestTableCards()
+            .Where(c => c.Type == CardType.Creature && c.Element == ElementType.Eldritch)
+            .ToList();
+        
+        if (eldritchCards.Count == 0)
+        {
+            AddBattleLog("Something stirs from the deep, but nothing appears...", BattleLogEntryType.Info);
+            return;
+        }
+        
+        // Pick random eldritch creature
+        var random = new Random();
+        var summonedCard = eldritchCards[random.Next(eldritchCards.Count)].Clone();
+        var summonedVm = new CardViewModel(summonedCard);
+        
+        PlayerHand.Add(summonedVm);
+        AddBattleLog($"Call of the Deep summons {summonedVm.Name} to your hand!", BattleLogEntryType.Spell);
+        OnPropertyChanged(nameof(PlayerHand));
+        LogToFile($"[SummonFromEldritchTable] Summoned {summonedVm.Name}");
+    }
+    
+    /// <summary>
+    /// Transform Dwarf Star Spawn into Greater Star Spawn
+    /// </summary>
+    private void TransformDwarfStarSpawn(string cardId, string cardName)
+    {
+        var oldCard = FindCardById(cardId);
+        if (oldCard == null)
+        {
+            AddBattleLog($"{cardName} transforms, but the transformation fails!", BattleLogEntryType.Info);
+            return;
+        }
+        
+        // Find the slot
+        int slotIndex = Array.FindIndex(FieldSlots, s => s?.Id == cardId);
+        
+        // Get the transformation target
+        var newCard = CardFactory.GetCardByTemplateId("Greater Star Spawn_Creature_Eldritch");
+        if (newCard == null)
+        {
+            AddBattleLog($"{cardName} transforms into Greater Star Spawn!", BattleLogEntryType.Info);
+            return;
+        }
+        
+        var newVm = new CardViewModel(newCard.Clone());
+        
+        // Replace in slot if found
+        if (slotIndex >= 0)
+        {
+            FieldSlots[slotIndex] = newVm;
+            RefreshCreatureSlotCaches();
+        }
+        
+        AddBattleLog($"{cardName} transforms into Greater Star Spawn!", BattleLogEntryType.Info);
+        LogToFile($"[TransformDwarfStarSpawn] Transformed {cardName} to Greater Star Spawn");
+    }
+    
+    /// <summary>
+    /// Apply damage from temporary effect
+    /// </summary>
+    private void ApplyTemporaryEffectDamage(TemporaryEffect effect)
+    {
+        if (effect.SourceAbility == null) return;
+        
+        int damage = effect.SourceAbility.EffectValue;
+        
+        if (effect.StatusEffect == "WhiteoutDamage")
+        {
+            // Whiteout has element-specific damage reduction
+            ApplyWhiteoutTick(null!, damage);
+        }
+        else if (effect.StatusEffect == "DamageAura")
+        {
+            // Regular damage aura
+            if (effect.TargetCardId == "OPPONENT_CREATURES")
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    if (OpponentCreatureSlots[i] != null)
+                    {
+                        OpponentCreatureSlots[i].ApplyDamage(damage);
+                    }
+                }
+            }
+            else if (effect.TargetCardId == "PLAYER_CREATURES")
+            {
+                for (int i = 6; i < 12; i++)
+                {
+                    if (FieldSlots[i] != null)
+                    {
+                        FieldSlots[i].ApplyDamage(damage);
+                    }
+                }
+            }
+            AddBattleLog($"{effect.EffectName} deals {damage} damage!", BattleLogEntryType.Damage);
+        }
+    }
+    
+    /// <summary>
+    /// Execute passive abilities for all player creatures on the field
+    /// </summary>
+    private void ExecutePassiveAbilities()
+    {
+        // Check each player creature slot (indices 6-11)
+        for (int i = 6; i < 12; i++)
+        {
+            var creature = FieldSlots[i];
+            if (creature == null) continue;
+            
+            // Check each ability on the creature
+            foreach (var ability in creature.Abilities)
+            {
+                if (ability.IsPassive)
+                {
+                    ExecutePassiveAbility(ability, creature);
+                }
+            }
+        }
+        
+        // Also execute opponent passive abilities during their turn (called separately)
+    }
+    
+    /// <summary>
+    /// Execute a single passive ability
+    /// </summary>
+    private void ExecutePassiveAbility(CardAbility ability, CardViewModel source)
+    {
+        // Skip if already used this turn (we could track this)
+        // For now, just execute passive abilities
+        
+        switch (ability.EffectType)
+        {
+            case EffectType.Buff:
+            case EffectType.BuffPower:
+            case EffectType.BuffHealth:
+                // Passive buffs are permanent - apply once at start
+                // Check if already has the buff status
+                if (!source.HasStatusEffects || !source.StatusEffects.Contains("Buffed"))
+                {
+                    // Apply permanent buff
+                    int value = ability.EffectValue;
+                    if (value > 0)
+                    {
+                        source.HealDamage(-value); // Negative heals as buff
+                        source.AddStatusEffect("Buffed");
+                        AddBattleLog($"{source.Name}'s {ability.Name} grants +{value} permanent buff!", BattleLogEntryType.PlayerAction);
+                    }
+                }
+                break;
+                
+            case EffectType.Debuff:
+            case EffectType.DebuffPower:
+            case EffectType.DebuffHealth:
+                // Some passive debuffs affect all enemies - apply at start
+                if (ability.Name == "Brain Fog")
+                {
+                    // Brain Fog: 25% chance to deal damage to owner, 75% to target
+                    var random = new Random();
+                    if (random.Next(4) == 0)
+                    {
+                        // 25% - damage to self
+                        source.ApplyDamage(ability.EffectValue);
+                        AddBattleLog($"{source.Name}'s Brain Fog backfires! Deals {ability.EffectValue} damage to owner!", BattleLogEntryType.Debuff);
+                    }
+                }
+                break;
+                
+            case EffectType.DamageToAllCreatures:
+            case EffectType.DamageToAllEnemyCreatures:
+                // Some passives deal damage each turn
+                ApplyPassiveDamageAura(ability, source);
+                break;
+                
+            case EffectType.ManaRegen:
+                // Passive mana regen
+                PlayerMaxMana += ability.EffectValue;
+                PlayerMana = Math.Min(PlayerMana + ability.EffectValue, PlayerMaxMana);
+                AddBattleLog($"{source.Name}'s {ability.Name} grants +{ability.EffectValue} max mana!", BattleLogEntryType.Info);
+                break;
+                
+            default:
+                // Other passive abilities - log that they're active
+                AddBattleLog($"{source.Name}'s {ability.Name} is active.", BattleLogEntryType.Info);
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// Apply passive damage aura (for passives that damage each turn)
+    /// </summary>
+    private void ApplyPassiveDamageAura(CardAbility ability, CardViewModel source)
+    {
+        int damage = ability.EffectValue;
+        bool isEnemyOnly = ability.EffectType == EffectType.DamageToAllEnemyCreatures;
+        
+        // Apply to opponent creatures
+        for (int i = 0; i < 6; i++)
+        {
+            var target = FieldSlots[i];
+            if (target != null)
+            {
+                target.ApplyDamage(damage);
+            }
+        }
+        
+        if (!isEnemyOnly)
+        {
+            // Also apply to player creatures if not enemy-only
+            for (int i = 6; i < 12; i++)
+            {
+                var target = FieldSlots[i];
+                if (target != null)
+                {
+                    target.ApplyDamage(damage);
+                }
+            }
+        }
+        
+        AddBattleLog($"{source.Name}'s {ability.Name} deals {damage} damage!", BattleLogEntryType.Damage);
+    }
+    
+    /// <summary>
+    /// Execute passive abilities for all opponent creatures on the field
+    /// </summary>
+    private void ExecuteOpponentPassiveAbilities()
+    {
+        // Check each opponent creature slot (indices 0-5)
+        for (int i = 0; i < 6; i++)
+        {
+            var creature = FieldSlots[i];
+            if (creature == null) continue;
+            
+            // Check each ability on the creature
+            foreach (var ability in creature.Abilities)
+            {
+                if (ability.IsPassive)
+                {
+                    ExecuteOpponentPassiveAbility(ability, creature);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Execute a single opponent passive ability
+    /// </summary>
+    private void ExecuteOpponentPassiveAbility(CardAbility ability, CardViewModel source)
+    {
+        switch (ability.EffectType)
+        {
+            case EffectType.Buff:
+            case EffectType.BuffPower:
+            case EffectType.BuffHealth:
+                // Passive buffs - apply if not already applied
+                if (!source.HasStatusEffects || !source.StatusEffects.Contains("Buffed"))
+                {
+                    int value = ability.EffectValue;
+                    if (value > 0)
+                    {
+                        source.HealDamage(-value);
+                        source.AddStatusEffect("Buffed");
+                        AddBattleLog($"{source.Name}'s {ability.Name} grants +{value} permanent buff!", BattleLogEntryType.OpponentAction);
+                    }
+                }
+                break;
+                
+            case EffectType.Debuff:
+            case EffectType.DebuffPower:
+            case EffectType.DebuffHealth:
+                if (ability.Name == "Brain Fog")
+                {
+                    var random = new Random();
+                    if (random.Next(4) == 0)
+                    {
+                        source.ApplyDamage(ability.EffectValue);
+                        AddBattleLog($"{source.Name}'s Brain Fog backfires! Deals {ability.EffectValue} damage to owner!", BattleLogEntryType.Debuff);
+                    }
+                }
+                break;
+                
+            case EffectType.DamageToAllCreatures:
+            case EffectType.DamageToAllEnemyCreatures:
+                ApplyPassiveDamageAura(ability, source);
+                break;
+                
+            case EffectType.ManaRegen:
+                // Opponent mana regen (we track separately)
+                AddBattleLog($"{source.Name}'s {ability.Name} is active.", BattleLogEntryType.Info);
+                break;
+                
+            default:
+                AddBattleLog($"{source.Name}'s {ability.Name} is active.", BattleLogEntryType.Info);
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// Execute an opponent activated ability on a target
+    /// </summary>
+    private void ExecuteOpponentAbilityOnTarget(CardAbility ability, CardViewModel source, CardViewModel? target)
+    {
+        switch (ability.EffectType)
+        {
+            case EffectType.Damage:
+            case EffectType.Debuff:
+                if (target != null)
+                {
+                    target.ApplyDamage(ability.EffectValue);
+                    AddBattleLog($"{source.Name}'s {ability.Name} deals {ability.EffectValue} damage to {target.Name}!", BattleLogEntryType.Damage);
+                }
+                else
+                {
+                    ApplyDamageToPlayer(ability.EffectValue, $"{source.Name}'s {ability.Name}");
+                }
+                break;
+                
+            case EffectType.Buff:
+            case EffectType.BuffPower:
+            case EffectType.BuffHealth:
+                source.HealDamage(-ability.EffectValue);
+                source.AddStatusEffect("Buffed");
+                AddBattleLog($"{source.Name}'s {ability.Name} buffs itself by +{ability.EffectValue}!", BattleLogEntryType.OpponentAction);
+                break;
+                
+            case EffectType.DebuffPower:
+            case EffectType.DebuffHealth:
+                if (target != null)
+                {
+                    target.AddStatusEffect("Weakened");
+                    AddBattleLog($"{source.Name}'s {ability.Name} debuffs {target.Name}!", BattleLogEntryType.OpponentAction);
+                }
+                break;
+                
+            case EffectType.DamageToAll:
+            case EffectType.DamageToAllEnemyCreatures:
+                for (int i = 6; i < 12; i++)
+                {
+                    if (FieldSlots[i] != null)
+                    {
+                        FieldSlots[i].ApplyDamage(ability.EffectValue);
+                    }
+                }
+                AddBattleLog($"{source.Name}'s {ability.Name} deals {ability.EffectValue} damage to all your creatures!", BattleLogEntryType.Damage);
+                break;
+                
+            case EffectType.DisableAttack:
+                if (target != null)
+                {
+                    target.AddStatusEffect("CannotAttack");
+                    AddBattleLog($"{source.Name} disables {target.Name}'s attacks!", BattleLogEntryType.Debuff);
+                }
+                break;
+            
+            case EffectType.RevealHand:
+                // Jar of Eyes - makes opponent's hand visible for one turn
+                OpponentHandVisible = true;
+                _temporaryEffects.Add(new TemporaryEffect
+                {
+                    EffectName = ability.Name,
+                    TargetCardId = "PLAYER",
+                    TargetCardName = "Opponent Hand",
+                    StatusEffect = "RevealHand",
+                    RemainingTurns = 1,
+                    IsFromOpponent = false,
+                    SourceAbility = ability
+                });
+                AddBattleLog($"{source.Name} reveals the opponent's hand!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Heal:
+            case EffectType.HealSelf:
+                source.HealDamage(-ability.EffectValue);
+                AddBattleLog($"{source.Name} heals for {ability.EffectValue} HP!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.ManaGain:
+                // Would track separately for opponent
+                AddBattleLog($"{source.Name} gains {ability.EffectValue} mana!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Infect:
+                if (target != null)
+                {
+                    target.AddStatusEffect("Infected");
+                    AddBattleLog($"{source.Name} adds infection to {target.Name}!", BattleLogEntryType.Debuff);
+                }
+                break;
+                
+            default:
+                AddBattleLog($"{source.Name}'s {ability.Name} effect not fully implemented!", BattleLogEntryType.Info);
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// Find a card by ID in the field slots
+    /// </summary>
+    private CardViewModel? FindCardById(string cardId)
+    {
+        for (int i = 0; i < FieldSlots.Length; i++)
+        {
+            if (FieldSlots[i]?.Id == cardId)
+                return FieldSlots[i];
+        }
+        return null;
     }
 
     private void ExecuteOpponentTurn()
@@ -1368,7 +2338,22 @@ public class MainViewModel : ViewModelBase
 
         while (keepPlaying && opponentMana > 0)
         {
-            var decision = _opponentAI.DecideAction(OpponentDeck, opponentMana, playerSlots);
+            // Build opponent creature slots for AI to use
+            var opponentSlots = new List<CreatureSlot>();
+            for (int i = 0; i < 6; i++)
+            {
+                if (FieldSlots[i] != null)
+                {
+                    var slot = new CreatureSlot { Creature = FieldSlots[i].Card, SlotIndex = i };
+                    opponentSlots.Add(slot);
+                }
+                else
+                {
+                    opponentSlots.Add(new CreatureSlot { SlotIndex = i });
+                }
+            }
+            
+            var decision = _opponentAI.DecideAction(OpponentDeck, opponentMana, playerSlots, opponentSlots);
 
             switch (decision.Type)
             {
@@ -1393,6 +2378,7 @@ public class MainViewModel : ViewModelBase
                             AddBattleLog($"Opponent summons {card.Name} to slot {displaySlot}", BattleLogEntryType.OpponentAction);
                             
                             RefreshCreatureSlotCaches();
+                            RefreshOpponentHand();
                             OnPropertyChanged(nameof(FieldSlots));
                             OnPropertyChanged(nameof(OpponentCreatureSlots));
                             OnPropertyChanged(nameof(PlayerCreatureSlots));
@@ -1426,11 +2412,13 @@ public class MainViewModel : ViewModelBase
                                 StatusMessage = $"Opponent plays {cardVm.Name}!";
                                 AddBattleLog($"Opponent plays {cardVm.Name}", BattleLogEntryType.Spell);
                                 OnPropertyChanged(nameof(OpponentEventSlot));
+                                RefreshOpponentHand();
                             }
                             else
                             {
                                 // Regular spell/enchantment - apply effects
                                 OpponentDeck.PlayCard(card.Id);
+                                RefreshOpponentHand();
                                 opponentMana -= card.ManaCost;
                                 LogToFile($"[ExecuteOpponentTurn] Playing {card.Name} (type={card.Type})");
                                 
@@ -1470,6 +2458,7 @@ public class MainViewModel : ViewModelBase
                             StatusMessage = $"Opponent equips {cardVm.Name}!";
                             AddBattleLog($"Opponent equips {cardVm.Name}", BattleLogEntryType.OpponentAction);
                             OnPropertyChanged(nameof(OpponentWeapon));
+                            RefreshOpponentHand();
                         }
                         else
                         {
@@ -1504,6 +2493,7 @@ public class MainViewModel : ViewModelBase
                             else if (cardVm.Type == CardType.Armor)
                             {
                                 OpponentArmor = cardVm;
+                                UpdateOpponentArmorBonus();
                                 LogToFile($"[ExecuteOpponentTurn] Equipped armor: {cardVm.Name}");
                                 StatusMessage = $"Opponent equips {cardVm.Name}!";
                                 AddBattleLog($"Opponent equips {cardVm.Name}", BattleLogEntryType.OpponentAction);
@@ -1540,6 +2530,7 @@ public class MainViewModel : ViewModelBase
                                 OnPropertyChanged(nameof(OpponentArtifactSlots));
                                 OnPropertyChanged(nameof(OpponentArtifactSlotsObs));
                             }
+                            RefreshOpponentHand();
                         }
                         else
                         {
@@ -1555,6 +2546,45 @@ public class MainViewModel : ViewModelBase
                 case OpponentAI.AIDecisionType.Attack:
                     ResolveOpponentCombat();
                     break;
+                
+                case OpponentAI.AIDecisionType.UseAbility:
+                    if (decision.SlotIndex.HasValue && decision.AbilityIndex.HasValue)
+                    {
+                        var oppCreature = FieldSlots[decision.SlotIndex.Value];
+                        if (oppCreature != null && oppCreature.Abilities.Count > decision.AbilityIndex.Value)
+                        {
+                            var ability = oppCreature.Abilities[decision.AbilityIndex.Value];
+                            
+                            // Check mana cost
+                            int abilityCost = ability.ManaCost > 0 ? ability.ManaCost : oppCreature.ManaCost;
+                            if (opponentMana >= abilityCost)
+                            {
+                                opponentMana -= abilityCost;
+                                oppCreature.AbilityUsedThisTurn = true;
+                                
+                                // Find target if needed
+                                CardViewModel? targetVm = null;
+                                if (decision.TargetCard != null)
+                                {
+                                    // Find target in player slots
+                                    for (int i = 6; i < 12; i++)
+                                    {
+                                        if (FieldSlots[i]?.Id == decision.TargetCard.Id)
+                                        {
+                                            targetVm = FieldSlots[i];
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                // Execute the ability
+                                ExecuteOpponentAbilityOnTarget(ability, oppCreature, targetVm);
+                                
+                                AddBattleLog($"Opponent {oppCreature.Name} uses {ability.Name}!", BattleLogEntryType.OpponentAction);
+                            }
+                        }
+                    }
+                    break;
 
                 default:
                     keepPlaying = false;
@@ -1569,6 +2599,10 @@ public class MainViewModel : ViewModelBase
         ResolveOpponentCombat();
         ResolveOpponentWeaponDamage();
         OpponentDeck.DrawCards(1);
+        RefreshOpponentHand();
+        
+        // Execute opponent passive abilities
+        ExecuteOpponentPassiveAbilities();
         
         LogToFile("[ExecuteOpponentTurn] END - FieldSlots:");
         for (int i = 6; i < 12; i++)
@@ -1625,7 +2659,7 @@ public class MainViewModel : ViewModelBase
                     else
                     {
                         LogToFile($"[ApplyOpponentCardEffects] No player creatures - applying {effect.Value} direct damage to player");
-                        PlayerHealth -= effect.Value;
+                        ApplyDamageToPlayer(effect.Value, "Opponent spell");
                     }
                 }
             }
@@ -1640,8 +2674,16 @@ public class MainViewModel : ViewModelBase
             
         for (int i = 0; i < 6; i++)
         {
-            var opponentCreature = FieldSlots[i]?.Card;
-            var playerCreature = FieldSlots[i + 6]?.Card;
+            var opponentCreature = FieldSlots[i];
+            var playerCreature = FieldSlots[i + 6];
+
+            // Check if opponent creature is Intimidated
+            if (opponentCreature?.StatusEffects.Contains("Intimidated") == true)
+            {
+                AddBattleLog($"{opponentCreature.Name} is too intimidated to attack!", BattleLogEntryType.Info);
+                LogToFile($"[ResolveOpponentCombat] {opponentCreature.Name} is Intimidated, skipping attack");
+                continue;
+            }
 
             if (opponentCreature != null && opponentCreature.Power > 0)
             {
@@ -1650,13 +2692,13 @@ public class MainViewModel : ViewModelBase
                 if (playerCreature != null)
                 {
                     LogToFile($"[ResolveOpponentCombat] Attacking player creature {playerCreature.Name} (HP={playerCreature.Health})");
-                    playerCreature.Health -= opponentCreature.Power;
+                    playerCreature.ApplyDamage(opponentCreature.Power);
                     if (playerCreature.Health <= 0)
                     {
                         LogToFile($"[ResolveOpponentCombat] Player creature died! Removing from slot {i + 6}");
                         FieldSlots[i + 6] = null;
                         RefreshCreatureSlotCaches();
-                        PlayerHealth -= opponentCreature.Power;
+                        ApplyDamageToPlayer(opponentCreature.Power, opponentCreature.Name);
                         StatusMessage = $"Your {playerCreature.Name} was destroyed by {opponentCreature.Name}!";
                         AddBattleLog($"Your {playerCreature.Name} was destroyed by {opponentCreature.Name}!", BattleLogEntryType.CreatureDeath);
                     }
@@ -1668,9 +2710,8 @@ public class MainViewModel : ViewModelBase
                 }
                 else
                 {
-                    PlayerHealth -= opponentCreature.Power;
+                    ApplyDamageToPlayer(opponentCreature.Power, opponentCreature.Name);
                     StatusMessage = $"{opponentCreature.Name} deals {opponentCreature.Power} damage to you!";
-                    AddBattleLog($"{opponentCreature.Name} deals {opponentCreature.Power} damage to you", BattleLogEntryType.Damage);
                 }
                 OnPropertyChanged(nameof(FieldSlots));
             }
@@ -1695,10 +2736,19 @@ public class MainViewModel : ViewModelBase
         {
             // Direct damage to player
             int damage = weapon.Power;
-            PlayerHealth -= damage;
+            ApplyDamageToPlayer(damage, $"Opponent's {weapon.Name}");
             StatusMessage = $"Opponent's {weapon.Name} deals {damage} damage to you!";
-            AddBattleLog($"Opponent's {weapon.Name} deals {damage} damage to you", BattleLogEntryType.Damage);
             LogToFile($"[ResolveOpponentWeaponDamage] {weapon.Name} deals {damage} direct damage to player");
+            
+            // Handle power growth
+            if (weapon.PowerGrowth > 0)
+            {
+                weapon.HitCount++;
+                weapon.Power += weapon.PowerGrowth;
+                OpponentWeapon.Card.Power = weapon.Power;
+                OnPropertyChanged(nameof(OpponentWeapon));
+                AddBattleLog($"Opponent's {weapon.Name} grows! Power is now {weapon.Power}!", BattleLogEntryType.Info);
+            }
         }
         else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
         {
@@ -1710,6 +2760,16 @@ public class MainViewModel : ViewModelBase
                 int damage = weapon.Power;
                 target.ApplyDamage(damage);
                 target.IsOnField = true;
+
+                // Handle power growth
+                if (weapon.PowerGrowth > 0)
+                {
+                    weapon.HitCount++;
+                    weapon.Power += weapon.PowerGrowth;
+                    OpponentWeapon.Card.Power = weapon.Power;
+                    OnPropertyChanged(nameof(OpponentWeapon));
+                    AddBattleLog($"Opponent's {weapon.Name} grows! Power is now {weapon.Power}!", BattleLogEntryType.Info);
+                }
 
                 // Check if target creature died
                 if (target.Health <= 0)
@@ -1769,6 +2829,14 @@ public class MainViewModel : ViewModelBase
             var playerCreatureVm = FieldSlots[i + 6];
             var opponentCreatureVm = FieldSlots[i];
 
+            // Check if player creature is Intimidated
+            if (playerCreatureVm != null && playerCreatureVm.StatusEffects.Contains("Intimidated"))
+            {
+                AddBattleLog($"{playerCreatureVm.Name} is too intimidated to attack!", BattleLogEntryType.Info);
+                LogToFile($"[ResolveCombat] {playerCreatureVm.Name} is Intimidated, skipping attack");
+                continue;
+            }
+
             if (playerCreatureVm != null && playerCreatureVm.Power > 0)
             {
                 if (opponentCreatureVm != null)
@@ -1784,12 +2852,12 @@ public class MainViewModel : ViewModelBase
                         opponentCreatureVm.ClearStatusEffects();
                         FieldSlots[i] = null;
                         RefreshCreatureSlotCaches();
-                        OpponentHealth -= damage;
+                        ApplyDamageToOpponent(damage, playerCreatureVm.Name);
                     }
                 }
                 else
                 {
-                    OpponentHealth -= playerCreatureVm.Power;
+                    ApplyDamageToOpponent(playerCreatureVm.Power, playerCreatureVm.Name);
                 }
             }
         }
@@ -1809,9 +2877,21 @@ public class MainViewModel : ViewModelBase
         {
             // Direct damage to opponent
             int damage = weapon.Power;
-            OpponentHealth -= damage;
+            ApplyDamageToOpponent(damage, weapon.Name);
             StatusMessage = $"{weapon.Name} deals {damage} damage to opponent!";
             LogToFile($"[ResolvePlayerWeaponDamage] {weapon.Name} deals {damage} direct damage to opponent");
+            
+            // Handle power growth (Disgusting! mechanic)
+            if (weapon.PowerGrowth > 0)
+            {
+                weapon.HitCount++;
+                weapon.Power += weapon.PowerGrowth;
+                // Update the underlying card directly
+                PlayerWeapon.Card.Power = weapon.Power;
+                OnPropertyChanged(nameof(PlayerWeapon));
+                AddBattleLog($"{weapon.Name} grows! Power is now {weapon.Power}!", BattleLogEntryType.Info);
+                LogToFile($"[ResolvePlayerWeaponDamage] {weapon.Name} power growth: +{weapon.PowerGrowth}, new power: {weapon.Power}");
+            }
         }
         else if (weapon.TargetType == WeaponTargetType.DamageToCreatures)
         {
@@ -1824,6 +2904,17 @@ public class MainViewModel : ViewModelBase
                 target.ApplyDamage(damage);
                 target.IsOnField = true;
                 StatusMessage = $"{weapon.Name} attacks {target.Name} for {damage} damage!";
+
+                // Handle power growth (Disgusting! mechanic)
+                if (weapon.PowerGrowth > 0)
+                {
+                    weapon.HitCount++;
+                    weapon.Power += weapon.PowerGrowth;
+                    PlayerWeapon.Card.Power = weapon.Power;
+                    OnPropertyChanged(nameof(PlayerWeapon));
+                    AddBattleLog($"{weapon.Name} grows! Power is now {weapon.Power}!", BattleLogEntryType.Info);
+                    LogToFile($"[ResolvePlayerWeaponDamage] {weapon.Name} power growth: +{weapon.PowerGrowth}, new power: {weapon.Power}");
+                }
 
                 // Check if target creature died
                 if (target.Health <= 0)
@@ -1939,6 +3030,12 @@ public class MainViewModel : ViewModelBase
 
     public void SetComboCard(CardViewModel card, int slot)
     {
+        // Only allow combinable cards (base creature cards) in combo slots
+        if (card == null || !card.IsCombinable)
+        {
+            return;
+        }
+
         if (slot == 1)
             ComboCard1 = card;
         else
@@ -2193,7 +3290,10 @@ public class MainViewModel : ViewModelBase
         
         PlayerMana -= card.Card.ManaCost;
         PlayerArmor = card;
-        PlayerArmorBonus = card.Card.Health;
+        
+        // Get damage reduction from the armor card
+        var armorCard = card.Card as ArmorCard;
+        PlayerArmorBonus = armorCard?.DamageReduction ?? 0;
         
         // Find CardViewModel by ID and remove from hand
         var cardInHand = PlayerHand.FirstOrDefault(c => c.Id == card.Id);
@@ -2446,7 +3546,7 @@ public class MainViewModel : ViewModelBase
                     
                 case EffectType.Debuff:
                     // Direct damage to opponent
-                    OpponentHealth -= effect.Value;
+                    ApplyDamageToOpponent(effect.Value, "Your spell");
                     LogToFile($"[Spell] Damage to opponent: {effect.Value}");
                     break;
                     

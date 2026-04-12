@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace MagicalDeckbuilder.Cards;
 
 /// <summary>
@@ -73,7 +76,14 @@ public enum EffectType
     ShieldSelf,      // Shield self
     Biteback,        // Counterattack when attacked
     Infect,          // Add infection tokens
-    DisableAttack    // Disable creature from attacking (Astral Eviction)
+    DisableAttack,   // Disable creature from attacking (Astral Eviction)
+    EldritchSummon,  // Summon from Eldritch table after X turns (Call of the Deep)
+    
+    // New armor effect types
+    NegateDamage,    // Negates all damage (Suspicious Suit, Aegis of Jaa'aird'thuun)
+    Temporary,       // Temporary effect that expires after X turns
+    OnHitDebuff,      // Debuffs attacker when hit (Virulent Vambrace)
+    RevealHand      // Makes opponent's hand visible for a turn (Jar of Eyes)
 }
 
 /// <summary>
@@ -138,6 +148,11 @@ public class Card
     public int Rarity { get; set; } // 1 = common, 2 = uncommon, 3 = rare, 4 = legendary
     public bool IsCombinable { get; set; } // true if this card can be used in the combine system
     public bool IsComboOnly { get; set; } // true if this card can only be obtained via combining, not added to decks
+    
+    /// <summary>
+    /// Temperature Gradient passive: "up" doubles Power buff amounts/duration, "down" doubles Health buff amounts/duration
+    /// </summary>
+    public string TemperatureGradient { get; set; } // "" = none, "up" = power, "down" = health, "both" = both
 
     public virtual Card Clone()
     {
@@ -278,6 +293,18 @@ public class SpellCard : Card
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
             }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                RequiresTarget = a.RequiresTarget,
+                IsPassive = a.IsPassive,
+                Duration = a.Duration,
+                Target = a.Target
+            }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity,
             IsCombinable = this.IsCombinable,
@@ -316,6 +343,18 @@ public class ArtifactCard : Card
                 Value = e.Value,
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
+            }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                RequiresTarget = a.RequiresTarget,
+                IsPassive = a.IsPassive,
+                Duration = a.Duration,
+                Target = a.Target
             }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity,
@@ -356,6 +395,18 @@ public class EventCard : Card
                 Value = e.Value,
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
+            }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                RequiresTarget = a.RequiresTarget,
+                IsPassive = a.IsPassive,
+                Duration = a.Duration,
+                Target = a.Target
             }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity,
@@ -410,6 +461,16 @@ public class BlankCard : Card
 public class WeaponCard : Card
 {
     public WeaponTargetType TargetType { get; set; } = WeaponTargetType.DamageToOpponent;
+    
+    /// <summary>
+    /// Power growth per hit - for weapons like Disgusting! that gain power each time they deal damage
+    /// </summary>
+    public int PowerGrowth { get; set; }
+    
+    /// <summary>
+    /// Number of times this weapon has dealt damage (for tracking power growth)
+    /// </summary>
+    public int HitCount { get; set; }
 
     public WeaponCard()
     {
@@ -437,9 +498,23 @@ public class WeaponCard : Card
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
             }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                RequiresTarget = a.RequiresTarget,
+                IsPassive = a.IsPassive,
+                Duration = a.Duration,
+                Target = a.Target
+            }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity,
-            TargetType = this.TargetType
+            TargetType = this.TargetType,
+            PowerGrowth = this.PowerGrowth,
+            HitCount = this.HitCount
         };
     }
 }
@@ -449,6 +524,76 @@ public class WeaponCard : Card
 /// </summary>
 public class ArmorCard : Card
 {
+    /// <summary>
+    /// Passive damage reduction - reduces all incoming damage by this amount
+    /// </summary>
+    public int DamageReduction { get; set; }
+    
+    /// <summary>
+    /// Has Biteback effect - deals damage back to attacker
+    /// </summary>
+    public bool HasBiteback { get; set; }
+    
+    /// <summary>
+    /// Biteback damage amount
+    /// </summary>
+    public int BitebackDamage { get; set; }
+    
+    /// <summary>
+    /// Negates all incoming damage (for Suspicious Suit, Aegis of Jaa'aird'thuun)
+    /// </summary>
+    public bool NegatesAllDamage { get; set; }
+    
+    /// <summary>
+    /// Number of turns until armor expires (for temporary armor)
+    /// </summary>
+    public int TurnsRemaining { get; set; }
+    
+    /// <summary>
+    /// Has OnHitDebuff - debuffs attacker when hit
+    /// </summary>
+    public bool HasOnHitDebuff { get; set; }
+    
+    /// <summary>
+    /// OnHitDebuff power reduction amount
+    /// </summary>
+    public int OnHitDebuffPower { get; set; }
+    
+    /// <summary>
+    /// OnHitDebuff health reduction amount
+    /// </summary>
+    public int OnHitDebuffHealth { get; set; }
+    
+    /// <summary>
+    /// Has OnHitSpawn - spawns a creature when hit (50% chance for Disintegrating Regalia)
+    /// </summary>
+    public bool HasOnHitSpawn { get; set; }
+    
+    /// <summary>
+    /// Card ID to spawn when hit
+    /// </summary>
+    public string? SpawnCardId { get; set; }
+    
+    /// <summary>
+    /// Chance to spawn (0-100)
+    /// </summary>
+    public int SpawnChance { get; set; }
+    
+    /// <summary>
+    /// Has Intimidation effect - weakens attacking creatures
+    /// </summary>
+    public bool HasIntimidation { get; set; }
+    
+    /// <summary>
+    /// Intimidation power threshold (creatures with power <= this cannot attack)
+    /// </summary>
+    public int IntimidationPowerThreshold { get; set; }
+    
+    /// <summary>
+    /// Intimidation health threshold (creatures with health <= this cannot attack)
+    /// </summary>
+    public int IntimidationHealthThreshold { get; set; }
+
     public ArmorCard()
     {
         Type = CardType.Armor;
@@ -466,6 +611,20 @@ public class ArmorCard : Card
             ManaCost = this.ManaCost,
             Power = this.Power,
             Health = this.Health,
+            DamageReduction = this.DamageReduction,
+            HasBiteback = this.HasBiteback,
+            BitebackDamage = this.BitebackDamage,
+            NegatesAllDamage = this.NegatesAllDamage,
+            TurnsRemaining = this.TurnsRemaining,
+            HasOnHitDebuff = this.HasOnHitDebuff,
+            OnHitDebuffPower = this.OnHitDebuffPower,
+            OnHitDebuffHealth = this.OnHitDebuffHealth,
+            HasOnHitSpawn = this.HasOnHitSpawn,
+            SpawnCardId = this.SpawnCardId,
+            SpawnChance = this.SpawnChance,
+            HasIntimidation = this.HasIntimidation,
+            IntimidationPowerThreshold = this.IntimidationPowerThreshold,
+            IntimidationHealthThreshold = this.IntimidationHealthThreshold,
             Effects = this.Effects.Select(e => new CardEffect
             {
                 Name = e.Name,
@@ -474,6 +633,18 @@ public class ArmorCard : Card
                 Value = e.Value,
                 Target = e.Target,
                 IsTemporary = e.IsTemporary
+            }).ToList(),
+            Abilities = this.Abilities.Select(a => new CardAbility
+            {
+                Name = a.Name,
+                Description = a.Description,
+                ManaCost = a.ManaCost,
+                EffectType = a.EffectType,
+                EffectValue = a.EffectValue,
+                RequiresTarget = a.RequiresTarget,
+                IsPassive = a.IsPassive,
+                Duration = a.Duration,
+                Target = a.Target
             }).ToList(),
             IsLegendary = this.IsLegendary,
             Rarity = this.Rarity,

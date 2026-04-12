@@ -11,6 +11,7 @@
         Title="Magical Deckbuilder"
         Height="800" Width="1200"
         MinHeight="600" MinWidth="900"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BackgroundBrush}">
 

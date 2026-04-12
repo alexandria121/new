@@ -31,6 +31,9 @@
             <Converters:CanAffordToColorConverter x:Key="CanAffordToColorConverter"/>
             <Converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
             <Converters:CountToVisibilityInverseConverter x:Key="CountToVisibilityInverseConverter"/>
+            <Converters:CardTypeToStatsVisibilityConverter x:Key="CardTypeToStatsVisibilityConverter"/>
+            <Converters:CardTypeToPowerVisibilityConverter x:Key="CardTypeToPowerVisibilityConverter"/>
+            <Converters:CardTypeToHealthVisibilityConverter x:Key="CardTypeToHealthVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
