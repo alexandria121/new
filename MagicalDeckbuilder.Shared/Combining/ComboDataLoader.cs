@@ -257,6 +257,8 @@ public class ComboDataLoader
             "damagetoallenemycreatures" => MagicalDeckbuilder.Cards.EffectType.DamageToAllEnemyCreatures,
             "healself" => MagicalDeckbuilder.Cards.EffectType.HealSelf,
             "shieldself" => MagicalDeckbuilder.Cards.EffectType.ShieldSelf,
+            "damagetyself" => MagicalDeckbuilder.Cards.EffectType.DamageToSelf,
+            "buffallplayercreatures" => MagicalDeckbuilder.Cards.EffectType.BuffAllPlayerCreatures,
             _ => MagicalDeckbuilder.Cards.EffectType.Damage
         };
     }

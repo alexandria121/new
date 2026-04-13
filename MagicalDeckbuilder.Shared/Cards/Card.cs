@@ -71,6 +71,8 @@ public enum EffectType
     DamageToAll,     // Damage to all (DTA)
     DamageToAllCreatures, // DTAC
     DamageToAllEnemyCreatures, // DTAEC
+    DamageToSelf,    // DTS - damage to self
+    BuffAllPlayerCreatures, // BTAPC - buff all player creatures
     HealSelf,        // HTS - heal to self
     ManaRegen,       // MRPT - mana regen per turn
     ShieldSelf,      // Shield self

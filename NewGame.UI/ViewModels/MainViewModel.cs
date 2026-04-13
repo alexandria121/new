@@ -326,6 +326,12 @@ public class MainViewModel : ViewModelBase
 
     public ObservableCollection<CardViewModel> AvailableCards { get; }
     public ObservableCollection<CardViewModel> MenuCards { get; }
+
+    public string NewsText { get; } = @"Welcome, Alpha Tester and Deck Builder! Feel free to try as much or as little as you'd like! Some instructions since the tutorial is not yet functional: Left click and drag cards to the slots in the game field. Right clicking should remove cards from the deck builder or from the combination slots.
+
+I'm practically begging for as much feedback as you have, be it concepts, bugs, ideas, etc. No feedback is bad feedback! Please also send me a username you'd like included for when I credit Alpha Testers :) Thank you so much for playing and testing!!! A lot of the assets currently are placeholders, to show the functionality of the base game. Maybe the real combination card game was the friends we made along the way?
+
+Funky bits besides the flow of the game, which is notably funky rn. Note: game flow currently Deck Selection -> Select Deck or Build Deck -> Upon Selecting Deck, it brings you to the battle screen. Sorry! Back to funky stuff: (no structure for second ability, no rougelike or story progression, no setting functionality, no graphical assets, no ability to unlock cards and no way to view unlocked cards, no recipe book for combining, creatures cannot yet be combined with themselves, etc... lol)";
     public ObservableCollection<CardViewModel> PlayerHand { get; } = new();
     public ObservableCollection<CardViewModel> OpponentHand { get; } = new();
     public ObservableCollection<CardViewModel> CustomCards { get; } = new();
@@ -412,12 +418,37 @@ public class MainViewModel : ViewModelBase
         }
         else
         {
-            // Execute immediately for non-targeted abilities (like Search)
-            ExecuteAbility(ability, sourceCard, null);
-            sourceCard.AbilityUsedThisTurn = true;
-            _activeAbility = null;
-            _abilitySourceCard = null;
-            OnPropertyChanged(nameof(IsSelectingTarget));
+            // Check if this is a self-target ability (buff/debuff with RequiresTarget = false)
+            // These need to target the source card, not execute with null target
+            bool isSelfTargetAbility = ability.EffectType switch
+            {
+                EffectType.Buff => true,
+                EffectType.BuffPower => true,
+                EffectType.BuffHealth => true,
+                EffectType.Debuff => true,
+                EffectType.DebuffPower => true,
+                EffectType.DebuffHealth => true,
+                _ => false
+            };
+            
+            if (isSelfTargetAbility)
+            {
+                // Self-target buff/debuff - execute with source as target
+                ExecuteAbility(ability, sourceCard, sourceCard);
+                sourceCard.AbilityUsedThisTurn = true;
+                _activeAbility = null;
+                _abilitySourceCard = null;
+                OnPropertyChanged(nameof(IsSelectingTarget));
+            }
+            else
+            {
+                // Execute immediately for non-targeted abilities (like Search, ShieldSelf, etc.)
+                ExecuteAbility(ability, sourceCard, null);
+                sourceCard.AbilityUsedThisTurn = true;
+                _activeAbility = null;
+                _abilitySourceCard = null;
+                OnPropertyChanged(nameof(IsSelectingTarget));
+            }
         }
     }
 
@@ -694,6 +725,34 @@ public class MainViewModel : ViewModelBase
             case EffectType.Biteback:
                 // Counterattack when attacked - handled in combat resolution
                 AddBattleLog($"{source.Name} has biteback ability!", BattleLogEntryType.Info);
+                break;
+
+            case EffectType.DamageToSelf:
+                // Damage to self (DTS) - Jubilee Jester ability cost
+                source.ApplyDamage(ability.EffectValue);
+                AddBattleLog($"{source.Name} takes {ability.EffectValue} damage from its own ability!", BattleLogEntryType.Damage);
+                break;
+
+            case EffectType.BuffAllPlayerCreatures:
+                // Buff all player creatures on the field (BTAPC)
+                int buffCount = 0;
+                for (int i = 6; i < 12; i++)
+                {
+                    var creature = FieldSlots[i];
+                    if (creature != null && creature != source) // Don't buff self here (handled separately)
+                    {
+                        ApplyBuffToTarget(ability, source, creature);
+                        buffCount++;
+                    }
+                }
+                if (buffCount == 0)
+                {
+                    AddBattleLog($"{source.Name}'s {ability.Name} has no other creatures to buff!", BattleLogEntryType.Info);
+                }
+                else
+                {
+                    AddBattleLog($"{source.Name}'s {ability.Name} buffs {buffCount} creature(s)!", BattleLogEntryType.Info);
+                }
                 break;
 
             default:
@@ -1781,6 +1840,9 @@ public class MainViewModel : ViewModelBase
         if (!IsPlayerTurn) return;
 
         ResolveCombat();
+        
+        // Remove dead creatures after combat
+        RemoveDeadCreatures();
 
         if (OpponentHealth <= 0 || PlayerHealth <= 0)
         {
@@ -2332,6 +2394,69 @@ public class MainViewModel : ViewModelBase
                 }
                 break;
                 
+            case EffectType.Shield:
+            case EffectType.ShieldSelf:
+                source.AddStatusEffect("Shielded");
+                AddBattleLog($"{source.Name} shields itself!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.DamageToAllCreatures:
+                // Damage all creatures (both player and opponent)
+                for (int i = 0; i < FieldSlots.Length; i++)
+                {
+                    if (FieldSlots[i] != null)
+                    {
+                        FieldSlots[i].ApplyDamage(ability.EffectValue);
+                    }
+                }
+                AddBattleLog($"{source.Name}'s {ability.Name} deals {ability.EffectValue} damage to ALL creatures!", BattleLogEntryType.Damage);
+                break;
+                
+            case EffectType.Search:
+                // Opponent search ability (adds to quest table or something)
+                AddBattleLog($"{source.Name} searches!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Duplicate:
+                // Opponent duplicate ability - simplified spawn
+                AddBattleLog($"{source.Name} prepares to duplicate!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Transform:
+                // Opponent transform ability
+                AddBattleLog($"{source.Name} begins to transform!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Destroy:
+                if (target != null)
+                {
+                    AddBattleLog($"{source.Name} destroys {target.Name}!", BattleLogEntryType.Damage);
+                    target.ApplyDamage(999); // High damage to ensure death
+                }
+                break;
+                
+            case EffectType.EldritchSummon:
+                AddBattleLog($"{source.Name} begins a ritual!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.ManaRegen:
+                // Opponent mana regen
+                AddBattleLog($"{source.Name}'s {ability.Name} grants mana!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.DamageToSelf:
+                source.ApplyDamage(ability.EffectValue);
+                AddBattleLog($"{source.Name} takes {ability.EffectValue} damage from its own ability!", BattleLogEntryType.Damage);
+                break;
+                
+            case EffectType.BuffAllPlayerCreatures:
+                AddBattleLog($"{source.Name}'s {ability.Name} buffs all allied creatures!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.DrawCard:
+                AddBattleLog($"{source.Name} draws a card!", BattleLogEntryType.Info);
+                break;
+                
             default:
                 AddBattleLog($"{source.Name}'s {ability.Name} effect not fully implemented!", BattleLogEntryType.Info);
                 break;
@@ -2349,6 +2474,47 @@ public class MainViewModel : ViewModelBase
                 return FieldSlots[i];
         }
         return null;
+    }
+
+    /// <summary>
+    /// Remove dead creatures (Health <= 0) from the field.
+    /// This should be called after any damage is applied.
+    /// </summary>
+    private void RemoveDeadCreatures()
+    {
+        bool anyRemoved = false;
+        
+        // Check opponent creatures (slots 0-5)
+        for (int i = 0; i < 6; i++)
+        {
+            var creature = FieldSlots[i];
+            if (creature != null && creature.Health <= 0)
+            {
+                AddBattleLog($"{creature.Name} has died!", BattleLogEntryType.CreatureDeath);
+                FieldSlots[i] = null;
+                anyRemoved = true;
+            }
+        }
+        
+        // Check player creatures (slots 6-11)
+        for (int i = 6; i < 12; i++)
+        {
+            var creature = FieldSlots[i];
+            if (creature != null && creature.Health <= 0)
+            {
+                AddBattleLog($"{creature.Name} has died!", BattleLogEntryType.CreatureDeath);
+                FieldSlots[i] = null;
+                anyRemoved = true;
+            }
+        }
+        
+        if (anyRemoved)
+        {
+            RefreshCreatureSlotCaches();
+            OnPropertyChanged(nameof(FieldSlots));
+            OnPropertyChanged(nameof(PlayerCreatureSlots));
+            OnPropertyChanged(nameof(OpponentCreatureSlots));
+        }
     }
 
     private void ExecuteOpponentTurn()
@@ -2632,11 +2798,18 @@ public class MainViewModel : ViewModelBase
             
         ResolveOpponentCombat();
         ResolveOpponentWeaponDamage();
+        
+        // Remove dead creatures after opponent combat
+        RemoveDeadCreatures();
+        
         OpponentDeck.DrawCards(1);
         RefreshOpponentHand();
         
         // Execute opponent passive abilities
         ExecuteOpponentPassiveAbilities();
+        
+        // Remove dead creatures after passive abilities
+        RemoveDeadCreatures();
         
         LogToFile("[ExecuteOpponentTurn] END - FieldSlots:");
         for (int i = 6; i < 12; i++)

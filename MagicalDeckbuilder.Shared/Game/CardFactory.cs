@@ -91,15 +91,24 @@ public static class CardFactory
         
         // Irradiated Blob - CREATURE, MC:1, H:6, P:1, COMMON
         var irradiatedBlob = CreateCreature("Irradiated Blob", "This was once a person... you think.\n[ABILITY: Mutation - 2 MC, BTS +2P, DBTS -2H]", 
-            ElementType.Radioactivity, 1, 6, 1, 1, false,
+            ElementType.Radioactivity, 1, 1, 6, 1, false,
             new List<CardAbility>
             {
                 new CardAbility
                 {
                     Name = "Mutation",
-                    Description = "2 MC, BTS +2P, DBTS -2H",
+                    Description = "2 MC, BTS +2P",
                     ManaCost = 2,
                     EffectType = EffectType.BuffPower,
+                    EffectValue = 2,
+                    RequiresTarget = false
+                },
+                new CardAbility
+                {
+                    Name = "Mutation",
+                    Description = "DBTS -2H",
+                    ManaCost = 0, // No extra mana - part of same ability
+                    EffectType = EffectType.DebuffHealth,
                     EffectValue = 2,
                     RequiresTarget = false
                 }
@@ -536,9 +545,20 @@ public static class CardFactory
                 new CardAbility
                 {
                     Name = "Joviality",
-                    Description = "3MC, +4H+4P BTAPC for one turn, 4 DTS",
+                    Description = "3MC, +4H+4P to ALL player creatures for 1 turn",
                     ManaCost = 3,
-                    EffectType = EffectType.Buff,
+                    EffectType = EffectType.BuffAllPlayerCreatures,
+                    EffectValue = 4,
+                    RequiresTarget = false,
+                    IsTemporary = true,
+                    Duration = 1
+                },
+                new CardAbility
+                {
+                    Name = "Joviality",
+                    Description = "4 DTS - damage to self",
+                    ManaCost = 0, // No extra mana - part of same ability
+                    EffectType = EffectType.DamageToSelf,
                     EffectValue = 4,
                     RequiresTarget = false
                 }

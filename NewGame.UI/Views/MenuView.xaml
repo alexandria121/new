@@ -7,86 +7,20 @@
              mc:Ignorable="d"
              Background="{StaticResource BackgroundBrush}">
 
+    <UserControl.Resources>
+        <Converters:ElementToColorConverter x:Key="ElementToColorConverter"/>
+    </UserControl.Resources>
+
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="2*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Title Area -->
-        <StackPanel Grid.Row="0" 
-                    VerticalAlignment="Bottom" 
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,20">
-            <TextBlock Text="MAGICAL DECKBUILDER" 
-                       Style="{StaticResource TitleStyle}"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Text="Combine Cards, Build Your Deck, Win!" 
-                       Style="{StaticResource SubtitleStyle}"
-                       HorizontalAlignment="Center"
-                       Margin="0,10,0,0"/>
-        </StackPanel>
-
-        <!-- Menu Buttons -->
-        <StackPanel Grid.Row="1" 
-                    VerticalAlignment="Top" 
-                    HorizontalAlignment="Center"
-                    MinWidth="300">
-            
-            <Button Content="Play Game" 
-                    Style="{StaticResource PrimaryButtonStyle}"
-                    Command="{Binding NavigateCommand}"
-                    CommandParameter="BattleSelect"
-                    Height="60"
-                    Margin="0,10,0,0"
-                    FontSize="18"/>
-            
-            <Button Content="Card Browser" 
-                    Style="{StaticResource AccentButtonStyle}"
-                    Command="{Binding NavigateCommand}"
-                    CommandParameter="Browser"
-                    Height="60"
-                    Margin="0,10,0,0"
-                    FontSize="18"/>
-            
-            <Button Content="Deck Selection" 
-                    Style="{StaticResource BaseButtonStyle}"
-                    Command="{Binding NavigateCommand}"
-                    CommandParameter="DeckSelection"
-                    Height="60"
-                    Margin="0,10,0,0"
-                    FontSize="18"/>
-            
-            <Button Content="Card Gallery" 
-                    Style="{StaticResource BaseButtonStyle}"
-                    Command="{Binding NavigateCommand}"
-                    CommandParameter="Gallery"
-                    Height="60"
-                    Margin="0,10,0,0"
-                    FontSize="18"/>
-            
-            <Button Content="Settings" 
-                    Style="{StaticResource WarningButtonStyle}"
-                    Command="{Binding NavigateCommand}"
-                    CommandParameter="Settings"
-                    Height="60"
-                    Margin="0,10,0,0"
-                    FontSize="18"/>
-            
-            <Button Content="Quit" 
-                    Style="{StaticResource DangerButtonStyle}"
-                    Command="{Binding NavigateCommand}"
-                    CommandParameter="Quit"
-                    Height="60"
-                    Margin="0,10,0,0"
-                    FontSize="18"/>
-        </StackPanel>
-
-        <!-- Featured Cards Preview -->
-        <Border Grid.Row="2" 
+        <!-- News Section -->
+        <Border Grid.Column="0"
                 Background="{StaticResource SurfaceBrush}"
-                Margin="20,20,20,20"
+                Margin="20,20,10,20"
                 CornerRadius="8"
                 Padding="15">
             <Grid>
@@ -95,73 +29,184 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 
-                <TextBlock Text="Featured Cards" 
+                <TextBlock Text="News"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            FontSize="16"
                            FontWeight="Bold"
                            Margin="0,0,0,10"/>
                 
-                <ItemsControl Grid.Row="1" ItemsSource="{Binding MenuCards}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="{StaticResource SurfaceLightBrush}"
-                                    BorderBrush="{StaticResource SecondaryBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="8"
-                                    Margin="4"
-                                    Width="120"
-                                    Height="160">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <TextBlock Text="{Binding Name}"
-                                               Foreground="White"
-                                               FontSize="10"
-                                               FontWeight="Bold"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    
-                                    <Border Grid.Row="1"
-                                            Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
-                                            Margin="0,4,0,4"
-                                            CornerRadius="3">
-                                        <TextBlock Text="{Binding Type}"
-                                                   Foreground="#80FFFFFF"
-                                                   FontSize="9"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                    </Border>
-                                    
-                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding ManaCost}"
-                                                   Foreground="{StaticResource ManaBrush}"
-                                                   FontSize="10"
-                                                   FontWeight="Bold"/>
-                                        <TextBlock Text=" Mana" 
-                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                   FontSize="9"
-                                                   Margin="2,0,0,0"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ScrollViewer Grid.Row="1" 
+                              VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding NewsText}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap"/>
+                </ScrollViewer>
             </Grid>
         </Border>
-    </Grid>
 
-    <UserControl.Resources>
-        <Converters:ElementToColorConverter x:Key="ElementToColorConverter"/>
-    </UserControl.Resources>
+        <!-- Main Content Column -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Area -->
+            <StackPanel Grid.Row="0" 
+                        VerticalAlignment="Bottom" 
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,20">
+                <TextBlock Text="MAGICAL DECKBUILDER" 
+                           Style="{StaticResource TitleStyle}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Combine Cards, Build Your Deck, Win!" 
+                           Style="{StaticResource SubtitleStyle}"
+                           HorizontalAlignment="Center"
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+
+            <!-- Menu Buttons -->
+            <StackPanel Grid.Row="1" 
+                        VerticalAlignment="Top" 
+                        HorizontalAlignment="Center"
+                        MinWidth="300">
+                
+                <Button Content="Play Game" 
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="BattleSelect"
+                        Height="60"
+                        Margin="0,10,0,0"
+                        FontSize="18"/>
+                
+                <Button Content="Card Browser" 
+                        Style="{StaticResource AccentButtonStyle}"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Browser"
+                        Height="60"
+                        Margin="0,10,0,0"
+                        FontSize="18"/>
+                
+                <Button Content="Deck Selection" 
+                        Style="{StaticResource BaseButtonStyle}"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="DeckSelection"
+                        Height="60"
+                        Margin="0,10,0,0"
+                        FontSize="18"/>
+                
+                <Button Content="Card Gallery" 
+                        Style="{StaticResource BaseButtonStyle}"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Gallery"
+                        Height="60"
+                        Margin="0,10,0,0"
+                        FontSize="18"/>
+                
+                <Button Content="Settings" 
+                        Style="{StaticResource WarningButtonStyle}"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Settings"
+                        Height="60"
+                        Margin="0,10,0,0"
+                        FontSize="18"/>
+                
+                <Button Content="Quit" 
+                        Style="{StaticResource DangerButtonStyle}"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Quit"
+                        Height="60"
+                        Margin="0,10,0,0"
+                        FontSize="18"/>
+            </StackPanel>
+
+            <!-- Featured Cards Preview -->
+            <Border Grid.Row="2" 
+                    Background="{StaticResource SurfaceBrush}"
+                    Margin="20,20,20,20"
+                    CornerRadius="8"
+                    Padding="15">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Text="Featured Cards" 
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10"/>
+                    
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding MenuCards}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource SurfaceLightBrush}"
+                                        BorderBrush="{StaticResource SecondaryBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="8"
+                                        Margin="4"
+                                        Width="120"
+                                        Height="160">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <TextBlock Text="{Binding Name}"
+                                                   Foreground="White"
+                                                   FontSize="10"
+                                                   FontWeight="Bold"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        
+                                        <Border Grid.Row="1"
+                                                Background="{Binding Element, Converter={StaticResource ElementToColorConverter}}"
+                                                Margin="0,4,0,4"
+                                                CornerRadius="3">
+                                            <TextBlock Text="{Binding Type}"
+                                                       Foreground="#80FFFFFF"
+                                                       FontSize="9"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding ManaCost}"
+                                                       Foreground="{StaticResource ManaBrush}"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"/>
+                                            <TextBlock Text=" Mana" 
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       FontSize="9"
+                                                       Margin="2,0,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+
+            <!-- Version Indicator -->
+            <TextBlock Grid.Row="2"
+                       Text="Alpha Version 0.2.0"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontSize="10"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Right"
+                        Margin="0,0,20,10"/>
+        </Grid>
+    </Grid>
 
 </UserControl>
