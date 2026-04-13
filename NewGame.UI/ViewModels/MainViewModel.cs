@@ -556,6 +556,116 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
     }
 
     /// <summary>
+    /// Spawn a creature from an ability (e.g., Mycelium Spore, Irradiated Blob)
+    /// The creature to spawn is retrieved by the ability's name
+    /// </summary>
+    private void SpawnCreature(CardAbility ability, CardViewModel source)
+    {
+        // Get the creature to spawn - use the ability's name-based lookup
+        Card? creatureToSpawn = null;
+        
+        // Try common variations based on the ability name
+        string creatureName = ability.Name;
+        // Try common variations
+        string[] variations = { 
+            creatureName, 
+            creatureName.Replace("Spore", " Spore"), 
+            creatureName.Replace("Blob", " Blob"), 
+            "Mycelium Spore", 
+            "Mycelium Spore_Creature_Fungus",
+            "Irradiated Blob",
+            "Irradiated Blob_Creature_Toxin"
+        };
+        
+        foreach (var varName in variations)
+        {
+            creatureToSpawn = CardFactory.GetCardByTemplateId(varName);
+            if (creatureToSpawn != null) break;
+        }
+        
+        // Find empty player slot
+        int emptySlot = FindEmptyPlayerSlot();
+        
+        if (emptySlot < 0)
+        {
+            AddBattleLog($"No empty slot for {ability.Name}!", BattleLogEntryType.Info);
+            return;
+        }
+        
+        if (creatureToSpawn == null)
+        {
+            AddBattleLog($"{source.Name} spawns a creature, but spawn data is missing!", BattleLogEntryType.Info);
+            // Still spawn a placeholder Mycelium Spore as fallback
+            creatureToSpawn = CardFactory.GetCardByTemplateId("Mycelium Spore_Creature_Fungus");
+            if (creatureToSpawn == null) return;
+        }
+        
+        // Clone the creature and place it on the field
+        var spawnedCreature = new CardViewModel(creatureToSpawn.Clone());
+        spawnedCreature.IsOnField = true;
+        FieldSlots[emptySlot] = spawnedCreature;
+        
+        int displaySlot = emptySlot - 5; // Convert 6-11 to 1-6
+        AddBattleLog($"{source.Name} spawns {spawnedCreature.Name} to slot {displaySlot}!", BattleLogEntryType.Spell);
+        LogToFile($"[SpawnCreature] Spawned {spawnedCreature.Name} at slot {emptySlot}");
+        
+        RefreshCreatureSlotCaches();
+    }
+
+    /// <summary>
+    /// Spawn a creature on opponent's field (for opponent abilities)
+    /// </summary>
+    private void SpawnCreatureForOpponent(CardAbility ability, CardViewModel source)
+    {
+        // Get the creature to spawn - use the ability's name-based lookup
+        Card? creatureToSpawn = null;
+        
+        // Try common variations based on the ability name
+        string creatureName = ability.Name;
+        string[] variations = { 
+            creatureName, 
+            creatureName.Replace("Spore", " Spore"), 
+            creatureName.Replace("Blob", " Blob"), 
+            "Mycelium Spore", 
+            "Mycelium Spore_Creature_Fungus",
+            "Irradiated Blob",
+            "Irradiated Blob_Creature_Toxin"
+        };
+        
+        foreach (var varName in variations)
+        {
+            creatureToSpawn = CardFactory.GetCardByTemplateId(varName);
+            if (creatureToSpawn != null) break;
+        }
+        
+        // Find empty opponent slot
+        int emptySlot = FindEmptyOpponentSlot();
+        
+        if (emptySlot < 0)
+        {
+            AddBattleLog($"No empty slot for opponent's {ability.Name}!", BattleLogEntryType.Info);
+            return;
+        }
+        
+        if (creatureToSpawn == null)
+        {
+            AddBattleLog($"{source.Name} tries to spawn, but spawn data is missing!", BattleLogEntryType.Info);
+            return;
+        }
+        
+        // Clone the creature and place it on opponent's field
+        var spawnedCreature = new CardViewModel(creatureToSpawn.Clone());
+        spawnedCreature.IsOnField = true;
+        FieldSlots[emptySlot] = spawnedCreature;
+        
+        int displaySlot = emptySlot + 1; // Convert 0-5 to 1-6
+        AddBattleLog($"Opponent's {source.Name} spawns {spawnedCreature.Name} to slot {displaySlot}!", BattleLogEntryType.OpponentAction);
+        LogToFile($"[SpawnCreatureForOpponent] Spawned {spawnedCreature.Name} at opponent slot {emptySlot}");
+        
+        RefreshCreatureSlotCaches();
+    }
+
+    /// <summary>
     /// Execute an ability
     /// </summary>
     private void ExecuteAbility(CardAbility ability, CardViewModel source, CardViewModel? target)
@@ -720,6 +830,11 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
                     SourceAbility = ability
                 });
                 AddBattleLog($"{source.Name} begins to transform! Will become Greater Star Spawn in 2 turns.", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Spawn:
+                // Spawn a creature (Mycelium Spore, etc.) in an empty slot
+                SpawnCreature(ability, source);
                 break;
                 
             case EffectType.Biteback:
@@ -953,7 +1068,15 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
                 if (ability.EffectType == EffectType.Buff || ability.EffectType == EffectType.BuffPower)
                 {
                     target.AddStatusEffect("Buffed");
-                    target.HealDamage(-value); // Negative damage = buff
+                    // BuffPower increases the Power stat
+                    if (ability.EffectType == EffectType.BuffPower)
+                    {
+                        target.Card.Power += value;
+                    }
+                    else
+                    {
+                        target.HealDamage(-value); // Generic buff affects health
+                    }
                 }
                 if (ability.EffectType == EffectType.Buff || ability.EffectType == EffectType.BuffHealth)
                 {
@@ -1042,6 +1165,8 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
                 }
                 if (ability.EffectType == EffectType.Debuff || ability.EffectType == EffectType.DebuffHealth)
                 {
+                    // DebuffHealth actually reduces the creature's current health
+                    target.ApplyDamage(value); // Positive damage reduces health
                     target.AddStatusEffect("Weakened");
                 }
                 AddBattleLog($"{source.Name} debuffs {target.Name} by -{value}!", BattleLogEntryType.OpponentAction);
@@ -2455,6 +2580,11 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
                 
             case EffectType.DrawCard:
                 AddBattleLog($"{source.Name} draws a card!", BattleLogEntryType.Info);
+                break;
+                
+            case EffectType.Spawn:
+                // Opponent spawn ability - spawn creature on opponent's field
+                SpawnCreatureForOpponent(ability, source);
                 break;
                 
             default:

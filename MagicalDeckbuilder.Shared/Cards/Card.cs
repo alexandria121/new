@@ -80,6 +80,7 @@ public enum EffectType
     Infect,          // Add infection tokens
     DisableAttack,   // Disable creature from attacking (Astral Eviction)
     EldritchSummon,  // Summon from Eldritch table after X turns (Call of the Deep)
+    Spawn,          // Spawn a creature (Mycelium Spore, etc.) in an empty slot
     
     // New armor effect types
     NegateDamage,    // Negates all damage (Suspicious Suit, Aegis of Jaa'aird'thuun)
