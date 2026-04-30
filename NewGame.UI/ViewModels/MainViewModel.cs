@@ -435,6 +435,30 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
             {
                 // Self-target buff/debuff - execute with source as target
                 ExecuteAbility(ability, sourceCard, sourceCard);
+                
+                // For Mutation-style abilities (BuffPower or DebuffHealth), check if there are 
+                // additional abilities on the same card to execute together
+                if (ability.EffectType == EffectType.BuffPower || ability.EffectType == EffectType.DebuffHealth)
+                {
+                    // Look for paired ability (e.g., BuffPower + DebuffHealth for Mutation)
+                    foreach (var additionalAbility in sourceCard.Abilities)
+                    {
+                        // Skip if this is the same ability we just executed
+                        if (additionalAbility == ability) continue;
+                        
+                        // Skip if already used
+                        if (sourceCard.AbilityUsedThisTurn) continue;
+                        
+                        // Execute paired self-target abilities together
+                        if ((additionalAbility.EffectType == EffectType.BuffPower || 
+                             additionalAbility.EffectType == EffectType.DebuffHealth) &&
+                            !additionalAbility.IsPassive)
+                        {
+                            ExecuteAbility(additionalAbility, sourceCard, sourceCard);
+                        }
+                    }
+                }
+                
                 sourceCard.AbilityUsedThisTurn = true;
                 _activeAbility = null;
                 _abilitySourceCard = null;
@@ -2461,6 +2485,12 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
                 {
                     target.AddStatusEffect("Weakened");
                     AddBattleLog($"{source.Name}'s {ability.Name} debuffs {target.Name}!", BattleLogEntryType.OpponentAction);
+                }
+                else if (ability.EffectType == EffectType.DebuffHealth)
+                {
+                    // Self-target debuff (like Irradiated Blob's DBTS)
+                    source.ApplyDamage(ability.EffectValue);
+                    AddBattleLog($"{source.Name}'s {ability.Name} takes {ability.EffectValue} damage!", BattleLogEntryType.Damage);
                 }
                 break;
                 

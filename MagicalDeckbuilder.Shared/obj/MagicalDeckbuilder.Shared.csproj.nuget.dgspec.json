@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {}
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {}
   },
   "projects": {
-    "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
+    "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+        "projectUniqueName": "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
         "projectName": "MagicalDeckbuilder.Shared",
-        "projectPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+        "projectPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
         "packagesPath": "C:\\Users\\atw61\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\obj\\",
+        "outputPath": "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\atw61\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -65,7 +65,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.312/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

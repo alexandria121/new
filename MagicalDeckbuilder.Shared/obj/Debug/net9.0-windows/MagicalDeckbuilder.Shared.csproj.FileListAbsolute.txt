@@ -11,3 +11,16 @@ C:\Users\atw61\OneDrive\Desktop\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-w
 C:\Users\atw61\OneDrive\Desktop\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\refint\MagicalDeckbuilder.Shared.dll
 C:\Users\atw61\OneDrive\Desktop\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.pdb
 C:\Users\atw61\OneDrive\Desktop\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\ref\MagicalDeckbuilder.Shared.dll
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\bin\Debug\net9.0-windows\MagicalDeckbuilder.Shared.deps.json
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\bin\Debug\net9.0-windows\MagicalDeckbuilder.Shared.dll
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\bin\Debug\net9.0-windows\MagicalDeckbuilder.Shared.pdb
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.csproj.AssemblyReference.cache
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.AssemblyInfoInputs.cache
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.AssemblyInfo.cs
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.csproj.CoreCompileInputs.cache
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.sourcelink.json
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.dll
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\refint\MagicalDeckbuilder.Shared.dll
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\MagicalDeckbuilder.Shared.pdb
+C:\Users\atw61\OneDrive\Desktop\stuff\new\MagicalDeckbuilder.Shared\obj\Debug\net9.0-windows\ref\MagicalDeckbuilder.Shared.dll

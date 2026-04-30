@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hoVgv1ibtF4=",
+  "dgSpecHash": "HZ5ySnVJeeQ=",
   "success": true,
-  "projectFilePath": "C:\\Users\\atw61\\OneDrive\\Desktop\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+  "projectFilePath": "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\atw61\\.nuget\\packages\\microsoft.win32.systemevents\\8.0.0\\microsoft.win32.systemevents.8.0.0.nupkg.sha512",
     "C:\\Users\\atw61\\.nuget\\packages\\system.drawing.common\\8.0.0\\system.drawing.common.8.0.0.nupkg.sha512"
