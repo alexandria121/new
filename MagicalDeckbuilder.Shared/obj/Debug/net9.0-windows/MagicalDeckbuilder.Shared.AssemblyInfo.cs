@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MagicalDeckbuilder.Shared")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d9e0de8f1da0aa4025e684bcc970d3aef392c890")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c5c694d19ad9c79e427faaecdd4a5e5c189f119")]
 [assembly: System.Reflection.AssemblyProductAttribute("MagicalDeckbuilder.Shared")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MagicalDeckbuilder.Shared")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

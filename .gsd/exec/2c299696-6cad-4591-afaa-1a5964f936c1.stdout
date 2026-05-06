@@ -1,0 +1,14 @@
+13: public class CombinationLookup
+15:     private readonly Dictionary<int, Card> _comboCardsByTemplateId = new();
+20:     public void LoadCombinationCards(IEnumerable<Card> cards)
+42:     public Card? FindCombination(Card card1, Card card2)
+47:             return FindCombinationByName(card1, card2);
+62:         return FindCombinationByName(card1, card2);
+68:     private Card? FindCombinationByName(Card card1, Card card2)
+115:     public bool HasCombination(Card card1, Card card2)
+117:         return FindCombination(card1, card2) != null;
+124: public class CombinationResult
+126:     public bool Success { get; set; }
+127:     public Card? ResultCard { get; set; }
+128:     public string Message { get; set; } = "";
+129:     public bool IsPreMade => ResultCard != null;

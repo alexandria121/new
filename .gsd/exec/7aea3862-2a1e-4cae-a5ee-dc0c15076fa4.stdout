@@ -1,0 +1,39 @@
+41:     private readonly CombinationLookup _combinationLookup = new();
+102:         CombineCardsCommand = new RelayCommand(ExecuteCombine, () => _canCombine);
+146:         _combinationLookup.LoadCombinationCards(customCards);
+150:         var allComboCards = jsonCombos.ToList();
+151:         _combinationLookup.LoadCombinationCards(allComboCards);
+1580:     public CardViewModel? ComboCard1
+1586:     public CardViewModel? ComboCard2
+1592:     public CardViewModel? ComboResult
+1598:     public bool CanCombine
+1725:     public ICommand CombineCardsCommand { get; }
+3349:         if (ComboCard1 == null || ComboCard2 == null) return;
+3352:         var resultCard = _combinationLookup.FindCombination(ComboCard1.Card, ComboCard2.Card);
+3363:         PlayerDeck.DiscardFromHand(ComboCard1.Id);
+3364:         PlayerDeck.DiscardFromHand(ComboCard2.Id);
+3366:         var card1ToRemove = PlayerHand.FirstOrDefault(c => c.Id == ComboCard1.Id);
+3367:         var card2ToRemove = PlayerHand.FirstOrDefault(c => c.Id == ComboCard2.Id);
+3399:         ComboCard1 = null;
+3400:         ComboCard2 = null;
+3401:         ComboResult = null;
+3402:         CanCombine = false;
+3406:     public void TakeComboResult()
+3408:         if (ComboResult == null || !IsComboLocked) return;
+3410:         PlayerDeck.Hand.Add(ComboResult.Card);
+3411:         PlayerHand.Add(ComboResult);
+3413:         StatusMessage = $"Added {ComboResult.Card.Name} to hand!";
+3418:     public void SetComboCard(CardViewModel card, int slot)
+3421:         if (card == null || !card.IsCombinable)
+3427:             ComboCard1 = card;
+3429:             ComboCard2 = card;
+3439:             ComboCard1 = null;
+3441:             ComboCard2 = null;
+3448:         if (ComboCard1 == null || ComboCard2 == null)
+3450:             ComboResult = null;
+3451:             CanCombine = false;
+3456:         var resultCard = _combinationLookup.FindCombination(ComboCard1.Card, ComboCard2.Card);
+3460:             ComboResult = new CardViewModel(resultCard);
+3461:             CanCombine = true;
+3465:             ComboResult = null;
+3466:             CanCombine = false;

@@ -1,0 +1,18 @@
+{
+  "id": "e5f97831-6f58-4f61-bc9e-ff728b12aff1",
+  "runtime": "bash",
+  "purpose": "Verify game-over guard locations",
+  "script_chars": 157,
+  "started_at": "2026-05-06T18:01:56.571Z",
+  "finished_at": "2026-05-06T18:02:00.576Z",
+  "exit_code": 1,
+  "signal": null,
+  "timed_out": false,
+  "duration_ms": 4005,
+  "stdout_bytes": 0,
+  "stderr_bytes": 97,
+  "stdout_truncated": false,
+  "stderr_truncated": false,
+  "stdout_path": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\.gsd\\exec\\e5f97831-6f58-4f61-bc9e-ff728b12aff1.stdout",
+  "stderr_path": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\.gsd\\exec\\e5f97831-6f58-4f61-bc9e-ff728b12aff1.stderr"
+}

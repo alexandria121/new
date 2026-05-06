@@ -2041,7 +2041,7 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
         }
 
         TurnCount++;
-        PlayerMana = Math.Min(PlayerMana + 2, 10);
+        PlayerMana = PlayerMaxMana;
         IsPlayerTurn = true;
         PlayerDeck.DrawCards(1);
         RefreshHand();
@@ -2957,6 +2957,20 @@ Funky bits besides the flow of the game, which is notably funky rn. Note: game f
             LogToFile($"  FieldSlots[{i}] = {FieldSlots[i]?.Name ?? "null"}");
             
         ResolveOpponentCombat();
+
+        // Game-over guard: opponent weapon should not fire if game is already over
+        if (OpponentHealth <= 0 || PlayerHealth <= 0)
+        {
+            bool playerWon = OpponentHealth <= 0;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var endWindow = new Views.GameEndWindow(playerWon);
+                endWindow.ShowDialog();
+                CurrentView = "Menu";
+            });
+            return;
+        }
+
         ResolveOpponentWeaponDamage();
         
         // Remove dead creatures after opponent combat

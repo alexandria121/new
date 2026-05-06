@@ -1,11 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "HZ5ySnVJeeQ=",
+  "dgSpecHash": "5E5dPf2mrgg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\atw61\\OneDrive\\Desktop\\stuff\\new\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
+  "projectFilePath": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\MagicalDeckbuilder.Shared\\MagicalDeckbuilder.Shared.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\atw61\\.nuget\\packages\\microsoft.win32.systemevents\\8.0.0\\microsoft.win32.systemevents.8.0.0.nupkg.sha512",
-    "C:\\Users\\atw61\\.nuget\\packages\\system.drawing.common\\8.0.0\\system.drawing.common.8.0.0.nupkg.sha512"
+    "C:\\Users\\Derek\\.nuget\\packages\\microsoft.win32.systemevents\\8.0.0\\microsoft.win32.systemevents.8.0.0.nupkg.sha512",
+    "C:\\Users\\Derek\\.nuget\\packages\\system.drawing.common\\8.0.0\\system.drawing.common.8.0.0.nupkg.sha512",
+    "C:\\Users\\Derek\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.15\\microsoft.netcore.app.ref.9.0.15.nupkg.sha512",
+    "C:\\Users\\Derek\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.15\\microsoft.windowsdesktop.app.ref.9.0.15.nupkg.sha512",
+    "C:\\Users\\Derek\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.15\\microsoft.aspnetcore.app.ref.9.0.15.nupkg.sha512"
   ],
   "logs": []
 }

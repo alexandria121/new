@@ -1,0 +1,18 @@
+{
+  "id": "27624ae2-7396-4c58-95eb-956f477e5b8e",
+  "runtime": "bash",
+  "purpose": "Find combo-related members in MainViewModel",
+  "script_chars": 225,
+  "started_at": "2026-05-06T18:08:42.115Z",
+  "finished_at": "2026-05-06T18:08:45.791Z",
+  "exit_code": 1,
+  "signal": null,
+  "timed_out": false,
+  "duration_ms": 3676,
+  "stdout_bytes": 0,
+  "stderr_bytes": 97,
+  "stdout_truncated": false,
+  "stderr_truncated": false,
+  "stdout_path": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\.gsd\\exec\\27624ae2-7396-4c58-95eb-956f477e5b8e.stdout",
+  "stderr_path": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\.gsd\\exec\\27624ae2-7396-4c58-95eb-956f477e5b8e.stderr"
+}

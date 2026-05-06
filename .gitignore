@@ -40,3 +40,27 @@ packages/
 .Spotlight-V100
 .Trashes
 Thumbs.db
+
+# ── GSD baseline (auto-generated) ──
+.gsd-id
+.mcp.json
+.bg-shell/
+*.swo
+*.code-workspace
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+*.log
+coverage/
+.cache/
+tmp/

@@ -445,6 +445,10 @@
                             <DataTemplate>
                                 <Border Background="#464636" BorderBrush="#506046" BorderThickness="2" CornerRadius="3" Width="80" Height="110" Margin="2" Cursor="Hand"
                                         Tag="{Binding}"
+                                        AllowDrop="True"
+                                        DragEnter="OnHandCardDragEnter"
+                                        DragLeave="OnHandCardDragLeave"
+                                        Drop="OnHandCardDrop"
                                         MouseLeftButtonDown="OnHandCardPreviewMouseLeftButtonDown"
                                         MouseLeftButtonUp="OnHandCardPreviewMouseLeftButtonUp"
                                         MouseMove="OnHandCardPreviewMouseMove"

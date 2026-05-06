@@ -5,6 +5,7 @@ using System.Windows.Media;
 using NewGame.UI.ViewModels;
 using System.IO;
 using CardType = MagicalDeckbuilder.Cards.CardType;
+using MagicalDeckbuilder.Combining;
 
 namespace NewGame.UI.Views;
 
@@ -15,6 +16,7 @@ public partial class GameView : UserControl
     private const double DragThreshold = 15.0;
     private int _lastHoveredPlayerSlotIndex = -1;
     private int _lastHoveredArtifactSlotIndex = -1;
+    private CombinationLookup? _combinationLookup;
     
     // Debug file logging
     private static readonly string DebugLogPath = Path.Combine(
@@ -34,6 +36,7 @@ public partial class GameView : UserControl
     public GameView()
     {
         InitializeComponent();
+        _combinationLookup = new CombinationLookup();
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
@@ -81,6 +84,71 @@ public partial class GameView : UserControl
                 _pendingDragSource = null;
             }
         }
+    }
+
+    private void OnHandCardDragEnter(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent("CardViewModel")) return;
+        
+        var draggedCard = e.Data.GetData("CardViewModel") as CardViewModel;
+        if (draggedCard == null) return;
+        
+        // Only allow base creature cards to combine
+        if (!draggedCard.IsCombinable) return;
+        
+        if (sender is Border targetBorder && targetBorder.Tag is CardViewModel targetCard)
+        {
+            // Don't highlight self
+            if (targetCard == draggedCard) return;
+            
+            // Check if this pair has a valid recipe
+            if (_combinationLookup.HasCombination(draggedCard.Card, targetCard.Card) || 
+                _combinationLookup.HasCombination(targetCard.Card, draggedCard.Card))
+            {
+                // Highlight as valid combine target
+                targetBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(200, 220, 80));
+                targetBorder.BorderThickness = new Thickness(3);
+                LogToFile($"[COMBO-DRAG] Valid target highlighted: {targetCard.Name} (dragging {draggedCard.Name})");
+            }
+        }
+        e.Handled = true;
+    }
+    
+    private void OnHandCardDragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border cardBorder)
+        {
+            // Reset to default border style (same as in XAML: #506046)
+            cardBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(80, 96, 70));
+            cardBorder.BorderThickness = new Thickness(2);
+        }
+        e.Handled = true;
+    }
+    
+    private void OnHandCardDrop(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent("CardViewModel")) return;
+        
+        var droppedCard = e.Data.GetData("CardViewModel") as CardViewModel;
+        if (droppedCard == null || !droppedCard.IsCombinable) return;
+        
+        if (sender is Border targetBorder && targetBorder.Tag is CardViewModel targetCard)
+        {
+            if (targetCard == droppedCard) return;
+            
+            // Auto-populate the first empty slot
+            int emptySlot = ViewModel?.ComboCard1 == null ? 1 : 2;
+            if (emptySlot == 1)
+                ViewModel?.SetComboCard(droppedCard, 1);
+            else
+                ViewModel?.SetComboCard(droppedCard, 2);
+            
+            LogToFile($"[COMBO-DROP] Dropped {droppedCard.Name} over {targetCard.Name} -> slot {emptySlot}");
+        }
+        
+        // Clear highlight
+        OnHandCardDragLeave(sender, e);
+        e.Handled = true;
     }
 
     // Clean up when mouse is released

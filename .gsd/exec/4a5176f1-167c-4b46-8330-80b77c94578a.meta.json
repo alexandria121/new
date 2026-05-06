@@ -1,0 +1,18 @@
+{
+  "id": "4a5176f1-167c-4b46-8330-80b77c94578a",
+  "runtime": "bash",
+  "purpose": "Verify mana refill fix in EndTurn",
+  "script_chars": 153,
+  "started_at": "2026-05-06T18:01:56.561Z",
+  "finished_at": "2026-05-06T18:02:00.570Z",
+  "exit_code": 1,
+  "signal": null,
+  "timed_out": false,
+  "duration_ms": 4009,
+  "stdout_bytes": 0,
+  "stderr_bytes": 97,
+  "stdout_truncated": false,
+  "stderr_truncated": false,
+  "stdout_path": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\.gsd\\exec\\4a5176f1-167c-4b46-8330-80b77c94578a.stdout",
+  "stderr_path": "C:\\Users\\Derek\\Desktop\\new\\.gsd\\worktrees\\M001\\.gsd\\exec\\4a5176f1-167c-4b46-8330-80b77c94578a.stderr"
+}
