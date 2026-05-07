@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameMakerObject>
+  <name>obj_card_data</name>
+  <type>0</type>
+  <persistent>1</persistent>
+  <enumb>0</enumb>
+  <enumb2>0</enumb2>
+  <threadn>0</threadn>
+  <eventtype>0</eventtype>
+  <eventn>0</eventn>
+  <events>
+    <event eventtype="0">
+      <eventn>0</eventn>
+      <Create>
+        <data>load_all_card_data();
+show_debug_message("obj_card_data: persistent card data loader ready — " + string(GetCardCount()) + " base cards, " + string(GetComboCount()) + " combos");</data>
+      </Create>
+    </event>
+  </events>
+  <parent>0</parent>
+  <mask>0</mask>
+</GameMakerObject>
