@@ -45,3 +45,10 @@
 {"id":"f898fb6b-102f-46e0-a895-40ae19a92e6b","ts":"2026-05-07T02:08:37.998Z","severity":"info","message":"Committed: chore: auto-commit after reactive-execute","source":"notify","read":false}
 {"id":"1ebf247f-d0df-40fe-bf8b-1d97fb9c1085","ts":"2026-05-07T02:12:19.842Z","severity":"info","message":"Committed: chore: auto-commit after reactive-execute","source":"notify","read":false}
 {"id":"8b94682f-232e-4ffb-a0a2-f490d30f37a8","ts":"2026-05-07T02:15:18.747Z","severity":"warning","message":"Warning: C:\\Users\\Derek\\Desktop\\new has no recognized project files — proceeding as greenfield project","source":"notify","read":false}
+{"id":"b88533cd-7eb3-4e2e-921a-17db19d6ccce","ts":"2026-05-07T02:19:10.589Z","severity":"info","message":"Committed: chore: auto-commit after execute-task","source":"notify","read":false}
+{"id":"646b2d22-c41a-4d01-b2e5-6f6c40cbceaa","ts":"2026-05-07T02:19:10.936Z","severity":"info","message":"Verification gate: FAILED — ls rooms/*.room.gmx, ls objects/*.object.gmx, test -f project.yy","source":"notify","read":false}
+{"id":"0d8b81ea-7357-4404-a2e5-6f3598e5afd2","ts":"2026-05-07T02:19:10.944Z","severity":"warning","message":"Verification failed (ls rooms/*.room.gmx, ls objects/*.object.gmx, test -f project.yy) — auto-fix attempt 1/2","source":"notify","read":false}
+{"id":"f9015434-32b7-4378-8b7c-eb77b8bbac0a","ts":"2026-05-07T02:19:11.159Z","severity":"warning","message":"Warning: C:\\Users\\Derek\\Desktop\\new has no recognized project files — proceeding as greenfield project","source":"notify","read":false}
+{"id":"56dac382-ee41-4922-b9b4-b46710a93d1b","ts":"2026-05-07T02:21:37.835Z","severity":"error","message":"Git commit failed: git add -- (none) failed in C:\\Users\\Derek\\Desktop\\new","source":"notify","read":false}
+{"id":"fbf222a6-15bf-4285-a05d-dfa9124f7589","ts":"2026-05-07T02:21:38.087Z","severity":"info","message":"Auto-mode paused (Escape). Type to interact, or /gsd auto to resume.","source":"notify","read":false}
+{"id":"59415807-f14c-47d3-ac37-11b107ba7f89","ts":"2026-05-07T02:49:22.345Z","severity":"info","message":"Auto-mode resumed.","source":"notify","read":false}
