@@ -22,8 +22,11 @@
   "defaultViewSpeed": 30,
   "defaultViewArea": [ 1280, 720 ],
   "roomOrder": [
-    { "path": "rooms/room_menu.room.gmx",    "order": 0 },
-    { "path": "rooms/room_battle.room.gmx", "order": 1 }
+    { "path": "rooms/room_menu.room.gmx",        "order": 0 },
+    { "path": "rooms/room_battle_select.room.gmx","order": 1 },
+    { "path": "rooms/room_gallery.room.gmx",     "order": 2 },
+    { "path": "rooms/room_deck_builder.room.gmx","order": 3 },
+    { "path": "rooms/room_battle.room.gmx",      "order": 4 }
   ],
   "scriptOrder": [
     { "path": "scripts/scr_card_data_loader.gml"  },

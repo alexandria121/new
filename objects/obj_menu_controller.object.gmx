@@ -22,7 +22,7 @@
       "collisionObjectId": -1,
       "eventOwner": -1,
       "IsDnD": false,
-      "m_lazyFunctionBody": "/// Draw menu label\ndraw_set_color(c_white);\ndraw_set_font(fnt_title);\ndraw_set_halign(fa_center);\ndraw_text(display_get_width()/2, 150, "Magical Deckbuilder");\n\ndraw_set_font(fnt_normal);\ndraw_text(display_get_width()/2, 220, "AI vs AI Battle Simulator");\n\n// Draw Start Battle button\nvar bx = display_get_width()/2 - 100;\nvar by = 320;\ndraw_set_color(c_dkgray);\ndraw_roundrect(bx, by, bx+200, by+60, 8, false);\ndraw_set_color(c_white);\ndraw_text(bx+100, by+30, "Start Battle");",
+      "m_lazyFunctionBody": "/// Draw menu hub with 4 navigation buttons\ndraw_set_color(c_white);\ndraw_set_font(fnt_title);\ndraw_set_halign(fa_center);\ndraw_text(display_get_width()/2, 100, \"Magical Deckbuilder\");\n\ndraw_set_font(fnt_normal);\ndraw_text(display_get_width()/2, 150, \"AI vs AI Battle Simulator\");\n\n// Button layout: 200x50, 20px gap, start at y=180\nvar btn_w = 200;\nvar btn_h = 50;\nvar btn_gap = 20;\nvar btn_count = 4;\nvar start_y = 180;\n\nvar center_x = display_get_width()/2;\nvar btn_x = center_x - btn_w/2;\n\n// Draw 4 buttons: Start Battle, Gallery, Deck Builder, Battle Select\nvar buttons = [\n    { label: \"Start Battle\",    target: room_battle        },\n    { label: \"Gallery\",        target: room_gallery         },\n    { label: \"Deck Builder\",   target: room_deck_builder   },\n    { label: \"Battle Select\",  target: room_battle_select  }\n];\n\nfor (var i = 0; i < array_length(buttons); i++) {\n    var btn_y = start_y + i * (btn_h + btn_gap);\n    draw_set_color(c_dkgray);\n    draw_roundrect(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, 8, false);\n    draw_set_color(c_white);\n    draw_text(btn_x + btn_w/2, btn_y + btn_h/2, buttons[i].label);\n}",
       "actionScripts": []
     },
     {
@@ -33,7 +33,7 @@
       "collisionObjectId": -1,
       "eventOwner": -1,
       "IsDnD": false,
-      "m_lazyFunctionBody": "/// Mouse press: start battle\nif (mouse_check_button_pressed(mb_left)) {\n    var bx = display_get_width()/2 - 100;\n    var by = 320;\n    if (point_in_rectangle(mouse_x, mouse_y, bx, by, bx+200, by+60)) {\n        room_goto(room_battle);\n    }\n}",
+      "m_lazyFunctionBody": "/// Mouse press: navigate based on button clicked\nif (mouse_check_button_pressed(mb_left)) {\n    var btn_w = 200;\n    var btn_h = 50;\n    var btn_gap = 20;\n    var start_y = 180;\n    var center_x = display_get_width()/2;\n    var btn_x = center_x - btn_w/2;\n\n    var buttons = [\n        { label: \"Start Battle\",    target: room_battle        },\n        { label: \"Gallery\",        target: room_gallery         },\n        { label: \"Deck Builder\",   target: room_deck_builder   },\n        { label: \"Battle Select\",  target: room_battle_select  }\n    ];\n\n    for (var i = 0; i < array_length(buttons); i++) {\n        var btn_y = start_y + i * (btn_h + btn_gap);\n        if (point_in_rectangle(mouse_x, mouse_y, btn_x, btn_y, btn_x + btn_w, btn_y + btn_h)) {\n            room_goto(buttons[i].target);\n            break;\n        }\n    }\n}",
       "actionScripts": []
     }
   ],
