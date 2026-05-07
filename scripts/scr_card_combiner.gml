@@ -47,8 +47,14 @@ function TryCombine(cardA, cardB) {
 ///   - isCombo = true; comboResult = "{cardA.name} + {cardB.name}"
 ///   - abilities are inherited from combo_data.abilities (or computed if absent)
 /// Logs combo_created with combo name and ingredient cards.
+/// Returns null if no recipe exists (UI must handle null gracefully).
 function GetComboResult(cardA, cardB) {
     if (!IsCombinable(cardA, cardB)) {
+        show_debug_message("combo_no_match: no recipe found for "
+            + string(is_struct(cardA) ? struct_get(cardA, "id") : cardA.id)
+            + " + "
+            + string(is_struct(cardB) ? struct_get(cardB, "id") : cardB.id)
+            + " — UI should show 'no combo' feedback");
         return null;
     }
 

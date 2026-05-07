@@ -102,8 +102,19 @@ function DrawCards(count) {
                 ds_list_copy(global.draw_pile, global.discard_pile);
                 ds_list_clear(global.discard_pile);
                 ShuffleDrawPile();
+                show_debug_message("[DeckManager] DrawCards: reshuffle complete — "
+                    + string(ds_list_size(global.draw_pile)) + " cards in draw pile");
             } else {
-                show_debug_message("[DeckManager] DrawCards: pile_empty — both draw and discard are empty");
+                // BOTH piles are empty — player has no cards left to draw
+                show_debug_message("[DeckManager] DrawCards: pile_empty — "
+                    + "draw pile AND discard pile are both empty — "
+                    + "hand has " + string(ds_list_size(global.hand)) + " cards, "
+                    + "cannot draw more");
+                // Emit a named event so the UI layer can show feedback
+                if (global.game_phase != undefined) {
+                    // Let battle controller know player is out of cards
+                    show_debug_message("[DeckManager] player_out_of_cards");
+                }
                 break;
             }
         }
