@@ -1,6 +1,0 @@
-FOUND OnHandCardDragEnter at line 89: OnHandCardDragEnter(object sender, DragEventArgs e)
-    {
-FOUND OnHandCardDragLeave at line 117: OnHandCardDragLeave(object sender, DragEventArgs e)
-    {
-FOUND OnHandCardDrop at line 128: OnHandCardDrop(object sender, DragEventArgs e)
-    {

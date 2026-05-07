@@ -64,3 +64,5 @@ vendor/
 coverage/
 .cache/
 tmp/
+.gsd/
+.gsd.migrating/
