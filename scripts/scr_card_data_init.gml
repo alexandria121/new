@@ -57,3 +57,24 @@ function GetComboCount() {
     if (!global.cards_loaded) return 0;
     return ds_map_size(global.combo_registry);
 }
+
+/// IsBaseCard(card_id)
+/// Returns: true if card_id is a base (non-combo) card.
+/// Base card IDs are 1–999.
+function IsBaseCard(card_id) {
+    return (card_id > 0 && card_id < 1000);
+}
+
+/// IsComboCard(card_id)
+/// Returns: true if card_id is a combo card.
+/// Combo card IDs are 1000–1999.
+function IsComboCard(card_id) {
+    return (card_id >= 1000 && card_id < 2000);
+}
+
+/// GetRecipeKey(card_a, card_b)
+/// Returns: numeric key for the combo recipe combining card_a and card_b.
+/// Key = 10000 + min(id1,id2)*1000 + max(id1,id2)
+function GetRecipeKey(card_a, card_b) {
+    return 10000 + min(card_a, card_b) * 1000 + max(card_a, card_b);
+}
