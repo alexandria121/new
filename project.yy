@@ -102,6 +102,9 @@
     },
     {
       "path": "scripts/scr_ai_guard.gml"
+    },
+    {
+      "path": "scripts/scr_mobile_check.gml"
     }
   ],
   "dataFiles": [

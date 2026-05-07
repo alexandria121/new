@@ -11,7 +11,7 @@
       "collisionObjectId": -1,
       "eventOwner": -1,
       "IsDnD": false,
-      "m_lazyFunctionBody": "/// Create: load all data and initialize decks\nif (!global.cards_loaded) {\n    load_all_card_data();\n}\n\nif (!variable_global_exists(\"playerDeck\") || global.playerDeck == noone) {\n    global.playerDeck = CreateDeck(true);\n}\nif (!variable_global_exists(\"aiDeck\") || global.aiDeck == noone) {\n    global.aiDeck = CreateDeck(false);\n}\n\nshow_debug_message(\"obj_global_system: cards loaded=\" + string(global.cards_loaded)\n                + \", playerDeck=\" + string(ds_exists(global.playerDeck, ds_type_list))\n                + \", aiDeck=\" + string(ds_exists(global.aiDeck, ds_type_list)));",
+      "m_lazyFunctionBody": "/// Create: load all data and initialize decks\n/// Mobile export readiness — log platform info for diagnostics\nLogMobileInfo();\n\nif (!global.cards_loaded) {\n    load_all_card_data();\n}\n\nif (!variable_global_exists(\"playerDeck\") || global.playerDeck == noone) {\n    global.playerDeck = CreateDeck(true);\n}\nif (!variable_global_exists(\"aiDeck\") || global.aiDeck == noone) {\n    global.aiDeck = CreateDeck(false);\n}\n\nshow_debug_message(\"obj_global_system: cards loaded=\" + string(global.cards_loaded)\n                + \", playerDeck=\" + string(ds_exists(global.playerDeck, ds_type_list))\n                + \", aiDeck=\" + string(ds_exists(global.aiDeck, ds_type_list)));",
       "actionScripts": []
     },
     {
