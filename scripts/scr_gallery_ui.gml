@@ -1,104 +1,111 @@
 /// scr_gallery_ui.gml
-/// Helper functions for gallery UI rendering
+/// Drawing helpers for the card gallery UI
+/// Used by obj_gallery_controller in room_gallery
 
-/// Draw a single gallery card at the given grid position
-/// card: Card struct instance
-/// x, y: top-left corner of the card slot
-/// isHovered: bool, changes border highlight
-function DrawGalleryCard(card, x, y, isHovered) {
-    var CARD_W = 118;
-    var CARD_H = 158;
+/// Draw a single element filter button
+/// cx, cy: center of button; label: element name; selected: highlighted
+function DrawGalleryFilterButton(cx, cy, label, selected, hover) {
+    var bw = 80;
+    var bh = 30;
+    var bx = cx - bw / 2;
+    var by = cy - bh / 2;
 
-    // Card background
-    draw_set_color(c_black);
-    draw_rectangle(x, y, x + CARD_W, y + CARD_H, false);
-
-    // Element color border
-    var elemColor = GetCardElementColor(card.element);
-    if (isHovered) {
-        elemColor = merge_color(elemColor, c_white, 0.3);
-    }
-    draw_set_color(elemColor);
-    draw_rectangle(x, y, x + CARD_W, y + CARD_H, true);
-
-    // Element strip on left
-    draw_set_color(elemColor);
-    draw_rectangle(x, y, x + 6, y + CARD_H, false);
-
-    // Mana cost circle
-    draw_set_color(make_color_rgb(30, 30, 80));
-    draw_circle(x + CARD_W - 12, y + 12, 11, false);
-    draw_set_color(c_white);
-    draw_text(x + CARD_W - 16, y + 4, string(card.manaCost));
-
-    // Card name (centered)
-    draw_set_color(c_white);
-    draw_set_halign(fa_center);
-    draw_text(x + CARD_W / 2, y + 26, card.name);
-    draw_set_halign(fa_left);
-
-    // Stats
-    draw_set_color(make_color_rgb(255, 100, 100));
-    draw_text(x + 10, y + CARD_H - 28, "ATK:" + string(card.power));
-    draw_set_color(make_color_rgb(100, 255, 100));
-    draw_text(x + 10, y + CARD_H - 14, "DEF:" + string(card.health));
-}
-
-/// Returns the draw color for a given element string
-function GetCardElementColor(element) {
-    switch (element) {
-        case "Fire":  return make_color_rgb(255, 100, 50);
-        case "Water": return make_color_rgb(50, 150, 255);
-        case "Earth": return make_color_rgb(180, 120, 60);
-        case "Air":   return make_color_rgb(180, 255, 255);
-        default:      return c_white;
-    }
-}
-
-/// Draw a gallery filter button
-/// x, y: center of the button
-/// label: button text
-/// isSelected: currently selected filter
-/// isHover: mouse is over button
-function DrawGalleryFilterButton(x, y, label, isSelected, isHover) {
-    var btnW = 80;
-    var btnH = 30;
-
-    if (isSelected) {
-        draw_set_color(make_color_rgb(255, 200, 50));
-    } else if (isHover) {
-        draw_set_color(c_dkgray);
+    if (selected) {
+        draw_set_color(make_color_rgb(60, 100, 180));
+    } else if (hover) {
+        draw_set_color(make_color_rgb(40, 40, 70));
     } else {
-        draw_set_color(make_color_rgb(50, 50, 70));
+        draw_set_color(make_color_rgb(25, 25, 45));
     }
-    draw_rectangle(x - btnW / 2, y - btnH / 2, x + btnW / 2, y + btnH / 2, false);
+    draw_roundrect(bx, by, bx + bw, by + bh, 6, false);
 
-    draw_set_color(isSelected ? c_black : c_white);
+    if (selected) {
+        draw_set_color(c_yellow);
+    } else if (hover) {
+        draw_set_color(c_white);
+    } else {
+        draw_set_color(c_ltgray);
+    }
+    draw_roundrect(bx, by, bx + bw, by + bh, 6, true);
+
+    draw_set_color(selected ? c_black : c_white);
     draw_set_halign(fa_center);
-    draw_set_valign(fa_middle);
-    draw_text(x, y, label);
+    draw_text(cx, cy - 4, label);
     draw_set_halign(fa_left);
-    draw_set_valign(fa_top);
+}
+
+/// Draw a single gallery card cell (compact, grid-friendly)
+/// card: simple wrapper struct with name/element/manaCost/power/health
+/// x, y: top-left of cell; isHover: highlight on mouse-over
+function DrawGalleryCard(card, x, y, isHover) {
+    var cw = 118;
+    var ch = 158;
+
+    // Background
+    draw_set_color(isHover ? make_color_rgb(35, 35, 55) : make_color_rgb(25, 25, 40));
+    draw_rectangle(x, y, x + cw, y + ch, false);
+
+    // Element strip (top edge)
+    var elemColor = GetGalleryElementColor(card.element);
+    draw_set_color(elemColor);
+    draw_rectangle(x, y, x + cw, y + 6, false);
+
+    // Border
+    draw_set_color(isHover ? c_white : make_color_rgb(60, 60, 90));
+    draw_rectangle(x, y, x + cw, y + ch, true);
+
+    // Mana cost
+    draw_set_color(c_blue);
+    draw_circle(x + cw - 14, y + 14, 11, false);
+    draw_set_color(c_white);
+    draw_text(x + cw - 18, y + 5, string(card.manaCost));
+
+    // Card name
+    draw_set_color(c_white);
+    draw_text(x + 4, y + 18, card.name);
+
+    // Type badge (short)
+    draw_set_color(make_color_rgb(80, 80, 120));
+    draw_rectangle(x + 4, y + 34, x + cw - 4, y + 50, false);
+    draw_set_color(c_ltgray);
+    draw_text(x + 6, y + 36, "Creature");
+
+    // Power
+    draw_set_color(make_color_rgb(255, 80, 80));
+    draw_text(x + 4, y + ch - 20, "P:" + string(card.power));
+
+    // Health
+    draw_set_color(make_color_rgb(80, 255, 80));
+    draw_text(x + cw - 30, y + ch - 20, "H:" + string(card.health));
+}
+
+/// Returns a colour for an element name string (matching gallery filter labels)
+function GetGalleryElementColor(elemName) {
+    switch (elemName) {
+        case "Fire":     return make_color_rgb(255, 100, 0);
+        case "Water":    return make_color_rgb(50, 150, 255);
+        case "Earth":    return make_color_rgb(160, 120, 60);
+        case "Air":      return make_color_rgb(200, 230, 255);
+        case "Neutral": return make_color_rgb(150, 150, 150);
+        default:         return make_color_rgb(150, 150, 150);
+    }
 }
 
 /// Draw the gallery back button
-/// Returns true if point (mx, my) is inside the button
-function DrawGalleryBackButton(btnX, btnY, btnW, btnH, mx, my) {
-    var isHover = (mx >= btnX && mx <= btnX + btnW && my >= btnY && my <= btnY + btnH);
-
-    if (isHover) {
-        draw_set_color(c_red);
+/// mx, my: current mouse position (for hover highlight)
+function DrawGalleryBackButton(bx, by, bw, bh, mx, my) {
+    var hover = (mx >= bx && mx <= bx + bw && my >= by && my <= by + bh);
+    if (hover) {
+        draw_set_color(make_color_rgb(60, 60, 100));
     } else {
-        draw_set_color(make_color_rgb(120, 30, 30));
+        draw_set_color(make_color_rgb(30, 30, 55));
     }
-    draw_rectangle(btnX, btnY, btnX + btnW, btnY + btnH, false);
-
+    draw_roundrect(bx, by, bx + bw, by + bh, 8, false);
     draw_set_color(c_white);
-    draw_set_halign(fa_center);
-    draw_set_valign(fa_middle);
-    draw_text(btnX + btnW / 2, btnY + btnH / 2, "Back to Menu");
-    draw_set_halign(fa_left);
-    draw_set_valign(fa_top);
+    draw_roundrect(bx, by, bx + bw, by + bh, 8, true);
 
-    return isHover;
+    var label = "Back to Menu";
+    var tw = string_width(label);
+    var th = string_height(label);
+    draw_text(bx + (bw - tw) / 2, by + (bh - th) / 2, label);
 }
