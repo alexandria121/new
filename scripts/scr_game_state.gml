@@ -462,6 +462,18 @@ function GetGameLogText() {
 }
 
 // --------------------------------------------------------
+// GameOver(playerWon)
+// Called by CheckWinCondition() when a player reaches 0 HP.
+// Sets global flags that trigger the VICTORY/DEFEAT overlay in obj_battle_controller.
+// --------------------------------------------------------
+function GameOver(playerWon) {
+    global.battle_complete = true;
+    global.winner = playerWon ? "Player" : "AI";
+    _gs_log("═══ " + (playerWon ? "VICTORY" : "DEFEAT") + " ═══");
+    event_log("game_over", "winner=" + global.winner);
+}
+
+// --------------------------------------------------------
 // IsGameOver()
 // Returns true if either player has 0 health.
 // --------------------------------------------------------
