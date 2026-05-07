@@ -144,3 +144,59 @@ function GetComboResult(cardA, cardB) {
         effects:     []
     };
 }
+
+/// VerifyAllCombos()
+/// Iterates global.combo_registry (loaded from combos.json by load_all_card_data)
+/// and confirms every entry has required fields (resultId, resultName).
+/// Logs combo_count with actual registry size vs. expected 265 entries.
+/// Returns the number of entries with missing or malformed recipe data (0 = all OK).
+function VerifyAllCombos() {
+    if (!ds_exists(global.combo_registry)) {
+        show_debug_message("combo_count: ERROR - global.combo_registry does not exist");
+        return -1;
+    }
+
+    var size = ds_map_size(global.combo_registry);
+    show_debug_message("combo_count: " + string(size) + " combos registered (expected 265+)");
+
+    var malformed = 0;
+    var firstFive = [];
+    var idx = 0;
+
+    var key = ds_map_find_first(global.combo_registry);
+    for (var i = 0; i < size && !is_undefined(key); i++) {
+        var data = ds_map_find_value(global.combo_registry, key);
+
+        // Check required fields
+        var hasResultId   = is_struct(data) ? struct_exists(data, "resultId")   : ds_map_exists(data, "resultId");
+        var hasResultName = is_struct(data) ? struct_exists(data, "resultName") : ds_map_exists(data, "resultName");
+
+        if (!hasResultId || !hasResultName) {
+            malformed++;
+            show_debug_message("combo_failed: malformed entry at key " + string(key));
+        }
+
+        // Capture first 5 entries for debug output
+        if (idx < 5) {
+            var name = is_struct(data) ? struct_get(data, "resultName") : data[? "resultName"];
+            if (is_undefined(name)) name = "(no name)";
+            firstFive[idx] = string(key) + " => " + string(name);
+            idx++;
+        }
+
+        key = ds_map_find_next(global.combo_registry, key);
+    }
+
+    show_debug_message("combo_registry first 5 entries:");
+    for (var j = 0; j < array_length(firstFive); j++) {
+        show_debug_message("  " + firstFive[j]);
+    }
+
+    if (malformed > 0) {
+        show_debug_message("combo_count: " + string(malformed) + " malformed entries found");
+    } else {
+        show_debug_message("combo_count: all " + string(size) + " entries valid, 0 missing recipes");
+    }
+
+    return malformed;
+}
